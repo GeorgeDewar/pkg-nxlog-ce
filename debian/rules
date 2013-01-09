@@ -12,6 +12,8 @@ override_dh_auto_install:
 	$(MAKE) DESTDIR=$(CURDIR)/debian/nxlog-ce install
 	rm -f $(CURDIR)/debian/nxlog-ce/usr/lib/nxlog/modules/*/*.la
 	rm -f $(CURDIR)/debian/nxlog-ce/usr/lib/nxlog/modules/*/*.a
+
+override_dh_installinit:
 	dh_installinit --name=nxlog --no-restart-on-upgrade --no-start
 
 override_dh_strip:
