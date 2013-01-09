@@ -3,7 +3,7 @@ Section: admin
 Priority: optional
 Maintainer: Chris Lamb <lamby@debian.org>
 Build-Depends: debhelper (>= 7.0.50), automake1.9, libapr1-dev, libpcre3-dev, libssl-dev, libdbi0-dev, libcap-dev, libexpat1-dev, libtool, libperl-dev
-Standards-Version: 3.8.4
+Standards-Version: 3.9.4
 
 Package: nxlog-ce
 Architecture: any
