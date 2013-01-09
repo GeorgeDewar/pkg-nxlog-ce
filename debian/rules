@@ -18,3 +18,8 @@ override_dh_installinit:
 
 override_dh_strip:
 	dh_strip --dbg-package=nxlog-ce-dbg
+
+override_dh_installchangelogs:
+	# autotools-installed changelog
+	rm $(CURDIR)/debian/nxlog-ce/usr/share/doc/nxlog-ce/ChangeLog.txt
+	dh_installchangelogs
