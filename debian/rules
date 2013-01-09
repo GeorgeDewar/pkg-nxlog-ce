@@ -20,4 +20,3 @@ override_dh_auto_install:
 	dh_installinit --name=nxlog --no-restart-on-upgrade --no-start
 override_dh_strip:
 	dh_strip --dbg-package=nxlog-ce-dbg
-override_dh_installdocs:
