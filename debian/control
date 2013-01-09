@@ -7,7 +7,6 @@ Standards-Version: 3.9.4
 
 Package: nxlog-ce
 Architecture: any
-Section: admin
 Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, openssl
 Suggests: libdbd-mysql, libdbd-pgsql, libdbd-sqlite3, libdbd-freetds
 Description: nxlog is a modular, multi-threaded, high-performance log management solution.
