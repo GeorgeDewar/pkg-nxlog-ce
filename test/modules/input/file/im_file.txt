@@ -1,0 +1,48 @@
+REMOVE: tmp/input
+REMOVE: tmp/output
+WRITELINE: file:tmp/input 11111
+STARTDAEMON: modules/input/file/test.conf
+WRITELINE: file:tmp/input 22222
+SLEEP: 1
+STOPDAEMON: modules/input/file/test.conf
+REMOVE: tmp/input
+COMPAREFILE: tmp/output modules/input/file/testoutput1.txt
+REMOVE: tmp/output
+
+TRUNCATE: tmp/input
+STARTDAEMON: modules/input/file/test.conf
+WRITELINE: file:tmp/input 11111
+WRITELINE: file:tmp/input 22222
+SLEEP: 1
+STOPDAEMON: modules/input/file/test.conf
+REMOVE: tmp/input
+COMPAREFILE: tmp/output modules/input/file/testoutput1.txt
+REMOVE: tmp/output
+
+TRUNCATE: tmp/input
+STARTDAEMON: modules/input/file/test.conf
+WRITEFILE: file:tmp/input test.log
+SLEEP: 2
+STOPDAEMON: modules/input/file/test.conf
+REMOVE: tmp/input
+COMPAREFILE: tmp/output test.log
+REMOVE: tmp/output
+
+
+# TEST SAVEPOS
+REMOVE: tmp/configcache.dat
+REMOVE: tmp/input
+REMOVE: tmp/output
+REMOVE: tmp/selflog
+
+WRITELINE: file:tmp/input 11111
+WRITELINE: file:tmp/input 22222
+RUNPROCESSOR: modules/input/file/savepos.conf
+COMPAREFILE: tmp/output modules/input/file/testoutput1.txt
+WRITELINE: file:tmp/input 33333
+WRITELINE: file:tmp/input 44444
+RUNPROCESSOR: modules/input/file/savepos.conf
+REMOVE: tmp/input
+COMPAREFILE: tmp/output modules/input/file/testoutput2.txt
+REMOVE: tmp/output
+

@@ -1,0 +1,16 @@
+NXLOG COMMUNITY EDITION
+http://nxlog.org
+Copyright 2010-2012 nxsec.com
+
+Unless otherwise noted, this software is licensed under the terms of the
+ * GPL v2 for source files under src/modules
+ * LGPL v2.1 for source files under src/common, src/core and src/utils
+
+You should be able to obtain a copy of these licenses from the following
+locations:
+  http://www.gnu.org/licenses/gpl-2.0.txt
+  http://www.gnu.org/licenses/lgpl-2.1.txt
+
+
+This product includes software developed by the OpenSSL Project
+for use in the OpenSSL Toolkit. (http://www.openssl.org/)

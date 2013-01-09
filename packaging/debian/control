@@ -1,0 +1,21 @@
+Source: nxlog-ce
+Priority: optional
+Maintainer: Botond Botyanszki <boti@nxlog.org>
+Build-Depends: debhelper (>= 7.0.50), automake1.9, libapr1-dev, libpcre3-dev, libssl-dev, libdbi0-dev, libcap-dev, libexpat1-dev, libtool, libperl-dev
+Standards-Version: 3.8.4
+
+Package: nxlog-ce
+Architecture: any
+Section: admin
+Depends: ${shlibs:Depends}, openssl
+Suggests: libdbd-mysql, libdbd-pgsql, libdbd-sqlite3, libdbd-freetds
+Description: nxlog is a modular, multi-threaded, high-performance log management solution.
+ nxlog is a modular, multi-threaded, high-performance log management solution.
+
+Package: nxlog-ce-dbg
+Section: debug
+Priority: extra
+Architecture: any
+Depends: ${misc:Depends}, nxlog-ce (= ${binary:Version})
+Description: debug symbols for nxlog
+ Debug symbols for nxlog

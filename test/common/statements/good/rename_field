@@ -1,0 +1,8 @@
+$success = TRUE;
+$Testfield = 'testvalue';
+rename_field('Testfield', 'Newfield');
+if defined $Testfield $success = FALSE;
+if not defined $Newfield $success = FALSE;
+if $Newfield != 'testvalue' $success = FALSE;
+
+

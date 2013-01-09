@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section id="im_file">
+  <title>File (im_file)</title>
+  <para>
+    This module can be used to read log messages from files. The file position can be 
+    persistently saved across restarts in order to avoid reading from the beginning again
+    when nxlog is restarted.
+    It also supports external rotation tools. When the module cannot read any more data
+    from the file, it checks whether the opened file descriptor belongs to the
+    same filename it opened originally. If the inodes differ, the module assumes the file was
+    moved and reopens its input.
+  </para>
+  <para>
+    im_file uses a 1 second interval to monitor files for new messages. This method was
+    implemented because polling a regular file is not supported on all platforms.
+    If there is no more data to read, the module will sleep for 1 second.
+  </para>
+  <para>
+    By using wildcards, the module can read multiple files simultaneously and will open
+    new files as they appear. It will also enter newly created directories if recursion
+    is enabled.
+  </para>
+
+  <section id="im_file_config">
+    <title>Configuration</title>
+    <para>
+      In addition to the <link linkend="config_module_common">common module directives</link>,
+      the following can be used to configure the im_file module instance.
+      <variablelist>
+	<varlistentry>
+	  <term><anchor id="im_file_config_file"/>File</term>
+	  <listitem>
+	    <para>
+	      This mandatory directive specifies the name of the input file to open.
+	      It must be a <link linkend="lang_type_string">string</link> type
+	      <link linkend="lang_expressions">expression</link>.
+	      For relative filenames you should be aware that nxlog changes its working
+	      directory to '/' unless the global
+	      <link linkend="config_global_spooldir">SpoolDir</link> is set to something else.
+	      On Windows systems the directory separator is backslash. For compatibility reasons
+	      the forward slash '/' character can be also used as the directory separator,
+	      but this only works for filenames which don't contain wildcards. If the
+	      filename is specified using wildcards, you should use backslash for the directory
+	      separator.
+	      </para>
+	    <para>
+	      Wildcards are supported in filenames only, directory names in the path cannot
+	      be wildcarded. Wildcards are not regular expressions, these are patterns commonly
+	      used by unix shells to expand filenames which is also known as globbing.
+	      <variablelist>
+		<varlistentry>
+		  <term>?</term>
+		  <listitem>
+		    <para>
+		      Matches a single character only.
+		    </para>
+		  </listitem>
+		</varlistentry>
+		<varlistentry>
+		  <term>*</term>
+		  <listitem>
+		    <para>
+		      Matches zero or more characters.
+		    </para>
+		  </listitem>
+		</varlistentry>
+		<varlistentry>
+		  <term>\*</term>
+		  <listitem>
+		    <para>
+		      Matches the asterisk '*' character.
+		    </para>
+		  </listitem>
+		</varlistentry>
+		<varlistentry>
+		  <term>\?</term>
+		  <listitem>
+		    <para>
+		      Matches the question mark '?' character.
+		    </para>
+		  </listitem>
+		</varlistentry>
+		<varlistentry>
+		  <term>[...]</term>
+		  <listitem>
+		    <para>
+		      Used to specify a single character. If the first character of the class
+		      description is ^ or !, the sense of the description is reversed.
+		      The rest of the class description is a list of single characters or pairs
+		      of characters separated by -. Any of those characters can have a backslash
+		      in front of them, which is ignored; this lets you use the characters ]
+		      and - in the character class, as well as ^ and ! at the beginning.
+		    </para>
+		  </listitem>
+		</varlistentry>
+	      </variablelist>
+	      <note>
+		<para>
+		  The backslash character '\' is used to escape the wildcard
+		  characters, unfortunately this is the same as the directory separator on Windows.
+		  Take this into account when specifying wildcarded filenames on this platform.
+		  Lets suppose that we have log files under the directory <filename>C:\test</filename>
+		  which need to be monitored. Specifying the wildcard <replaceable>'C:\test\*.log'</replaceable>
+		  will not match because '\*' becomes a literal asterisk, thus it is treated as a
+		  non-wildcarded filename. For this reason the directory separator needs to be escaped,
+		  so the <replaceable>'C:\test\\*.log'</replaceable> will match our files. 
+		  <replaceable>'C:\\test\\*.log'</replaceable> will also work.
+		  When specifying the filename using double quotes, this would became 
+		  <replaceable>"C:\\test\\\\*.log"</replaceable> because the backslash is also
+		  used as an escape character inside double quoted 
+		  <link linkend="lang_literal_string">string literals</link>.
+		  Filenames on Windows systems are treated case-insensitively. Unix/Linux is case-sensitive.
+		</para>
+	      </note>
+	    </para>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_file_config_savepos"/>SavePos</term>
+	  <listitem>
+	    <simpara>
+	      This directive takes a boolean value of TRUE or FALSE and specifies whether
+	      the file position should be saved when nxlog exits.
+	      The file position will be read from the cache file file upon startup.	      
+	      The file position is saved by default if this directive is not specified
+	      in the configuration.
+	      Even if SavePos is enabled, it can be explicitly turned off with the
+	      <link linkend="config_global_nocache">NoCache</link> directive.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_file_config_readfromlast"/>ReadFromLast</term>
+	  <listitem>
+	    <simpara>
+	      This optional directive takes a boolean value. If it is set to TRUE, it instructs
+	      the module to only read logs which arrived after nxlog was started in case the
+	      saved position could not be read (for example on first start).
+	      When SavePos is TRUE and a previously saved position value could be read,
+	      the module will resume reading from this saved position.
+	      If this is FALSE, the module will read all logs from the file. This can result
+	      in quite a lot of messages which is usually not the expected behaviour.
+	      If this directive is not specified, it defaults to TRUE.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_file_config_recursive"/>Recursive</term>
+	  <listitem>
+	    <simpara>
+	      This directive takes a boolean value of TRUE or FALSE and specifies whether
+	      input files should be searched recursively under subdirectories.
+	      The default value is TRUE.
+	      This option takes effect only if wildcards are used in the filename.
+	      For example if '/var/log/*.log' is specified in the
+	      <link linkend="im_file_config_file">File</link> directive, then 
+	      '/var/log/apache2/access.log' will also match.
+	      Because wildcards in directory names of the path are not supported, this directive
+	      makes it possible to read  multiple files from different subdirectories
+	      with a single im_file module instance only.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_file_config_pollinterval"/>PollInterval</term>
+	  <listitem>
+	    <simpara>
+	      This directive specifies in seconds how frequently the module will check for
+	      new files and new log entries. If this directive is not specified it defaults 
+	      to 1 second.
+	      Fractional seconds may be specified, i.e. to check twice every second you should
+	      set the following: <replaceable>PollInterval 0.5</replaceable>
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
+	  <term><anchor id="im_file_config_inputtype"/>InputType</term>
+	  <listitem>
+	    <simpara>
+	      See the description about <link linkend="config_inputtype">InputType</link>
+	      in the global module config section.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+      </variablelist>
+    </para>
+  </section>
+
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../apidoc-im_file.xml" />
+
+  <section id="im_file_config_examples">
+    <title>Configuration examples</title>
+    <para>
+      <example>
+	<title>Forwarding logs from a file to a remote host</title>
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-im_file.xml" />
+      </example>
+    </para>
+  </section>
+
+</section>
