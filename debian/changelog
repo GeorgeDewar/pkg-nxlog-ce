@@ -1,9 +1,5 @@
-nxlog-ce (0.1-1) unstable; urgency=low
+nxlog-ce (2.1.957-1) UNRELEASED; urgency=low
 
-  * Initial Release.
+  * Initial release.
 
- -- Botond Botyanszki <boti@nxlog.org>  Sat, 06 Nov 2010 18:24:10 +0200
-
-Local variables:
-mode: debian-changelog
-End:
+ -- Chris Lamb <lamby@debian.org>  Wed, 09 Jan 2013 14:15:36 +0000
