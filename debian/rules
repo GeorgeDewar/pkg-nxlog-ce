@@ -21,7 +21,3 @@ override_dh_auto_install:
 override_dh_strip:
 	dh_strip --dbg-package=nxlog-ce-dbg
 override_dh_installdocs:
-	
-override_dh_installchangelogs:
-	
-
