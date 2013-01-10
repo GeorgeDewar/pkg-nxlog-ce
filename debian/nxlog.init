@@ -7,6 +7,7 @@
 # Required-Stop:        $network $local_fs $remote_fs
 # Default-Start:        2 3 4 5
 # Default-Stop:         0 1 6
+# Description:          logging daemon
 # Short-Description:    logging daemon
 ### END INIT INFO
 
