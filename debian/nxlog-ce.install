@@ -1,1 +1,1 @@
-debian/nxlog.conf /etc
+debian/nxlog.conf /etc/nxlog/
