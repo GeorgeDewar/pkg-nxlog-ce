@@ -4,7 +4,7 @@
 	dh $@ --with autotools_dev
 
 override_dh_auto_configure:
-	dh_auto_configure -- $(EXTRA_CONFIGURE_OPTIONS) --prefix=/usr --libexecdir=/usr/lib --with-cachedir=/var/spool/nxlog --with-configfile=/etc/nxlog.conf --with-pidfile=/var/run/nxlog/nxlog.pid
+	dh_auto_configure -- --prefix=/usr --libexecdir=/usr/lib --with-cachedir=/var/spool/nxlog --with-configfile=/etc/nxlog.conf --with-pidfile=/var/run/nxlog/nxlog.pid
 
 override_dh_auto_test:
 
