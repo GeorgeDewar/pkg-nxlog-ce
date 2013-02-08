@@ -255,7 +255,7 @@ static void om_file_write(nx_module_t *module)
 static void om_file_config(nx_module_t *module)
 {
     const nx_directive_t *curr;
-    nx_om_file_conf_t *omconf;
+    nx_om_file_conf_t * volatile omconf;
     nx_exception_t e;
 
     ASSERT(module->directives != NULL);

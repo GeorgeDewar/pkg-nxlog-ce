@@ -3,7 +3,7 @@
 
 
   <Product Name='NXLOG-CE' Id='*' UpgradeCode='9E888A9C-5962-11E0-B4E3-20CF305ACE5E'
-    Language='1033' Codepage='1252' Version='2.1.957' Manufacturer='nxsec.com'>
+    Language='1033' Codepage='1252' Version='2.2.1017' Manufacturer='nxsec.com'>
 
     <Package Id='*' Keywords='Installer' Description="NXLOG Installer" Manufacturer='nxsec.com'
 	     InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
@@ -12,8 +12,8 @@
     <Property Id='DiskPrompt' Value="NXLOG Installation [1]" />
 
     <Upgrade Id="9E888A9C-5962-11E0-B4E3-20CF305ACE5E">
-      <UpgradeVersion OnlyDetect="yes" Minimum="2.1.957" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
-      <UpgradeVersion OnlyDetect="no" Maximum="2.1.957" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="2.2.1017" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
+      <UpgradeVersion OnlyDetect="no" Maximum="2.2.1017" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
     </Upgrade>
 
     <InstallExecuteSequence>

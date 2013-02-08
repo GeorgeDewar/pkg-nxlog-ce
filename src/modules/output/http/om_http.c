@@ -823,8 +823,8 @@ static void om_http_parse_url(apr_pool_t *pool,
 
 static void om_http_config(nx_module_t *module)
 {
-    const nx_directive_t *curr;
-    nx_om_http_conf_t *modconf;
+    const nx_directive_t * volatile curr;
+    nx_om_http_conf_t * volatile modconf;
     const char *url;
     nx_exception_t e;
 

@@ -65,7 +65,27 @@ static void nx_route_add_module(const char *start,
 	{
 	    try
 	    {
-		nx_conf_error(routeconf, "module '%s' is not declared or failed to load", modname);
+		nx_conf_error(routeconf, "module '%s' is not declared", modname);
+	    }
+	    catch(e)
+	    {
+		log_exception(e);
+	    }
+	    return;
+	}
+    }
+    if ( module->has_config_errors )
+    {
+	if ( ctx->ignoreerrors != TRUE )
+	{
+	    nx_conf_error(routeconf, "module '%s' has configuration errors", modname);
+	}
+	else
+	{
+	    try
+	    {
+		nx_conf_error(routeconf, "module '%s' has configuration errors, not adding to route '%s'",
+			      modname, route->name);
 	    }
 	    catch(e)
 	    {
@@ -77,6 +97,7 @@ static void nx_route_add_module(const char *start,
 
     log_debug("adding module %s to route %s", module->name, route->name);
 
+    // TODO: get rid of this and forbid using a processor instance in multiple routes
     if ( (module->type == NX_MODULE_TYPE_PROCESSOR) && (module->routes->nelts >= 1) )
     { // clone module
 	char tmpname[512];
@@ -174,8 +195,8 @@ static boolean nx_add_route(const nx_ctx_t *ctx,
     const nx_directive_t *directive;
     int priority = 10;
     nx_exception_t e;
-    int num_input = 0;
-    int num_output = 0;
+    int volatile num_input = 0;
+    int volatile num_output = 0;
     int i;
     nx_module_t *module;
 

@@ -32,7 +32,7 @@ nx_ctx_t *nx_ctx_new()
 
     nxlog = nxlog_get();
 
-    pool = nx_pool_create_child(nxlog->pool);
+    pool = nx_pool_create_core();
 
     ctx = apr_pcalloc(pool, sizeof(nx_ctx_t));
     ctx->pool = pool;
@@ -326,7 +326,7 @@ static nx_jobgroup_t *nx_ctx_get_jobgroup(nx_ctx_t *ctx,
 
 void nx_ctx_init_jobs(nx_ctx_t *ctx)
 {
-    nx_jobgroup_t *jobgroup;
+    nx_jobgroup_t *jobgroup = NULL;
     nx_job_t *job;
     nx_module_t *module;
 
@@ -343,8 +343,11 @@ void nx_ctx_init_jobs(nx_ctx_t *ctx)
 	NX_DLIST_INSERT_TAIL(&(jobgroup->jobs), job, link);
 	module->job = job;
     }
-    ctx->coremodule->job = apr_pcalloc(ctx->pool, sizeof(nx_job_t));
-    NX_DLIST_INSERT_TAIL(&(jobgroup->jobs), ctx->coremodule->job, link);
+    if ( jobgroup != NULL )
+    {
+	ctx->coremodule->job = apr_pcalloc(ctx->pool, sizeof(nx_job_t));
+	NX_DLIST_INSERT_TAIL(&(jobgroup->jobs), ctx->coremodule->job, link);
+    }
 }
 
 
@@ -382,7 +385,8 @@ boolean nx_ctx_next_job(nx_ctx_t *ctx,
 	do
 	{
 	    ASSERT(job != NULL);
-	    if ( (job->busy != TRUE) && (NX_DLIST_EMPTY(&(job->events)) != TRUE) )
+	    if ( (nx_atomic_read32(&(job->busy)) != TRUE) &&
+		 (NX_DLIST_EMPTY(&(job->events)) != TRUE) )
 	    {
 		event = NX_DLIST_FIRST(&(job->events));
 		NX_DLIST_REMOVE(&(job->events), event, link);

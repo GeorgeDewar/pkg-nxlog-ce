@@ -27,6 +27,10 @@ static void nx_expr_decl_init(nx_expr_decl_t *decl,
     ASSERT(parser != NULL);
 
     decl->file = parser->file;
+    if ( decl->file == NULL )
+    {
+	decl->file = "INPUT";
+    }
     decl->line = parser->linenum;
     decl->pos = parser->linepos;
     decl->name = exprname;
@@ -146,7 +150,7 @@ void nx_expr_statement_execute(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "procedure '%s' failed at line %d, character %d in %s. "
 			    "statement execution has been aborted",
 			    stmnt->decl.name, stmnt->decl.line, stmnt->decl.pos,
-			    stmnt->decl.file == NULL ? "input" : stmnt->decl.file);
+			    stmnt->decl.file);
 	    }
 	    break;
 	case NX_EXPR_STATEMENT_TYPE_IFELSE:
@@ -159,7 +163,7 @@ void nx_expr_statement_execute(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "%s failed at line %d, character %d in %s. "
 			    "statement execution has been aborted",
 			    stmnt->decl.name, stmnt->decl.line, stmnt->decl.pos,
-			    stmnt->decl.file == NULL ? "input" : stmnt->decl.file);
+			    stmnt->decl.file);
 	    }
 	    break;
 	case NX_EXPR_STATEMENT_TYPE_ASSIGNMENT:
@@ -172,7 +176,7 @@ void nx_expr_statement_execute(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "%s failed at line %d, character %d in %s. "
 			    "statement execution has been aborted",
 			    stmnt->decl.name, stmnt->decl.line, stmnt->decl.pos,
-			    stmnt->decl.file == NULL ? "input" : stmnt->decl.file);
+			    stmnt->decl.file);
 	    }
 	    break;
 	case NX_EXPR_STATEMENT_TYPE_BLOCK:
@@ -289,7 +293,8 @@ void nx_expr_evaluate(nx_expr_eval_ctx_t *eval_ctx,
     ASSERT(expr != NULL);
     ASSERT(eval_ctx != NULL);
 
-    log_debug("evaluating expression");
+    log_debug("evaluating expression '%s' at %s:%d",
+	      expr->decl.name, expr->decl.file, expr->decl.line);
     retval->defined = FALSE;
     switch ( expr->type )
     {
@@ -302,7 +307,7 @@ void nx_expr_evaluate(nx_expr_eval_ctx_t *eval_ctx,
 		throw_msg("missing logdata, no field available in this context at line %d,"
 			  " character %d in %s. operation possibly after drop()",
 			  expr->decl.line, expr->decl.pos,
-			  expr->decl.file == NULL ? "input" : expr->decl.file);
+			  expr->decl.file);
 	    }
 	    else
 	    {
@@ -336,7 +341,7 @@ void nx_expr_evaluate(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "%s failed at line %d, character %d in %s. "
 			    "expression evaluation has been aborted",
 			    expr->decl.name, expr->decl.line, expr->decl.pos,
-			    expr->decl.file == NULL ? "input" : expr->decl.file);
+			    expr->decl.file);
 	    }
 	    break;
 	case NX_EXPR_TYPE_BINOP:
@@ -351,7 +356,7 @@ void nx_expr_evaluate(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "%s failed at line %d, character %d in %s. "
 			    "expression evaluation has been aborted",
 			    expr->decl.name, expr->decl.line, expr->decl.pos,
-			    expr->decl.file == NULL ? "input" : expr->decl.file);
+			    expr->decl.file);
 	    }
 	    break;
 	case NX_EXPR_TYPE_FUNCTION:
@@ -365,7 +370,7 @@ void nx_expr_evaluate(nx_expr_eval_ctx_t *eval_ctx,
 		rethrow_msg(e, "function '%s' failed at line %d, character %d in %s. "
 			    "expression evaluation has been aborted",
 			    expr->decl.name, expr->decl.line, expr->decl.pos,
-			    expr->decl.file == NULL ? "input" : expr->decl.file);
+			    expr->decl.file);
 	    }
 	    break;
 	default:
@@ -383,10 +388,14 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
     nx_value_t lval, rval;
     const pcre *regexp = NULL;
     const char *regexpstr = NULL;
-    const char *subject;
+    char *subject = NULL;
+    const char *replacement = NULL;
+    size_t replacement_length = 0;
+    uint8_t modifiers;
     int result;
     int i;
     int ovector[NX_EXPR_MAX_CAPTURED_FIELDS * 3];
+    nx_value_t fieldval;
 
     ASSERT(retval != NULL);
     ASSERT(left != NULL);
@@ -429,6 +438,8 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
 	ASSERT(rval.type == NX_VALUE_TYPE_REGEXP);
 	regexp = rval.regexp.pcre;
 	regexpstr = rval.regexp.str;
+	replacement = rval.regexp.replacement;
+	modifiers = rval.regexp.modifiers;
 	subject = lval.string->buf;
     }
     else if ( rval.type == NX_VALUE_TYPE_STRING )
@@ -436,6 +447,8 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
 	ASSERT(lval.type == NX_VALUE_TYPE_REGEXP);
 	regexp = lval.regexp.pcre;
 	regexpstr = lval.regexp.str;
+	replacement = lval.regexp.replacement;
+	modifiers = lval.regexp.modifiers;
 	subject = rval.string->buf;
     }
     else
@@ -452,17 +465,42 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
     }
 
     ASSERT(subject != NULL);
+
+    if ( replacement != NULL )
+    {
+	ASSERT(right->rettype == NX_VALUE_TYPE_REGEXP);
+	ASSERT(left->type == NX_EXPR_TYPE_FIELD);
+	replacement_length = strlen(replacement);
+	if ( eval_ctx->logdata == NULL )
+	{
+	    throw_msg("missing logdata, no field available in this context at line %d,"
+		      " character %d in %s. operation possibly after drop()",
+		      left->decl.line, left->decl.pos,
+		      left->decl.file);
+	}
+	nx_logdata_get_field_value(eval_ctx->logdata, left->field, &fieldval);
+	ASSERT(fieldval.type == NX_VALUE_TYPE_STRING);
+	ASSERT(fieldval.defined == TRUE);
+	subject = fieldval.string->buf;
+    }
+
+    retval->boolean = FALSE;
+    retval->defined = TRUE;
+
+  match_global:
     result = pcre_exec(regexp, NULL, subject, (int) strlen(subject), 0, 0,
 		       ovector, NX_EXPR_MAX_CAPTURED_FIELDS * 3);
     
-    retval->defined = TRUE;
-    retval->boolean = result >= 0;
+    if ( result >= 0 )
+    {
+	retval->boolean = TRUE;
+    }
     if ( result < 0 )
     {
 	switch ( result )
 	{
 	    case PCRE_ERROR_NOMATCH:
-		log_debug("regexp [%s] doesn't match subject string [%s]", regexpstr, subject);
+		log_debug("regexp /%s/ doesn't match subject string '%s'", regexpstr, subject);
 		break;
 	    case PCRE_ERROR_NULL:
 		nx_panic("invalid arguments (code, ovector or ovecsize are invalid)");
@@ -476,7 +514,7 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
 	    case PCRE_ERROR_NOMEMORY:
 		nx_panic("pcre_malloc() failed");
 	    case PCRE_ERROR_MATCHLIMIT:
-		log_error("pcre match_limit reached");
+		log_error("pcre match_limit reached for regexp /%s/", regexpstr);
 		break;
 	    case PCRE_ERROR_BADUTF8:
 		log_error("invalid pcre utf-8 byte sequence");
@@ -506,7 +544,32 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
 	    eval_ctx->captured[i] = nx_string_create(subject + ovector[i * 2],
 						     (size_t) (ovector[i * 2 + 1] - ovector[i * 2]));
 	}
+
+	if ( replacement != NULL )
+	{
+	    ASSERT(ovector[1] >= ovector[0]);
+	    nx_string_ensure_size(fieldval.string,
+				  (size_t) fieldval.string->len + 
+				  (size_t) (ovector[1] - ovector[0]) + replacement_length);
+	    memmove(fieldval.string->buf + (size_t) ovector[0] + replacement_length,
+		    fieldval.string->buf + (size_t) ovector[1],
+		    fieldval.string->len - (size_t) ovector[1] + 1); // +1 is for the trailing NUL
+	    if ( replacement_length > 0 )
+	    {
+		memcpy(fieldval.string->buf + ovector[0],
+		       replacement, replacement_length);
+	    }
+	    ASSERT(fieldval.string->len >= (uint32_t) (ovector[1] - ovector[0]));
+	    fieldval.string->len += ((uint32_t) (replacement_length - (size_t) (ovector[1] - ovector[0])));
+	    
+	    subject = fieldval.string->buf;
+	    if ( modifiers & NX_EXPR_REGEXP_MODIFIER_MATCH_GLOBAL )
+	    {
+		goto match_global; // not that ugly as it seems
+	    }
+	}
     }
+
     nx_value_kill(&lval);
     nx_value_kill(&rval);
 }
@@ -1425,11 +1488,23 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 			((right->rettype == NX_VALUE_TYPE_REGEXP) &&
 			 (left->rettype == NX_VALUE_TYPE_STRING))) )
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s =~ %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s =~ %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
+	    if ( (right->rettype == NX_VALUE_TYPE_REGEXP) &&
+		 (right->value.regexp.replacement != NULL) &&
+		 (left->type != NX_EXPR_TYPE_FIELD) )
+	    {
+		throw_msg("field required for left operand of regexp substitution");
+	    }
+	    if ( (left->rettype == NX_VALUE_TYPE_REGEXP) &&
+		 (left->value.regexp.replacement != NULL) )
+	    {
+		throw_msg("regexp substitution operand must be the right in regexp substitution");
+	    }
+
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_regmatch;
 	    break;
@@ -1444,11 +1519,23 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 			((right->rettype == NX_VALUE_TYPE_REGEXP) &&
 			 (left->rettype == NX_VALUE_TYPE_STRING))) )
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s !~ %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s !~ %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
+	    if ( (right->rettype == NX_VALUE_TYPE_REGEXP) &&
+		 (right->value.regexp.replacement != NULL) &&
+		 (left->type != NX_EXPR_TYPE_FIELD) )
+	    {
+		throw_msg("field required for left operand of regexp substitution");
+	    }
+	    if ( (left->rettype == NX_VALUE_TYPE_REGEXP) &&
+		 (left->value.regexp.replacement != NULL) )
+	    {
+		throw_msg("regexp substitution operand must be the right in regexp substitution");
+	    }
+
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_notregmatch;
 	    break;
@@ -1463,10 +1550,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s == %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s == %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_equal;
@@ -1482,10 +1569,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL, 
-				     "invalid binary operation: %s != %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL, 
+					 "invalid binary operation: %s != %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_notequal;
@@ -1506,10 +1593,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s < %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s < %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_less;
@@ -1530,10 +1617,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s <= %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s <= %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_le;
@@ -1554,10 +1641,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s > %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s > %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_greater;
@@ -1578,10 +1665,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s >= %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s >= %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_greater_equal;
@@ -1598,10 +1685,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s AND %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s AND %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
 	    expr->binop.cb = &_and;
@@ -1618,10 +1705,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s OR %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s OR %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_or;
 	    expr->rettype = NX_VALUE_TYPE_BOOLEAN;
@@ -1655,10 +1742,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s + %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s + %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_plus;
 	    break;
@@ -1686,10 +1773,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s - %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s - %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_minus;
 	    break;
@@ -1707,10 +1794,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s * %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s * %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_mul;
 	    break;
@@ -1728,10 +1815,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s / %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s / %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_div;
 	    break;
@@ -1749,10 +1836,10 @@ nx_expr_t *nx_expr_new_binop(nx_expr_parser_t *parser,
 	    }
 	    else
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid binary operation: %s %% %s",
-				     nx_value_type_to_string(left->rettype),
-				     nx_value_type_to_string(right->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid binary operation: %s %% %s",
+					 nx_value_type_to_string(left->rettype),
+					 nx_value_type_to_string(right->rettype));
 	    }
 	    expr->binop.cb = &_mod;
 	    break;
@@ -1866,9 +1953,9 @@ nx_expr_t *nx_expr_new_unop(nx_expr_parser_t *parser,
 	    if ( !((op->rettype == NX_VALUE_TYPE_BOOLEAN) ||
 		   (op->rettype == NX_VALUE_TYPE_UNKNOWN)) )
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid unary operation: -%s",
-				     nx_value_type_to_string(op->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid unary operation: -%s",
+					 nx_value_type_to_string(op->rettype));
 	    }
 	    expr->unop.cb = &_neg;
 	    break;
@@ -1876,9 +1963,9 @@ nx_expr_t *nx_expr_new_unop(nx_expr_parser_t *parser,
 	    if ( !((op->rettype == NX_VALUE_TYPE_BOOLEAN) ||
 		   (op->rettype == NX_VALUE_TYPE_UNKNOWN)) )
 	    {
-		nx_expr_parser_error(parser, NULL,
-				     "invalid unary operation: not %s",
-				     nx_value_type_to_string(op->rettype));
+		nx_expr_parser_error_fmt(parser, NULL,
+					 "invalid unary operation: not %s",
+					 nx_value_type_to_string(op->rettype));
 	    }
 	    expr->unop.cb = &_not;
 	    break;
@@ -1936,7 +2023,10 @@ nx_expr_t *nx_expr_new_undef(nx_expr_parser_t *parser)
 
 
 
-nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser, const char *str)
+nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser,
+			      const char *str,
+			      const char *replacement,
+			      const char *modifiers)
 {
     nx_expr_t *expr;
     const char *error = NULL;
@@ -1946,18 +2036,43 @@ nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser, const char *str)
     int rc;
     int size;
     int capturecount;
+    uint8_t mod = 0;
 
     ASSERT(str != NULL);
 
-    log_debug("new regexp: [%s]", str);
+    if ( replacement != NULL )
+    {
+	log_debug("new regexpreplace: /%s/%s/", str, replacement);
+    }
+    else
+    {
+	log_debug("new regexp: /%s/", str);
+    }
+
+    if ( modifiers != NULL )
+    {
+	if ( replacement == NULL )
+	{
+	    nx_expr_parser_error_fmt(parser, NULL,
+				     "regular expression modifier is invalid: %s",
+				     modifiers);
+	}
+	if ( strcmp(modifiers, "g") != 0 )
+	{
+	    nx_expr_parser_error_fmt(parser, NULL,
+				     "regular expression modifier is invalid: %s",
+				     modifiers);
+	}
+	mod = NX_EXPR_REGEXP_MODIFIER_MATCH_GLOBAL;
+    }
 
     regexp = pcre_compile(str, 0, &error,  &erroroffs, NULL);
 
     if ( regexp == NULL )
     {
-	nx_expr_parser_error(parser, NULL,
-			     "failed to compile regular expression '%s', error at position %d: %s",
-			     str, erroroffs, error);
+	nx_expr_parser_error_fmt(parser, NULL,
+				 "failed to compile regular expression '%s', error at position %d: %s",
+				 str, erroroffs, error);
     }
 
     rc = pcre_fullinfo(regexp, NULL, PCRE_INFO_SIZE, &size); 
@@ -1987,14 +2102,32 @@ nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser, const char *str)
 
     expr = apr_pcalloc(parser->pool, sizeof(nx_expr_t));
 
-    expr->type = NX_EXPR_TYPE_VALUE;
-    expr->rettype = NX_VALUE_TYPE_REGEXP;
-    expr->value.type = NX_VALUE_TYPE_REGEXP;
-    expr->value.defined = TRUE;
-    expr->value.regexp.pcre = tmppcre;
-    expr->value.regexp.pcre_size = (size_t) size;
-    expr->value.regexp.str = apr_pstrdup(parser->pool, str);
-    nx_expr_decl_init(&(expr->decl), parser, "regexp");
+    if ( replacement != NULL )
+    { // s/a/b/
+	expr->type = NX_EXPR_TYPE_VALUE;
+	expr->rettype = NX_VALUE_TYPE_REGEXP;
+	expr->value.type = NX_VALUE_TYPE_REGEXP;
+	expr->value.defined = TRUE;
+	expr->value.regexp.pcre = tmppcre;
+	expr->value.regexp.pcre_size = (size_t) size;
+	expr->value.regexp.str = apr_pstrdup(parser->pool, str);
+	expr->value.regexp.replacement = apr_pstrdup(parser->pool, replacement);
+	expr->value.regexp.modifiers = mod;
+	nx_expr_decl_init(&(expr->decl), parser, "regexpreplace");
+    }
+    else
+    {
+	expr->type = NX_EXPR_TYPE_VALUE;
+	expr->rettype = NX_VALUE_TYPE_REGEXP;
+	expr->value.type = NX_VALUE_TYPE_REGEXP;
+	expr->value.defined = TRUE;
+	expr->value.regexp.pcre = tmppcre;
+	expr->value.regexp.pcre_size = (size_t) size;
+	expr->value.regexp.str = apr_pstrdup(parser->pool, str);
+	expr->value.regexp.replacement = NULL;
+	expr->value.regexp.modifiers = 0;
+	nx_expr_decl_init(&(expr->decl), parser, "regexp");
+    }
 
     return ( expr );
 }

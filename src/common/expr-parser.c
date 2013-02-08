@@ -11,10 +11,10 @@
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
 
-void nx_expr_parser_error(nx_expr_parser_t *parser,
-			  void *scanner UNUSED,
-			  const char	*fmt,
-			  ...)
+void nx_expr_parser_error_fmt(nx_expr_parser_t	*parser,
+			      void *scanner UNUSED,
+			      const char *fmt,
+			      ...)
 {
     va_list ap;
     char buf[NX_LOGBUF_SIZE];
@@ -28,6 +28,16 @@ void nx_expr_parser_error(nx_expr_parser_t *parser,
 }
 
 
+
+void nx_expr_parser_error(nx_expr_parser_t *parser UNUSED,
+			  void *scanner UNUSED,
+			  const char *msg)
+{
+    throw_msg("%s", msg);
+}
+
+
+
 //TODO: use pool alloc
 void nx_expr_parser_append_string(char **dst,
 				  const char *src)
@@ -38,9 +48,9 @@ void nx_expr_parser_append_string(char **dst,
 
     if ( *dst == NULL )
     {
-	len1 = strlen(src) + 1;
-	*dst = malloc(len1);
-	apr_cpystrn(*dst, src, len1);
+	len1 = strlen(src);
+	*dst = malloc(len1 + 1);
+	apr_cpystrn(*dst, src, len1 + 1);
     }
     else
     {

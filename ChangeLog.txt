@@ -1,3 +1,23 @@
+* 2013-02-07 v2.2.1017
+  Regexp substitution is now supported with s/// and s///g.
+  Enhanced error reporting in pm_pattern in when 'pcre match_limit reached' is logged.
+  The json parser leaked memory when input contained raw_event.
+  Fixed possible race conditions with memory pool handling.
+  Shutdown sequence reverted to non-async mode.
+  Load module in STOPPED state in case of config errors.
+  The delete() procedure was leaking memory.
+  Module fields.xml files are now installed.
+  Compile with -Werror=format-security and -Wformat if gcc accepts it.
+  Fix invalid write in im_udp with apr-1.2 (mostly affecting Centos/Redhat 5).
+  nxlog-stmnt-verifier loads all locally available modules.
+  Fixed a possible endless loop in im_exec.
+  The rename_field() procedure now removes the 'new' field if it exists before renaming 'old' to it.
+  Updated the reference manual with some examples about parsing syslog from Cisco devices.
+  Added Cisco ASA/PIX timestamp format which can be parsed automatically: Nov 3 2005 14:50:30
+  Fixed expression handling for dynamic filenames in im_file so that it is not only evaluated at startup.
+  SockBufSize option for im_udp and om_udp.
+  PollInterval directive for im_msvistalog.
+  Channels are queried directly from the system instead of the registry in im_msvistalog.
 * 2012-12-18 v2.1.956
   Added a new output module om_http to send logs over HTTP/HTTPs.
   Two new procedures: reroute() and add_to_route().

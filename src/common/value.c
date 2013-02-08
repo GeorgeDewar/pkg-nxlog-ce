@@ -146,6 +146,15 @@ nx_value_t *nx_value_clone(nx_value_t *dst, const nx_value_t *value)
 		memcpy(retval->regexp.pcre, value->regexp.pcre, value->regexp.pcre_size);
 		retval->regexp.pcre_size = value->regexp.pcre_size;
 		retval->regexp.str = strdup(value->regexp.str);
+		if ( value->regexp.replacement == NULL )
+		{
+		    retval->regexp.replacement = NULL;
+		}
+		else
+		{
+		    retval->regexp.replacement = strdup(value->regexp.replacement);
+		}
+		retval->regexp.modifiers = value->regexp.modifiers;
 		break;
 	    default:
 		nx_panic("invalid value type: %d", value->type);
@@ -368,8 +377,7 @@ nx_value_type_t nx_value_type_from_string(const char *str)
 	    return ( value_types[i].key );
 	}
     }
-
-    return ( 0 );
+    throw_msg("invalid type: %s", str);
 }
 
 

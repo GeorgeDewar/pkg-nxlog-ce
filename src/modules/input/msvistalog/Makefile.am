@@ -5,5 +5,5 @@ im_msvistalog_la_LDFLAGS	= -module -no-undefined -avoid-version
 im_msvistalog_la_LIBADD		= -lwevtapi -lole32 $(LIBNX)
 im_msvistalogdir		= $(NX_MODULEDIR)/input
 endif
-EXTRA_DIST			= im_msvistalog-fields.xml
+dist_pkgdata_DATA		= im_msvistalog-fields.xml
 

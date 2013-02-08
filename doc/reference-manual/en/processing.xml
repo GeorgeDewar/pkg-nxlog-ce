@@ -214,10 +214,18 @@ Sun, 06-Nov-1994 08:49:37 GMT  ; RFC 850 with four digit years]]></programlistin
 	     <term><anchor id="processing_datetime_cisco"/>CISCO syslog date</term>
 	     <listitem>
 	       <para>
-		 This is RFC 3164 format with millisecond precision. Example:
+		 This is an RFC 3164 format with millisecond precision. Example:
 		 <programlisting><![CDATA[Nov 3 14:50:30.403
 Nov  3 14:50:30.403
 Nov 03 14:50:30.403
+]]></programlisting>
+		 The following format is also recognized (with or without millisecond precision):
+		 <programlisting><![CDATA[Nov 3 2005 14:50:30.403
+Nov  3 2005 14:50:30.403
+Nov 03 2005 14:50:30.403
+Nov 3 2005 14:50:30
+Nov  3 2005 14:50:30
+Nov 03 2005 14:50:30
 ]]></programlisting>
 	       </para>
 	     </listitem>
@@ -252,13 +260,6 @@ Nov 03 14:50:30.403
 	     The integer format of nxlog does not support fractional parts, so we use a regular
 	     expression to get around this.
 	     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-datetime.xml" />
-	     <note>
-	       <para>
-		 The <replaceable>%s</replaceable> formatter for 
-		 <link linkend="core_func_strptime">strptime()</link> is a GLIBC extension on
-		 GNU/Linux and is not available on other platforms. 
-	       </para>
-	     </note>
 	   </para>
 	 </example>
      </para>

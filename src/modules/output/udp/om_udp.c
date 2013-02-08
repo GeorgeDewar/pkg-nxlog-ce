@@ -142,6 +142,17 @@ static void om_udp_config(nx_module_t *module)
 	    }
 	    omconf->port = (apr_port_t) port;
 	}
+	else if ( strcasecmp(curr->directive, "sockbufsize") == 0 )
+	{
+	    if ( omconf->sockbufsize != 0 )
+	    {
+		nx_conf_error(curr, "SockBufSize is already defined");
+	    }
+	    if ( sscanf(curr->args, "%u", &(omconf->sockbufsize)) != 1 )
+	    {
+		nx_conf_error(curr, "invalid SockBufSize: %s", curr->args);
+	    }
+	}
 	else if ( strcasecmp(curr->directive, "OutputType") == 0 )
 	{
 	    if ( module->output.outputfunc != NULL )
@@ -227,6 +238,11 @@ static void om_udp_start(nx_module_t *module)
 		     "couldn't set SO_NONBLOCK on udp socket");
 	CHECKERR_MSG(apr_socket_timeout_set(omconf->sock, 0),
 		     "couldn't set socket timeout on udp socket");
+	if ( omconf->sockbufsize != 0 )
+	{
+	    CHECKERR_MSG(apr_socket_opt_set(omconf->sock, APR_SO_SNDBUF, omconf->sockbufsize),
+			 "couldn't set SO_SNDBUF on udp socket");
+	}
     }
     else
     {

@@ -65,6 +65,19 @@
 	</varlistentry>
 
 	<varlistentry>
+	  <term><anchor id="im_udp_config_sockbufsize"/>SockBufSize</term>
+	  <listitem>
+	    <simpara>
+	      This optional directive sets the socket buffer size (SO_RCVBUF) to the value
+	      specified. Otherwise the OS defaults are used.
+	      If you are experiencing UDP packet loss at the kernel level, setting this to a
+	      high value (e.g. 150000000) may help. On Microsoft Windows systems the default
+	      socket buffer size is extremely low, using this option is highly recommended.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
 	  <term><anchor id="im_udp_config_inputtype"/>InputType</term>
 	  <listitem>
 	    <simpara>

@@ -264,7 +264,10 @@ nx_string_t *nx_string_set(nx_string_t *dst, const char *src, int srclen)
     }
 
     set_len(dst, (size_t) srclen + 1);
-    memcpy(dst->buf, src, (apr_size_t) srclen);
+    if ( srclen > 0 )
+    {
+	memcpy(dst->buf, src, (apr_size_t) srclen);
+    }
     dst->len = (uint32_t) srclen;
     dst->buf[dst->len] = '\0';
 
@@ -477,7 +480,7 @@ size_t nx_string_unescape_c(char *str)
 		case 'X':
 		    if ( apr_isxdigit(str[i + 2]) && apr_isxdigit(str[i + 3]) )
 		    {
-			int c;
+			int c = 0;
 			if ( (str[i + 2] >= '0') && (str[i + 2] <= '9') )
 			{
 			    c = str[i + 2] - '0';

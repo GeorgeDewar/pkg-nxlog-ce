@@ -8,18 +8,20 @@ changelog_DATA = ChangeLog.txt
 changelogdir = $(docdir)
 
 EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE $(wildcard parsers/*.conf) \
-             $(wildcard packaging/debian/*.pem) \
-             packaging/debian/changelog \
-             packaging/debian/conffiles \
-             packaging/debian/compat \
-             packaging/debian/control \
-             packaging/debian/copyright \
-             packaging/debian/nxlog.init \
-             packaging/debian/make_debs.sh \
-             packaging/debian/nxlog.conf \
-             packaging/debian/postinst \
-             packaging/debian/postrm \
-             packaging/debian/rules \
+	     $(wildcard packaging/debian/*.pem) \
+	     packaging/debian/changelog \
+	     packaging/debian/compat \
+	     packaging/debian/control \
+	     packaging/debian/copyright \
+	     packaging/debian/nxlog.init \
+	     packaging/debian/make_debs.sh \
+	     packaging/debian/nxlog.conf \
+	     packaging/debian/nxlog-ce.install \
+	     packaging/debian/watch \
+	     packaging/debian/postinst \
+	     packaging/debian/postrm \
+	     packaging/debian/rules \
+	     packaging/debian/source/format \
 	     packaging/windows/license.rtf \
 	     packaging/windows/nxlog.conf \
 	     packaging/windows/nxlog.wxs \

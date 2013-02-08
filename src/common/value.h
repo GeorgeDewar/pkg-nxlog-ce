@@ -45,8 +45,10 @@ typedef struct nx_value_t
 	struct nx_value_regexp
 	{
 	    char	*str;
+	    char	*replacement; 	///< only used for s/a/b/ regexp replacement, not serialized!
 	    pcre	*pcre;
 	    size_t	pcre_size;
+	    uint8_t	modifiers;	///< TODO: not serialized, do we need it to?
 	} regexp;
 	boolean		boolean;
 	uint8_t		ip4addr[4];

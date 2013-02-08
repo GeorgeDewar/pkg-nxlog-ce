@@ -37,6 +37,7 @@ NX_DLIST_HEAD(nx_im_file_input_list_t, nx_im_file_input_t);
 typedef struct nx_im_file_conf_t
 {
     nx_expr_t   	*filename_expr;
+    boolean		filename_const;	///< Set to TRUE if the filename is not a dynamic string
     char		filename[APR_PATH_MAX];
     boolean 		savepos;
     boolean		readfromlast;

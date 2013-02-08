@@ -1374,7 +1374,7 @@ void nx_expr_func__get_stat(nx_expr_eval_ctx_t *eval_ctx,
 			    int32_t num_arg,
 			    nx_value_t *args)
 {
-    apr_time_t timeval = 0;
+    apr_time_t volatile timeval = 0;
     nx_module_stat_t *stat;
     nx_exception_t e;
 

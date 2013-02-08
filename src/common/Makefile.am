@@ -28,5 +28,7 @@ expr-core-funcproc.c: $(top_builddir)/src/utils/codegen.pl core-api.xml
 expr-core-funcproc.h: $(top_builddir)/src/utils/codegen.pl core-api.xml
 	-$(top_builddir)/src/utils/codegen.pl core-api.xml
 
-EXTRA_DIST		= core-api.xml core-fields.xml $(libnx_la_BUILTSOURCES)
+EXTRA_DIST		= core-api.xml $(libnx_la_BUILTSOURCES)
+dist_pkgdata_DATA	= core-fields.xml
+
 MAINTAINERCLEANFILES	+= $(libnx_la_BUILTSOURCES)

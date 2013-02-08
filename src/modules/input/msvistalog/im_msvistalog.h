@@ -11,9 +11,7 @@
 #include "../../../common/types.h"
 #include "../../../common/dlist.h"
 
-#define IM_MSVISTALOG_REGISTRY_PATH_SYSTEM "SYSTEM\\CurrentControlSet\\Services\\Eventlog"
-#define IM_MSVISTALOG_REGISTRY_PATH_CHANNELS "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WINEVT\\Channels"
-#define IM_MSVISTALOG_REG_BUFFER_LEN 1024
+#define IM_MSVISTALOG_DEFAULT_POLL_INTERVAL 1
 #define IM_MSVISTALOG_BATCH_SIZE 50
 #define IM_MSVISTALOG_RENDER_BUFFER_SIZE (1024 * 42) /* 42k */
 
@@ -39,23 +37,24 @@ NX_DLIST_HEAD(nx_msvistalog_publishers_t, nx_msvistalog_publisher_t);
 
 typedef struct nx_im_msvistalog_conf_t
 {
-    boolean savepos;
-    nx_event_t *event;
-    const char *query;
-    const char *channel;
-    LPCWSTR _query;
-    LPCWSTR _path;
-    boolean readfromlast;
-    EVT_HANDLE waithandle;
-    EVT_HANDLE eventarray[IM_MSVISTALOG_BATCH_SIZE];
-    EVT_HANDLE subscription;
-    EVT_HANDLE last_event;
-    EVT_HANDLE renderer_system;
-    PEVT_VARIANT renderbuf;
-    DWORD renderbufsize;
-
-    apr_pool_t *publisherpool;
-    apr_hash_t *publisherhash;
+    boolean		savepos;
+    nx_event_t		*event;
+    const char		*query;
+    const char		*channel;
+    LPCWSTR		_query;
+    LPCWSTR		_path;
+    boolean		readfromlast;
+    EVT_HANDLE		waithandle;
+    EVT_HANDLE		eventarray[IM_MSVISTALOG_BATCH_SIZE];
+    EVT_HANDLE		subscription;
+    EVT_HANDLE		last_event;
+    EVT_HANDLE		renderer_system;
+    PEVT_VARIANT	renderbuf;
+    DWORD		renderbufsize;
+    EVT_HANDLE		session;
+    float		poll_interval;
+    apr_pool_t		*publisherpool;
+    apr_hash_t		*publisherhash;
     nx_msvistalog_publishers_t *publisherlist;
 } nx_im_msvistalog_conf_t;
 

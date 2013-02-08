@@ -2,7 +2,7 @@
 
 Summary:	nxlog is a modular, multi-threaded, high-performance log management solution
 Name:		nxlog-ce
-Version:	2.1.957
+Version:	2.2.1017
 Release:	1
 License:	GPL/LGPL
 Group:		System Environment/Daemons
@@ -63,6 +63,7 @@ install -m 664 packaging/redhat/nxlog.conf $RPM_BUILD_ROOT/etc/nxlog.conf
 /usr/bin/*
 /usr/libexec/nxlog/modules/*
 /usr/share/doc/nxlog-ce/*
+/usr/share/nxlog-ce/*
 /usr/lib/perl5/*
 %config /etc/init.d/nxlog
 %config /etc/nxlog.conf

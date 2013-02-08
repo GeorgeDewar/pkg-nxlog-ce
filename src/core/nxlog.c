@@ -126,7 +126,7 @@ void nxlog_init(nxlog_t *nxlog)
     memset(nxlog, 0, sizeof(nxlog_t));
     nxlog_set(nxlog);
 
-    nxlog->pool = nx_pool_create_child(NULL);
+    nxlog->pool = nx_pool_create_core();
 
     nxlog->started = apr_time_now();
 
@@ -149,7 +149,7 @@ void nxlog_reload(nxlog_t *nxlog)
 {
     apr_status_t rv;
     apr_file_t *file;
-
+    nx_ctx_t *ctx_old;
     log_info("reloading configuration and restarting modules");
 
     ASSERT(nxlog->cfgfile != NULL);
@@ -173,6 +173,7 @@ void nxlog_reload(nxlog_t *nxlog)
     ASSERT(apr_thread_cond_broadcast(nxlog->worker_cond) == APR_SUCCESS);
     ASSERT(apr_thread_cond_signal(nxlog->event_cond) == APR_SUCCESS);
     nx_unlock();
+
     nxlog_wait_threads(nxlog);
 
     nx_ctx_save_queues(nxlog->ctx);
@@ -183,14 +184,15 @@ void nxlog_reload(nxlog_t *nxlog)
     nx_ctx_shutdown_modules(nxlog->ctx, NX_MODULE_TYPE_OUTPUT);
     nx_ctx_shutdown_modules(nxlog->ctx, NX_MODULE_TYPE_EXTENSION);
     
-    nx_ctx_free(nxlog->ctx);
+    ctx_old = nxlog->ctx;
+    nxlog->ctx = nx_ctx_new();
+    nx_ctx_free(ctx_old);
     nxlog->num_worker_thread = 0;
 
     // reset flags
-    nxlog->reload_request = FALSE;
+    nx_atomic_set32(&(nxlog->reload_request), FALSE);
     nxlog->terminating = FALSE;
 
-    nxlog->ctx = nx_ctx_new();
     nx_ctx_register_builtins(nxlog->ctx);
 
     nx_ctx_parse_cfg(nxlog->ctx, nxlog->cfgfile);
@@ -534,8 +536,6 @@ boolean nxlog_data_available()
 	{
 	    if ( job->busy == TRUE )
 	    {
-		nx_unlock();
-
 		for ( module = NX_DLIST_FIRST(ctx->modules);
 		      module != NULL;
 		      module = NX_DLIST_NEXT(module, link) )
@@ -549,6 +549,7 @@ boolean nxlog_data_available()
 		}
 		if ( nx_module_get_status(module) != NX_MODULE_STATUS_STOPPED )
 		{
+		    nx_unlock();
 		    return ( TRUE );
 		}
 	    }
@@ -562,12 +563,12 @@ boolean nxlog_data_available()
 		    case NX_EVENT_WRITE:
 		    case NX_EVENT_DATA_AVAILABLE:
 			type = event->type;
-			nx_unlock();
 			log_debug("found %s event while checking for unprocessed data",
 				  nx_event_type_to_string(type));
 			if ( (event->module != NULL) &&
 			     (nx_module_get_status(event->module) != NX_MODULE_STATUS_STOPPED) )
 			{
+			    nx_unlock();
 			    return ( TRUE );
 			}
 		    default:
@@ -640,7 +641,7 @@ void nxlog_mainloop(nxlog_t *nxlog, boolean offline)
 		break;
 	    }
 	}
-	if ( nxlog->reload_request == TRUE )
+	if ( nx_atomic_read32(&(nxlog->reload_request)) == TRUE )
 	{
 	    nxlog_reload(nxlog);
 	}

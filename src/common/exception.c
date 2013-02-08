@@ -255,7 +255,7 @@ void nx_log_exception(nx_logmodule_t		logmodule,
 	empty = FALSE;
     }
 
-    nx_log(e->code, NX_LOGLEVEL_ERROR, logmodule, tmpstr->buf);
+    nx_log(e->code, NX_LOGLEVEL_ERROR, logmodule, "%s", tmpstr->buf);
     nx_string_free(tmpstr);
 }
 	       

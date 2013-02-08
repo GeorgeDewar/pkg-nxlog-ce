@@ -1208,6 +1208,7 @@ apr_status_t nx_date_parse_iso(apr_time_t  *t,
  *
  * Formats supported:
  *  * Nov 3 14:50:30.403
+ *  * Oct 12 2004 21:54:47 
  */
 
 apr_status_t nx_date_parse_cisco(apr_time_t  *t, 
@@ -1291,6 +1292,67 @@ apr_status_t nx_date_parse_cisco(apr_time_t  *t,
 	    }
 	}
     }
+    else if ( _date_checkmask(date, "@$$ # #### ##:##:##*") ||
+	      _date_checkmask(date, "@$$  # #### ##:##:##*") ||
+	      _date_checkmask(date, "@$$ ## #### ##:##:##*") )
+    {
+	mint = (date[0] << 16) | (date[1] << 8) | date[2];
+	for ( mon = 0; mon < 12; mon++ )
+	{
+	    if ( mint == months[mon] )
+	    {
+		break;
+	    }
+	}
+	if ( mon == 12 )
+	{ // Invalid month
+	    return ( APR_EBADDATE );
+	}
+	ds.tm_mon = mon;
+
+	for ( i = 4; date[i] == ' '; i++ );
+
+	if ( date[i + 1] == ' ' )
+	{ // one digit day
+	    ds.tm_mday = date[i] - '0';
+	    i += 2;
+	}
+	else
+	{
+	    ds.tm_mday = ((date[i] - '0') * 10) + (date[i + 1] - '0');
+	    i += 3;
+	}
+
+        ds.tm_year = ((date[i] - '0') * 10 + (date[i + 1] - '0') - 19) * 100;
+
+        if ( ds.tm_year < 0 )
+	{
+            return ( APR_EBADDATE );
+	}
+
+        ds.tm_year += ((date[i + 2] - '0') * 10) + (date[i + 3] - '0');
+
+	i += 5;
+        timstr = date + i;
+	
+        TIMEPARSE_STD(ds, timstr);
+	offs = i + 8;
+
+	if ( date[offs] == '.' )
+	{
+	    offs++;
+	    i = 0;
+	    for ( ; apr_isdigit(date[offs]); offs++, i++ )
+	    {
+		if ( i >= 6 )
+		{
+		    return ( APR_EBADDATE );
+		}
+		usec += (date[offs] - '0') * mul;
+		mul /= 10;
+	    }
+	}
+    }
     else
     {
         return ( APR_EBADDATE );
@@ -1311,7 +1373,10 @@ apr_status_t nx_date_parse_cisco(apr_time_t  *t,
         return ( APR_EBADDATE );
     }
 
-    ds.tm_year = 70; // 1970
+    if ( ds.tm_year == 0 )
+    {
+	ds.tm_year = 70; // 1970
+    }
 
 #ifdef HAVE_STRUCT_TM_TM_GMTOFF
     ds.tm_gmtoff = gmtoff * 60;

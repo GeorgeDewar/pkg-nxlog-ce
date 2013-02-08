@@ -49,7 +49,7 @@ LIBS="$LIBS $APR_LIBS"
 APR_INCLUDES=`$apr_config --includes`
 INCLUDES="$INCLUDES $APR_INCLUDES"
 AC_CHECK_LIB([apr-1], [apr_socket_create], [HAVELIBAPR=1], [AC_MSG_ERROR([libapr-1 not found])])
-AC_CHECK_FUNCS(apr_pollset_wakeup apr_sockaddr_ip_getbuf apr_file_sync apr_file_link, [], [AC_MSG_WARN([libapr-1 1.4.0 or greater is recommended])])
+AC_CHECK_FUNCS(apr_pollset_wakeup apr_sockaddr_ip_getbuf apr_file_sync apr_file_link apr_pool_create_unmanaged_ex, [], [AC_MSG_WARN([libapr-1 1.4.0 or greater is recommended])])
 
 # DBI
 AC_CHECK_LIB([dbi], [dbi_initialize], [LIBDBI="-ldbi"], [AC_MSG_WARN([libdbi not found - not building dbi modules])])
@@ -259,6 +259,12 @@ AC_C_ADD_FLAG(wcast_align, -Wcast-align)
 AC_C_ADD_FLAG(wwrite_strings, -Wwrite-strings)
 AC_C_ADD_FLAG(wmissing_noreturn, -Wmissing-noreturn)
 AC_C_ADD_FLAG(wmissing_format_attribute, -Wmissing-format-attribute)
+AC_C_ADD_FLAG(wformat, -Wformat)
+AC_C_ADD_FLAG(wextra, -Wextra)
+AC_C_ADD_FLAG(werror_format_security, -Werror=format-security)
+#TODO: this fails with pm_pattern because the xcc generated code has such an error
+#AC_C_ADD_FLAG(werror_uninitialized, -Werror=uninitialized)
+
 AC_C_ADD_FLAG(rdynamic, -rdynamic)
 AC_SYS_LARGEFILE
 
