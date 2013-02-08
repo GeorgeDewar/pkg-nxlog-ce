@@ -5,5 +5,4 @@ im_mseventlog_la_LDFLAGS	= -module -no-undefined -avoid-version
 im_mseventlog_la_LIBADD		= $(LIBEVENTLOG) $(LIBNX)
 im_mseventlogdir		= $(NX_MODULEDIR)/input
 endif
-EXTRA_DIST			= im_mseventlog-fields.xml
-
+dist_pkgdata_DATA		= im_mseventlog-fields.xml

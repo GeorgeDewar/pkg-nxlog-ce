@@ -43,7 +43,9 @@ static int yajl_parse_null_cb(void *data)
 
     return ( 1 );
 }
-  
+ 
+
+
 static int yajl_parse_boolean_cb(void *data, int boolval)  
 {
     nx_json_parser_ctx_t *ctx;
@@ -87,6 +89,8 @@ static int yajl_parse_boolean_cb(void *data, int boolval)
     return ( 1 );
 }  
 
+
+
 static int yajl_parse_integer_cb(void *data, long long integerval)
 {
     nx_json_parser_ctx_t *ctx;
@@ -117,6 +121,8 @@ static int yajl_parse_integer_cb(void *data, long long integerval)
     return ( 1 );
 }
 
+
+
 static int yajl_parse_double_cb(void *data, double doubleval)
 {
     nx_json_parser_ctx_t *ctx;
@@ -146,6 +152,7 @@ static int yajl_parse_double_cb(void *data, double doubleval)
 
     return ( 1 );
 }
+
 
 
 static int yajl_parse_number_cb(void *data, const char *s, size_t l)  
@@ -185,8 +192,10 @@ static int yajl_parse_number_cb(void *data, const char *s, size_t l)
     ctx->key = NULL;
 
     return ( 1 );
-}  
-  
+}
+
+
+
 static int yajl_parse_string_cb(void *data, const unsigned char *stringval,  
 				size_t stringlen)  
 {  
@@ -210,10 +219,12 @@ static int yajl_parse_string_cb(void *data, const unsigned char *stringval,
 	throw_msg("map key name not found");
     }
 
-    val = nx_value_new(NX_VALUE_TYPE_STRING);
-    val->string = nx_string_create((const char *) stringval, (int) stringlen);
-
-    nx_logdata_set_field_value(ctx->logdata, ctx->key, val);
+    if ( strcmp(ctx->key, "raw_event") != 0 )
+    { // setting raw event would cause a free() on our buffer being parsed, ignore it
+	val = nx_value_new(NX_VALUE_TYPE_STRING);
+	val->string = nx_string_create((const char *) stringval, (int) stringlen);
+    	nx_logdata_set_field_value(ctx->logdata, ctx->key, val);
+    }
 
     free(ctx->key);
     ctx->key = NULL;
@@ -255,7 +266,9 @@ static int yajl_parse_map_key_cb(void *data, const unsigned char *stringval,
 
     return ( 1 );
 }  
-  
+
+
+
 static int yajl_parse_start_map_cb(void *data)  
 {  
     nx_json_parser_ctx_t *ctx;
@@ -280,7 +293,9 @@ static int yajl_parse_start_map_cb(void *data)
     }
 
     return ( 1 );
-}  
+}
+
+
 
 static int yajl_parse_end_map_cb(void *data)  
 {  
@@ -347,7 +362,9 @@ static int yajl_parse_start_array_cb(void *data)
     nx_string_append(ctx->tmpstr, "[", 1);
 
     return ( 1 );
-}  
+}
+
+
 
 static int yajl_parse_end_array_cb(void *data)  
 {  
@@ -388,7 +405,9 @@ static int yajl_parse_end_array_cb(void *data)
     }
 
     return ( 1 );
-}  
+}
+
+
   
 static yajl_callbacks callbacks = {  
     yajl_parse_null_cb,  

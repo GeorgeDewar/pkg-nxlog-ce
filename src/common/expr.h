@@ -33,6 +33,14 @@ typedef enum nx_expr_type_t
     NX_EXPR_TYPE_FUNCTION,
 } nx_expr_type_t;
 
+
+typedef enum nx_expr_regexp_modifier_t
+{
+    NX_EXPR_REGEXP_MODIFIER_NONE = 0,
+    NX_EXPR_REGEXP_MODIFIER_MATCH_GLOBAL 	 = 1 << 1,
+} nx_expr_regexp_modifier_t;
+
+
 typedef struct nx_expr_t nx_expr_t;
 typedef struct nx_expr_parser_t nx_expr_parser_t;
 typedef struct nx_expr_statement_t nx_expr_statement_t;
@@ -207,7 +215,10 @@ nx_expr_t *nx_expr_new_field(nx_expr_parser_t *parser, const char *str);
 nx_expr_t *nx_expr_new_captured(nx_expr_parser_t *parser, const char *str);
 nx_expr_t *nx_expr_new_string(nx_expr_parser_t *parser, const char *str);
 nx_expr_t *nx_expr_new_undef(nx_expr_parser_t *parser);
-nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser, const char *str);
+nx_expr_t *nx_expr_new_regexp(nx_expr_parser_t *parser,
+			      const char *str,
+			      const char *replacement,
+			      const char *modifiers);
 nx_expr_t *nx_expr_new_boolean(nx_expr_parser_t *parser, boolean value);
 nx_expr_t *nx_expr_new_integer(nx_expr_parser_t *parser, const char *str);
 nx_expr_t *nx_expr_new_datetime(nx_expr_parser_t *parser, const char *str);

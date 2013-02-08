@@ -146,20 +146,7 @@ static void im_file_eval_filename(nx_module_t *module)
     imconf = (nx_im_file_conf_t *) module->config;
 
     ASSERT(imconf->filename_expr != NULL);
-
-    if ( imconf->filename_expr->type == NX_EXPR_TYPE_VALUE )
-    {
-	ASSERT(imconf->filename_expr->value.defined == TRUE);
-	if ( imconf->filename_expr->value.type != NX_VALUE_TYPE_STRING )
-	{
-	    throw_msg("%s File directive evaluated to '%', string type required",
-		      module->name, nx_value_type_to_string(imconf->filename_expr->value.type));
-	}
-
-	apr_cpystrn(imconf->filename, imconf->filename_expr->value.string->buf,
-		    sizeof(imconf->filename));
-	return;
-    }
+    ASSERT(imconf->filename_expr->type != NX_EXPR_TYPE_VALUE);
 
     ctx.module = module;
     ctx.logdata = NULL;
@@ -218,7 +205,7 @@ static void im_file_input_get_filepos(nx_module_t *module, nx_im_file_input_t *f
  */
 
 static boolean im_file_input_open(nx_module_t *module,
-				  nx_im_file_input_t *file,
+				  nx_im_file_input_t **file,
 				  apr_finfo_t *finfo,
 				  boolean readfromlast,
 				  boolean existed)
@@ -230,120 +217,129 @@ static boolean im_file_input_open(nx_module_t *module,
     nx_exception_t e;
 
     ASSERT(file != NULL);
+    ASSERT(*file != NULL);
 
     imconf = (nx_im_file_conf_t *) module->config;
 
-    if ( (file->blacklist_until != 0) && (file->blacklist_until > apr_time_now()) )
+    if ( ((*file)->blacklist_until != 0) && ((*file)->blacklist_until > apr_time_now()) )
     {
-	log_debug("ignoring blacklisted file %s until blacklisting expires", file->name);
+	log_debug("ignoring blacklisted file %s until blacklisting expires", (*file)->name);
 
 	return ( FALSE );
     }
 
     try
     {
-	if ( file->input == NULL )
+	if ( (*file)->input == NULL )
 	{
-	    log_debug("opening %s", file->name);
-	    pool = nx_pool_create_child(file->pool);
-	    file->input = nx_module_input_new(module, pool);
-	    NX_DLIST_INSERT_TAIL(imconf->open_files, file, link);
+	    log_debug("opening %s", (*file)->name);
+	    pool = nx_pool_create_child((*file)->pool);
+	    (*file)->input = nx_module_input_new(module, pool);
+	    NX_DLIST_INSERT_TAIL(imconf->open_files, *file, link);
 	    (imconf->num_open_files)++;
 	
-	    nx_module_input_data_set(file->input, "filename", apr_pstrdup(pool, file->name));
-	    CHECKERR_MSG(apr_file_open(&(file->input->desc.f), file->name, APR_READ,
-				       APR_OS_DEFAULT, pool), "failed to open %s", file->name);
-	    file->input->desc_type = APR_POLL_FILE;
-	    file->input->inputfunc = imconf->inputfunc;
+	    nx_module_input_data_set((*file)->input, "filename", apr_pstrdup(pool, (*file)->name));
+	    CHECKERR_MSG(apr_file_open(&((*file)->input->desc.f), (*file)->name, APR_READ,
+				       APR_OS_DEFAULT, pool), "failed to open %s", (*file)->name);
+	    (*file)->input->desc_type = APR_POLL_FILE;
+	    (*file)->input->inputfunc = imconf->inputfunc;
 
 	    if ( finfo == NULL )
 	    {
 		CHECKERR_MSG(apr_file_info_get(&file_info, APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE,
-					       file->input->desc.f), 
-			     "failed to query file information for %s", file->name);
-		file->inode = file_info.inode;
-		file->mtime = file_info.mtime;
-		file->size = file_info.size;
+					       (*file)->input->desc.f), 
+			     "failed to query file information for %s", (*file)->name);
+		(*file)->inode = file_info.inode;
+		(*file)->mtime = file_info.mtime;
+		(*file)->size = file_info.size;
 	    }
 	    else
 	    {
-		file->inode = finfo->inode;
-		file->mtime = finfo->mtime;
-		file->size = finfo->size;
+		(*file)->inode = finfo->inode;
+		(*file)->mtime = finfo->mtime;
+		(*file)->size = finfo->size;
 	    }
 
-	    if ( file->filepos > 0 )
+	    if ( (*file)->filepos > 0 )
 	    {
-		CHECKERR_MSG(apr_file_seek(file->input->desc.f, APR_SET, &(file->filepos)),
+		CHECKERR_MSG(apr_file_seek((*file)->input->desc.f, APR_SET, &((*file)->filepos)),
 			     "failed to seek to file position %lu in file %s",
-			     file->filepos, file->name);
+			     (*file)->filepos, (*file)->name);
 	    }
 	    else if ( readfromlast == TRUE )
 	    {
 		apr_off_t fileend = 0;
 		
-		CHECKERR_MSG(apr_file_seek(file->input->desc.f, APR_END, &fileend),
-			     "failed to seek to end of input in file %s", file->name);
-		file->filepos = fileend;
+		CHECKERR_MSG(apr_file_seek((*file)->input->desc.f, APR_END, &fileend),
+			     "failed to seek to end of input in file %s", (*file)->name);
+		(*file)->filepos = fileend;
 	    }
-	    file->blacklist_until = 0;
-	    file->blacklist_interval = 0;
+	    (*file)->blacklist_until = 0;
+	    (*file)->blacklist_interval = 0;
 	    opened = TRUE;
 	}
 	
-	if ( (file->filepos > 0) && ((file->filepos > file->size) ||
-				     ((finfo != NULL) && (file->filepos > finfo->size))) )
+	if ( ((*file)->filepos > 0) && (((*file)->filepos > (*file)->size) ||
+				     ((finfo != NULL) && ((*file)->filepos > finfo->size))) )
 	{ // truncated, seek back to start
-	    log_info("input file %s was truncated, restarting from beginning", file->name);
-	    file->filepos = 0;
+	    log_info("input file %s was truncated, restarting from beginning", (*file)->name);
+	    (*file)->filepos = 0;
 	    
-	    CHECKERR_MSG(apr_file_seek(file->input->desc.f, APR_SET, &(file->filepos)),
-			 "failed to seek to beginning of file %s", file->name);
+	    CHECKERR_MSG(apr_file_seek((*file)->input->desc.f, APR_SET, &((*file)->filepos)),
+			 "failed to seek to beginning of file %s", (*file)->name);
 	}
 	
-	file->num_eof = 0;
+	(*file)->num_eof = 0;
 
 	if ( opened == TRUE )
 	{
 	    if ( imconf->num_open_files > IM_FILE_MAX_OPEN_FILES )
 	    {
 		log_debug("maximum number (%d) of files open, closing current", imconf->num_open_files);
-		im_file_input_close(module, file);
+		im_file_input_close(module, *file);
 	    }
 	    else
 	    {
-		log_debug("file %s opened", file->name);
+		log_debug("file %s opened", (*file)->name);
 	    }
 	}
 	else
 	{
-	    log_debug("file %s already opened", file->name);
+	    log_debug("file %s already opened", (*file)->name);
 	}
 
-	ASSERT(file->inode != 0);
-	ASSERT(file->mtime != 0);
+	ASSERT((*file)->inode != 0);
+	ASSERT((*file)->mtime != 0);
     }
     catch(e)
     {
 	if ( APR_STATUS_IS_ENOENT(e.code) )
 	{
-	    if ( existed == TRUE )
+	    if ( (existed == TRUE) || (imconf->filename_const == FALSE) )
 	    {
-		log_warn("input file was deleted: %s", file->name);
-		apr_hash_set(imconf->files, file->name, APR_HASH_KEY_STRING, NULL);
-		im_file_input_close(module, file);
-		apr_pool_destroy(file->pool);
+		if ( existed == TRUE )
+		{
+		    log_warn("input file was deleted: %s", (*file)->name);
+		}
+		else
+		{
+		    log_warn("input file does not exist: %s", (*file)->name);
+		}
+		apr_hash_set(imconf->files, (*file)->name, APR_HASH_KEY_STRING, NULL);
+		im_file_input_close(module, *file);
+		apr_pool_destroy((*file)->pool);
+		*file = NULL;
 	    }
 	    else
 	    {
-		log_warn("input file does not exist: %s", file->name);
-		im_file_input_blacklist(module, file);
+		log_warn("input file does not exist: %s", (*file)->name);
+		im_file_input_blacklist(module, *file);
 	    }
 	}
 	else
 	{
 	    log_exception(e);
-	    im_file_input_blacklist(module, file);
+	    im_file_input_blacklist(module, *file);
 	}
     }
 
@@ -407,7 +403,7 @@ static boolean im_file_has_unread_data(nx_module_t *module)
 	    log_debug("file '%s' has unread data (%u > %u)", fname,
 		      (unsigned int) file->new_size, (unsigned int) file->filepos);
 	    im_file_input_check_close(module);
-	    if ( im_file_input_open(module, file, NULL, FALSE, TRUE) == TRUE )
+	    if ( im_file_input_open(module, &file, NULL, FALSE, TRUE) == TRUE )
 	    {
 		retval = TRUE;
 		break;
@@ -428,7 +424,7 @@ static boolean im_file_check_files(nx_module_t *module)
     const char *fname;
     boolean volatile retval = FALSE;
     nx_exception_t e;
-    apr_hash_index_t *idx;
+    apr_hash_index_t * volatile idx;
     apr_ssize_t keylen;
     nx_im_file_input_t *file;
 
@@ -512,7 +508,7 @@ static boolean im_file_check_files(nx_module_t *module)
 	    if ( needopen == TRUE )
 	    {
 		im_file_input_check_close(module);
-		im_file_input_open(module, file, &finfo, FALSE, TRUE);
+		im_file_input_open(module, &file, &finfo, FALSE, TRUE);
 	    }
 	}
 	catch(e)
@@ -587,8 +583,11 @@ static boolean im_file_add_file(nx_module_t *module, const char *fname, boolean 
 	file->name = apr_pstrdup(pool, fname);
 
 	im_file_input_check_close(module);
-	retval = im_file_input_open(module, file, NULL, readfromlast, existed);
-	apr_hash_set(imconf->files, file->name, APR_HASH_KEY_STRING, (void *) file);
+	retval = im_file_input_open(module, &file, NULL, readfromlast, existed);
+	if ( file != NULL )
+	{
+	    apr_hash_set(imconf->files, file->name, APR_HASH_KEY_STRING, (void *) file);
+	}
     }
     else
     {
@@ -709,6 +708,10 @@ static boolean im_file_check_new(nx_module_t *module, boolean readfromlast)
 
     try
     {
+	if ( imconf->filename_const == FALSE )
+	{
+	    im_file_eval_filename(module);
+	}
 	if ( apr_fnmatch_test(imconf->filename) != 0 )
 	{
 	    char *idx;
@@ -921,8 +924,8 @@ static void im_file_read(nx_module_t *module)
 
 static void im_file_config(nx_module_t *module)
 {
-    const nx_directive_t *curr;
-    nx_im_file_conf_t *imconf;
+    const nx_directive_t * volatile curr;
+    nx_im_file_conf_t * volatile imconf;
     nx_exception_t e;
 
     ASSERT(module->directives != NULL);
@@ -952,6 +955,18 @@ static void im_file_config(nx_module_t *module)
 		{
 		    throw_msg("string type required in expression, found '%s'",
 			      nx_value_type_to_string(imconf->filename_expr->rettype));
+		}
+		if ( imconf->filename_expr->type == NX_EXPR_TYPE_VALUE )
+		{
+		    ASSERT(imconf->filename_expr->value.defined == TRUE);
+		    if ( imconf->filename_expr->value.type != NX_VALUE_TYPE_STRING )
+		    {
+			throw_msg("%s File directive evaluated to '%', string type required",
+				  module->name, nx_value_type_to_string(imconf->filename_expr->value.type));
+		    }
+		    apr_cpystrn(imconf->filename, imconf->filename_expr->value.string->buf,
+				sizeof(imconf->filename));
+		    imconf->filename_const = TRUE;
 		}
 	    }
 	    catch(e)
@@ -1038,7 +1053,6 @@ static void im_file_start(nx_module_t *module)
 
     imconf = (nx_im_file_conf_t *) module->config;
   
-    im_file_eval_filename(module);
     im_file_check_new(module, imconf->readfromlast);
     im_file_add_event(module, FALSE);
 }

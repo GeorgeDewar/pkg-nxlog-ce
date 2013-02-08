@@ -15,6 +15,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -36,7 +37,8 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 subdir = src/modules/input/internal
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(dist_pkgdata_DATA) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/macros.m4 \
 	$(top_srcdir)/configure.in
@@ -67,7 +69,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(im_internaldir)"
+am__installdirs = "$(DESTDIR)$(im_internaldir)" \
+	"$(DESTDIR)$(pkgdatadir)"
 LTLIBRARIES = $(im_internal_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 im_internal_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -91,6 +94,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(im_internal_la_SOURCES)
 DIST_SOURCES = $(im_internal_la_SOURCES)
+DATA = $(dist_pkgdata_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -246,7 +250,7 @@ im_internal_la_SOURCES = im_internal.c im_internal.h
 im_internal_la_LDFLAGS = -module -no-undefined -avoid-version
 im_internal_la_LIBADD = $(LIBNX)
 im_internaldir = $(NX_MODULEDIR)/input
-EXTRA_DIST = im_internal-fields.xml
+dist_pkgdata_DATA = im_internal-fields.xml
 all: all-am
 
 .SUFFIXES:
@@ -349,6 +353,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
+	@list='$(dist_pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgdatadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgdatadir)" || exit $$?; \
+	done
+
+uninstall-dist_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(pkgdatadir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pkgdatadir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -434,9 +458,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(im_internaldir)"; do \
+	for dir in "$(DESTDIR)$(im_internaldir)" "$(DESTDIR)$(pkgdatadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -489,7 +513,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-im_internalLTLIBRARIES
+install-data-am: install-dist_pkgdataDATA \
+	install-im_internalLTLIBRARIES
 
 install-dvi: install-dvi-am
 
@@ -535,7 +560,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-im_internalLTLIBRARIES
+uninstall-am: uninstall-dist_pkgdataDATA \
+	uninstall-im_internalLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -543,15 +569,17 @@ uninstall-am: uninstall-im_internalLTLIBRARIES
 	clean-im_internalLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-im_internalLTLIBRARIES install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-im_internalLTLIBRARIES
+	install install-am install-data install-data-am \
+	install-dist_pkgdataDATA install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-im_internalLTLIBRARIES install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-dist_pkgdataDATA \
+	uninstall-im_internalLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

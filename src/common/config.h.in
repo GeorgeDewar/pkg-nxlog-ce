@@ -9,6 +9,9 @@
 /* Define to 1 if you have the `apr_pollset_wakeup' function. */
 #undef HAVE_APR_POLLSET_WAKEUP
 
+/* Define to 1 if you have the `apr_pool_create_unmanaged_ex' function. */
+#undef HAVE_APR_POOL_CREATE_UNMANAGED_EX
+
 /* Define to 1 if you have the `apr_sockaddr_ip_getbuf' function. */
 #undef HAVE_APR_SOCKADDR_IP_GETBUF
 

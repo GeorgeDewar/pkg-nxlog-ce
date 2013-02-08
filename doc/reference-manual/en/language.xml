@@ -498,11 +498,21 @@
 		       </simpara>
 		     </listitem>
 		   </varlistentry>
-
+	   
 		 </variablelist>
 		 <example>
 		   <title>Regular expression based string matching</title>
 		   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-lang_binop_regmatch.xml" />
+		 </example>
+
+		 Regexp based string substitution is also supported with the 
+		 <replaceable>s///</replaceable> operator. The <replaceable>/g</replaceable>
+		 modifier can be used for global replacement.
+		 Variables and captured substring references cannot be used inside the reqular expression
+		 or the regexp substitution operator and will be treated literally as is.
+		 <example>
+		   <title>Replace whitespace occurences</title>
+		   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-lang_binop_regmatch_replace.xml" />
 		 </example>
 	       </para>
 	     </listitem>
@@ -548,6 +558,7 @@
 		     </listitem>
 		   </varlistentry>
 		 </variablelist>
+		 The <replaceable>s///</replaceable> substitution operator is also supported.
 		 <example>
 		   <title>Regular expression based string matching</title>
 		   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-lang_binop_notregmatch.xml" />

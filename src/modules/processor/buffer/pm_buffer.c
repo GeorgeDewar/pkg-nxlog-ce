@@ -473,7 +473,7 @@ static void pm_buffer_start(nx_module_t *module)
     size_t len;
     size_t namelen;
     char fname[1024];
-    apr_pool_t *pool;
+    apr_pool_t * volatile pool;
     char filename[APR_PATH_MAX];
 
     ASSERT(module->config != NULL);

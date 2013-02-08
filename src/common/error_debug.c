@@ -240,6 +240,7 @@ void nx_log(apr_status_t	code,
 	    log.module = logmodule;
 	    log.errorcode = code;
 
+	    // FIXME: race condition, module list is modified in nx_ctx_shutdown_modules
 	    for ( module = NX_DLIST_FIRST(ctx->modules);
 		  module != NULL;
 		  module = NX_DLIST_NEXT(module, link) )
@@ -291,9 +292,14 @@ void nx_log(apr_status_t	code,
 		{
 		    break;
 		}
+		if ( (message[i] == '\r') && (message[i + 1] == '\n') )
+		{
+		    message[i] = ';';
+		    message[i + 1] = ' ';
+		}
 		if ( (message[i] == '\n') || (message[i] == '\r') )
 		{
-		    message[i] = ' ';
+		    message[i] = ';';
 		}
 	    }
     

@@ -20,7 +20,13 @@
 
 #define NX_POLL_TIMEOUT (APR_USEC_PER_SEC / 20)
 //#define NX_POLL_TIMEOUT (APR_USEC_PER_SEC * 10)
-#define NX_POLLSET_NUM	100
+
+#ifdef WIN32
+// windows 2003 gives an invalid argument in apr_pollset_create if this is too large
+# define NX_POLLSET_NUM	500
+#else
+# define NX_POLLSET_NUM	10000
+#endif
 
 
 typedef struct nxlog_t
@@ -32,7 +38,7 @@ typedef struct nxlog_t
     const char		*chroot; 	///< chroot to this directory
     boolean		foreground; 	///< TRUE if should not daemonize
     boolean		daemonized; 	///< TRUE if daemonized
-    boolean		reload_request;	///< TRUE if nxlog is to be reloaded
+    apr_uint32_t	reload_request;	///< non-zero if nxlog is to be reloaded
     boolean		terminate_request;
     boolean		terminating;
     apr_time_t		started;	///< Time of start TODO: store this in UTC
@@ -46,11 +52,11 @@ typedef struct nxlog_t
     unsigned int	num_worker_thread;
     apr_thread_t	**worker_threads;
     apr_thread_cond_t	*worker_cond;
-    apr_uint32_t	*worker_threads_running; ///< boolean
+    apr_uint32_t	*worker_threads_running; ///< non-zero if running (array)
     apr_thread_cond_t	*event_cond;
     apr_thread_t	*event_thread;
 
-    apr_uint32_t	event_thread_running; ///< boolean
+    apr_uint32_t	event_thread_running; ///< non-zero if running
     apr_thread_mutex_t	*mutex;
     nx_ctx_t		*ctx;		///< configuration context
     apr_thread_mutex_t	**openssl_locks;

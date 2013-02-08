@@ -213,8 +213,8 @@ static void om_dbi_write(nx_module_t *module)
 {
     nx_om_dbi_conf_t *omconf;
     nx_logdata_t *logdata = NULL;
-    char *sql;
-    dbi_result result;
+    char * volatile sql;
+    volatile dbi_result result;
     nx_exception_t e;
 
     log_debug("om_dbi_write");

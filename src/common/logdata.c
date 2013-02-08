@@ -147,11 +147,11 @@ void nx_logdata_append_field_value(nx_logdata_t *logdata,
 				   const char *key,
 				   nx_value_t *value)
 {
+    nx_logdata_field_t *field;
+
     ASSERT(logdata != NULL);
     ASSERT(key != NULL);
     ASSERT(value != NULL);
-
-    nx_logdata_field_t *field;
 
     field = malloc(sizeof(nx_logdata_field_t));
     ASSERT(field != NULL);
@@ -192,7 +192,9 @@ void nx_logdata_set_field_value(nx_logdata_t *logdata,
 		}
 		else
 		{
-		    logdata->raw_event = nx_string_new_size(10);
+		    nx_value_free(value);
+		    throw_msg("raw_event must be defined and STRING type, got %s",
+			      nx_value_type_to_string(value->type));
 		}
 	    }
 	    return;
@@ -252,6 +254,7 @@ void nx_logdata_rename_field(nx_logdata_t *logdata,
 			     const char *new)
 {
     nx_logdata_field_t *field;
+    nx_logdata_field_t *exists = NULL;
 
     ASSERT(logdata != NULL);
     ASSERT(old != NULL);
@@ -266,10 +269,34 @@ void nx_logdata_rename_field(nx_logdata_t *logdata,
 	  field != NULL;
 	  field = NX_DLIST_NEXT(field, link) )
     {
+	if ( strcasecmp(field->key, new) == 0 )
+	{
+	    exists = field;
+	    break;
+	}
+    }
+
+    for ( field = NX_DLIST_FIRST(&(logdata->fields));
+	  field != NULL;
+	  field = NX_DLIST_NEXT(field, link) )
+    {
 	if ( strcasecmp(field->key, old) == 0 )
 	{
+	    if ( exists != NULL )
+	    { // remove the destination field if it already exists
+		if ( strcmp(new, "raw_event") == 0 )
+		{
+		    if ( field->value->type != NX_VALUE_TYPE_STRING )
+		    {
+			throw_msg("string type required for 'raw_event'");
+		    }
+		    logdata->raw_event = field->value->string;
+		}
+		NX_DLIST_REMOVE(&(logdata->fields), exists, link);
+	    }
 	    free(field->key);
 	    field->key = strdup(new);
+	    
 	    return;
 	}
     }
@@ -328,7 +355,9 @@ nx_logdata_field_t *nx_logdata_get_field(const nx_logdata_t *logdata,
 }
 
 
-
+/**
+ * Return TRUE if the field was deleted, FALSE otherwise
+ */
 boolean nx_logdata_delete_field(nx_logdata_t *logdata,
 				const char *key)
 {
@@ -343,11 +372,21 @@ boolean nx_logdata_delete_field(nx_logdata_t *logdata,
     {
 	if ( strcmp(field->key, key) == 0 )
 	{
-	    NX_DLIST_REMOVE(&(logdata->fields), field, link);
-
 	    if ( strcmp(field->key, "raw_event") == 0 )
 	    {
-		logdata->raw_event = NULL;
+		ASSERT((field->value->defined == TRUE) && 
+		       (field->value->type == NX_VALUE_TYPE_STRING));
+		ASSERT(logdata->raw_event != NULL);
+		if ( logdata->raw_event->len == 0 )
+		{
+		    return ( FALSE );
+		}
+		nx_string_set(logdata->raw_event, "", 0);
+	    }
+	    else
+	    {
+		NX_DLIST_REMOVE(&(logdata->fields), field, link);
+		nx_logdata_field_free(field);
 	    }
 	    return ( TRUE );
 	}

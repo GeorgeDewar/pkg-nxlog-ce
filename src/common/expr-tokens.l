@@ -46,6 +46,9 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 %x DOUBLEQUOTE
 %x SINGLEQUOTE
 %x REGEXPQUOTE
+%x REGEXPREPLACEQUOTE
+%x REGEXPREPLACEQUOTE2
+%x REGEXPREPLACEMODIFIERS
 %x REGEXP
 
 %option case-insensitive
@@ -76,7 +79,8 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 
 <REGEXP>{
     [ \t]+		{  }
-    [/]			{ log_debug("regexpquote start"); yylval->string = NULL; BEGIN(REGEXPQUOTE); }
+    "s/"		{ log_debug("regexpreplacequote start"); yylval->regexp[0] = NULL; yylval->regexp[1] = NULL; yylval->regexp[2] = NULL; BEGIN(REGEXPREPLACEQUOTE); }
+    [/]			{ log_debug("regexpquote start"); yylval->regexp[0] = NULL; yylval->regexp[1] = NULL; yylval->regexp[2] = NULL; BEGIN(REGEXPQUOTE); }
 }
 
 <REGEXPQUOTE>{
@@ -89,6 +93,36 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
                         }
 }
 
+<REGEXPREPLACEQUOTE>{
+    "\\/"		{ log_debug("regexpreplace: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
+    [^/]+		{ log_debug("regexpreplace: append"); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
+    "/"			{
+			  log_debug("regexpreplacequote2 begin"); 
+			  BEGIN(REGEXPREPLACEQUOTE2);
+                        }
+}
+
+<REGEXPREPLACEQUOTE2>{
+    "\\/"		{ log_debug("regexpreplace: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
+    [^/]+		{ log_debug("regexpreplace: append"); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
+    "/"			{
+			  log_debug("regexpreplacequote2 end"); 
+			  if ( yylval->regexp[1] == NULL ) yylval->regexp[1] = strdup("");
+			  BEGIN(REGEXPREPLACEMODIFIERS);
+                        }
+}
+
+<REGEXPREPLACEMODIFIERS>{
+    [g]			{
+			  log_debug("regexpreplacemodifiers begin [%s]", yytext); 
+			  nx_expr_parser_append_string(&(yylval->regexp[2]), yytext);
+                        }
+    [^g]		{
+			  log_debug("regexpreplacemodifiers end"); 
+			  BEGIN(INITIAL);
+			  return ( TOKEN_REGEXPREPLACE );
+                        }
+}
 
 <DOUBLEQUOTE>{
      [^\"]+          { nx_expr_parser_append_string(&(yylval->string), yytext); }
@@ -138,7 +172,7 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 [[:blank:]]+		/* ignore blanks */
 {COMMENT}		/* ignore comment */
 "\n"			PARSER->linepos = 0; (PARSER->linenum)++; /* reset column counter on new line */
-.			nx_expr_parser_error(PARSER, yyscanner, "invalid character: '%c'", yytext[0]);
+.			nx_expr_parser_error_fmt(PARSER, yyscanner, "invalid character: '%c'", yytext[0]);
 
 <*>.			nx_expr_parser_error(PARSER, yyscanner, "syntax error");
 

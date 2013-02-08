@@ -378,17 +378,67 @@ AxisFault
    <section id="sources_device">
      <title>Devices</title>
      <para>
-       This section deals with special devices such as routers, switches and appliances.
+       This section deals with special devices such as routers, firewalls, switches and other
+       appliances.
      </para>
 
-     <section id="sources_devince_cisco">
+     <section id="sources_device_cisco">
        <title>Cisco</title>
        <para>
-	 See <link linkend="xm_syslog">xm_syslog</link>. FIXME
+	 Cisco devices can be instructed to log over syslog. Unfortunately the lousy syslog RFC
+	 standards compliance and the different formats of cisco devices make it hard to have a
+	 universal cisco syslog parser. Some examples follow.
        </para>
+
+       <example>
+	 <title>Cisco Secure Access Control Server</title>
+	 <para>
+	   Refer to the <ulink url="http://www.cisco.com/en/US/docs/net_mgmt/cisco_secure_access_control_server_for_windows/4.1/configuration/guide/syslog.html#wp999729">Configuring Syslog Logging</ulink> 
+	   section in the Cisco Configuration Guide.
+	   An example syslog record from a Cisco ACS device looks like the following:
+	   <programlisting><![CDATA[<38>Oct 16 21:01:29 10.0.1.1 CisACS_02_FailedAuth 1k1fg93nk 1 0 Message-Type=Authen failed,User-Name=John,NAS-IP-Address=10.0.1.2,AAA Server=acs01]]></programlisting>
+	   The following configuration file instructs nxlog to accept syslog messages on UDP port 
+	   1514. The payload is parsed as syslog and then the ACS specific fields are
+	   extracted. The output is written to a file in JSON format.
+	   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/config-example-cisco_acs.xml" />
+	 </para>
+       </example>
+
+       <example>
+	 <title>Cisco PIX and Cisco ASA</title>
+	 <para>
+	   The PIX  <ulink url="http://www.cisco.com/en/US/docs/security/pix/pix63/system/message/pixemint.html#wp1020170">Log Message Format</ulink> 
+	   is described in the <replaceable>Cisco PIX Firewall System Log Messages</replaceable> 
+	   document.
+	   An example syslog record from a Cisco ASA device looks like the following:
+	   <programlisting><![CDATA[<38>Oct 12 2004 22:45:15 : %ASA-2-106006: Deny inbound UDP from 10.0.1.2/137 to 10.0.1.1/137 on interface inside]]></programlisting>
+	   The following configuration file instructs nxlog to accept syslog messages on UDP port 
+	   1514. The payload is parsed as syslog and then the ASA/PIX specific fields are
+	   extracted. The output is written to a file in JSON format.
+	   <note>
+	     <para>
+	       The <ulink url="http://www.cisco.com/en/US/docs/security/pix/pix63/system/message/pixemint.html#wp1040486">variables</ulink>
+	       can be extracted into fields with further parsing rules based on <replaceable>CiscoMessageNumber</replaceable>.
+	       See the <ulink url="http://www.cisco.com/en/US/docs/security/asa/asa72/system/message/logmsgs.html">System Log Messages</ulink>
+	       for a complete list.
+	       If you intend to create parsing rules for a lot of message types, consider using
+	       the <link linkend="pm_pattern">pm_pattern</link> module.
+	     </para>
+	   </note>
+	   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/config-example-cisco_pix_asa.xml" />
+	   
+	 </para>
+       </example>
+
      </section>
 
-<!-- FIXME: checkpoint etc -->
+     <section id="sources_device_checkpoint">
+       <title>Checkpoint</title>
+       <para>
+	 The im_checkpoint module can collect logs from Checkpoint devices over the OPSEC LEA protocol.
+	 (Note: available in the Enterprise Edition only).
+       </para>
+     </section>
 
    </section>
 

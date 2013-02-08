@@ -290,9 +290,9 @@ static boolean patterndb_regexp_match(const char *subject,
 				      const char *name)
 {
     int result;
-    nx_pattern_capturedfield_t *capturedfield;
+    nx_pattern_capturedfield_t * volatile capturedfield;
     int ovector[NX_PATTERNDB_MAX_CAPTURED_FIELDS * 3];
-    int i;
+    volatile int i;
     nx_value_t *value;
     nx_logdata_field_t *setfield;
     nx_exception_t e;
@@ -306,6 +306,10 @@ static boolean patterndb_regexp_match(const char *subject,
 	{
 	    case PCRE_ERROR_NOMATCH:
 		break;
+	    case PCRE_ERROR_PARTIAL:
+		// The subject string did not match, but it did match partially.
+		// Treat the same as NOMATCH
+		break;
 	    case PCRE_ERROR_NULL:
 		nx_panic("invalid arguments (code, ovector or ovecsize are invalid)");
 	    case PCRE_ERROR_BADOPTION:
@@ -318,15 +322,16 @@ static boolean patterndb_regexp_match(const char *subject,
 	    case PCRE_ERROR_NOMEMORY:
 		nx_panic("pcre_malloc() failed");
 	    case PCRE_ERROR_MATCHLIMIT:
-		log_error("pcre match_limit reached");
+		log_error("pcre match_limit reached in pattern '%s' for regexp '%s'",
+			  name, matchfield->value);
 		break;
 	    case PCRE_ERROR_BADUTF8:
-		log_error("invalid pcre utf-8 byte sequence");
+		log_error("invalid pcre utf-8 byte sequence in pattern '%s' for regexp '%s'",
+			  name, matchfield->value);
 		break;
 	    case PCRE_ERROR_BADUTF8_OFFSET:
-		log_error("invalid pcre utf-8 byte sequence offset");
-		break;
-	    case PCRE_ERROR_PARTIAL:
+		log_error("invalid pcre utf-8 byte sequence offset in pattern '%s' for regexp '%s'",
+			  name, matchfield->value);
 		break;
 	    case PCRE_ERROR_BADPARTIAL:
 		nx_panic("PCRE_ERROR_BADPARTIAL");

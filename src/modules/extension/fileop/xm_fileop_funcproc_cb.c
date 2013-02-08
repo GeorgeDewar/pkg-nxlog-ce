@@ -87,7 +87,7 @@ void nx_expr_proc__xm_fileop_file_cycle(nx_expr_eval_ctx_t *eval_ctx,
     apr_status_t rv;
     apr_pool_t *pool = NULL;
     nx_exception_t e;
-    int64_t max = 0;
+    volatile int64_t max = 0;
     int32_t i, last;
     nx_string_t *tmpstr = NULL;
     nx_string_t *tmpstr2 = NULL;

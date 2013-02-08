@@ -266,7 +266,7 @@ int32_t nx_convert_auto(char		**outptr,		///< destination string
 		       int32_t		*outbytesleft,		///< number of bytes in \p outptr
 		       const char	**inptr,		///< string to convert from
 		       int32_t		*inbytesleft,		///< number of bytes to convert from \p inptr
-		       const char	*to_encoding,		///< convert to this encoding, NULL to use locale charset
+		       const char	* volatile to_encoding,	///< convert to this encoding, NULL to use locale charset
 		       int32_t		num_encoding,		///< size of the encodings array
 		       const char	*from_encodings[],	///< encodings to try
 		       const char	**ok_encoding)		///< store the encoding which was used, NULL if not needed

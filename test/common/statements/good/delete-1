@@ -9,3 +9,5 @@ if defined $field $success = FALSE;
 
 delete($field2);
 if defined $field2 $success = FALSE;
+
+delete($raw_event);

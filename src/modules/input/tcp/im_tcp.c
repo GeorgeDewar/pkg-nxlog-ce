@@ -196,7 +196,7 @@ static void im_tcp_read(nx_module_t *module, nx_event_t *event)
 {
     nx_im_tcp_conf_t *imconf;
     nx_logdata_t *logdata;
-    boolean got_eof = FALSE;
+    boolean volatile got_eof = FALSE;
     apr_socket_t *sock;
     nx_module_input_t *input;
     apr_sockaddr_t *sa;

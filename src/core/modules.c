@@ -296,8 +296,8 @@ static void nx_module_add(const nx_ctx_t *ctx,
 
 void nx_ctx_config_modules(nx_ctx_t *ctx)
 {
-    const nx_directive_t *curr = ctx->cfgtree;
-    nx_module_t *module, *tmpmodule;
+    const nx_directive_t * volatile curr = ctx->cfgtree;
+    nx_module_t * volatile module;
     nx_exception_t e;
 
     ASSERT(ctx->cfgtree != NULL);
@@ -353,24 +353,22 @@ void nx_ctx_config_modules(nx_ctx_t *ctx)
 	curr = curr->next;
     }
 
-    module = NX_DLIST_FIRST(ctx->modules);
-    while ( module != NULL )
+    for ( module = NX_DLIST_FIRST(ctx->modules);
+          module != NULL;
+	  module = NX_DLIST_NEXT(module, link) )
     {
 	try
 	{
 	    nx_module_config(module);
-	    module = NX_DLIST_NEXT(module, link);
 	}
 	catch(e)
 	{
+	    module->has_config_errors = TRUE;
 	    if ( ctx->ignoreerrors != TRUE )
 	    {
 		rethrow(e);
 	    }
 	    log_exception(e);
-	    tmpmodule = module;
-	    module = NX_DLIST_NEXT(module, link);
-	    NX_DLIST_REMOVE(ctx->modules, tmpmodule, link);
 	}
     }
 }
@@ -585,12 +583,15 @@ void nx_ctx_stop_modules(nx_ctx_t *ctx, nx_module_type_t type)
 
 
 
+/**
+ * This is called after the threads are stopped, so async mode
+ * does not work here.
+ */
 void nx_ctx_shutdown_modules(nx_ctx_t *ctx, nx_module_type_t type)
 {
     nx_module_t * volatile module, *tmp;
-    int i;
+    volatile int i;
     nx_exception_t e;
-    nx_module_status_t status;
 
     log_debug("shutdown_modules: %s", nx_module_type_to_string(type));
 
@@ -603,30 +604,21 @@ void nx_ctx_shutdown_modules(nx_ctx_t *ctx, nx_module_type_t type)
 	{
 	    continue;
 	}
-	NX_DLIST_REMOVE(ctx->modules, tmp, link);
-	nx_module_shutdown(tmp);
-
-	// wait 10 sec at most
-	for ( i = 0; i < 100; i++ )
+	if ( nx_module_get_status(tmp) == NX_MODULE_STATUS_UNINITIALIZED )
 	{
-	    status = nx_module_get_status(tmp);
-	    if ( (status == NX_MODULE_STATUS_RUNNING) || (status == NX_MODULE_STATUS_PAUSED) )
-	    {
-		nx_module_shutdown(tmp);
-		apr_sleep(APR_USEC_PER_SEC / 10);
-	    }
-	    else
-	    {
-		break;
-	    }
+	    continue;
 	}
-	if ( i == 100 ) 
+
+	NX_DLIST_REMOVE(ctx->modules, tmp, link);
+	if ( tmp->job != NULL )
 	{
-	    if ( tmp->job != NULL )
+	    // wait 10 sec at most
+	    for ( i = 0; i < 100; i++ )
 	    {
 		if ( nx_atomic_read32(&(tmp->job->busy)) == TRUE )
 		{
-		    log_error("failed to shutdown module %s, module is busy", tmp->name);
+		    nx_module_shutdown(module);
+		    apr_sleep(APR_USEC_PER_SEC / 10);
 		}
 		else
 		{
@@ -638,7 +630,23 @@ void nx_ctx_shutdown_modules(nx_ctx_t *ctx, nx_module_type_t type)
 		    {
 			log_exception(e);
 		    }
+		    break;
 		}
+	    }
+	    if ( i == 100 )
+	    {
+		log_error("failed to shutdown module %s, module is busy", tmp->name);
+	    }
+	}
+	else
+	{
+	    try
+	    {
+		nx_module_shutdown_self(tmp);
+	    }
+	    catch(e)
+	    {
+		log_exception(e);
 	    }
 	}
     }

@@ -62,7 +62,8 @@ extern int nx_expr_parser_lex();
 %token <string>	TOKEN_CAPTURED
 %token <string>	TOKEN_FUNCPROC
 %token <string>	TOKEN_STRING
-%token <string>	TOKEN_REGEXP
+%token <regexp>	TOKEN_REGEXP
+%token <regexp>	TOKEN_REGEXPREPLACE
 %token <bool>	TOKEN_BOOLEAN
 %token <string>	TOKEN_UNDEF
 %token <string>	TOKEN_INTEGER
@@ -71,6 +72,7 @@ extern int nx_expr_parser_lex();
  // types of non-terminals:
 %type <expr>	expr
 %type <expr>	literal
+%type <expr>	regexpreplace
 %type <expr>	function
 %type <args>	exprs
 %type <args>	opt_exprs
@@ -131,7 +133,7 @@ statement_list	: statement
 		    }
  		;
 
-statement_noif 	: statement_block
+statement_noif 	: statement_block 
 		    {
 			$$ = $1;
 			log_debug("statement: block");
@@ -241,6 +243,8 @@ expr		: literal { log_debug("literal"); $$ = $1; }
 		| expr TOKEN_BINOR expr { $$ = nx_expr_new_binop(parser, TOKEN_BINOR, $1, $3); }
 		| expr TOKEN_REGMATCH expr { $$ = nx_expr_new_binop(parser, TOKEN_REGMATCH, $1, $3); }
 		| expr TOKEN_NOTREGMATCH expr { $$ = nx_expr_new_binop(parser, TOKEN_NOTREGMATCH, $1, $3); }
+		| expr TOKEN_REGMATCH regexpreplace { $$ = nx_expr_new_binop(parser, TOKEN_REGMATCH, $1, $3); }
+		| expr TOKEN_NOTREGMATCH regexpreplace { $$ = nx_expr_new_binop(parser, TOKEN_NOTREGMATCH, $1, $3); }
 		| expr TOKEN_EQUAL expr { $$ = nx_expr_new_binop(parser, TOKEN_EQUAL, $1, $3); }
 		| expr TOKEN_NOTEQUAL expr { $$ = nx_expr_new_binop(parser, TOKEN_NOTEQUAL, $1, $3); }
 		| expr TOKEN_LESS expr { $$ = nx_expr_new_binop(parser, TOKEN_LESS, $1, $3); }
@@ -254,8 +258,12 @@ expr		: literal { log_debug("literal"); $$ = $1; }
 		| TOKEN_LEFTBRACKET expr TOKEN_RIGHTBRACKET { log_debug("( expr:%d )", $2->type); $$ = $2; }
 		;
 
+regexpreplace   : TOKEN_REGEXPREPLACE { log_debug("regexpreplace"); $$ = nx_expr_new_regexp(parser, $1[0], $1[1], $1[2]); }
+		;
+
+
 literal		: TOKEN_STRING { $$ = nx_expr_new_string(parser, $1); }
-		| TOKEN_REGEXP { log_debug("regexp literal"); $$ = nx_expr_new_regexp(parser, $1); }
+		| TOKEN_REGEXP { log_debug("regexp literal"); $$ = nx_expr_new_regexp(parser, $1[0], NULL, $1[2]); }
 		| TOKEN_BOOLEAN { log_debug("boolean literal"); $$ = nx_expr_new_boolean(parser, $1); }
 		| TOKEN_UNDEF { $$ = nx_expr_new_undef(parser); }
 		| TOKEN_INTEGER { log_debug("integer literal: %s", $1); $$ = nx_expr_new_integer(parser, $1); }

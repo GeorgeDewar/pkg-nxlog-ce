@@ -1,8 +1,8 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>NXLOG Community Edition Reference Manual for v2.1.957</title><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div lang="en" class="book" title="NXLOG Community Edition Reference Manual for v2.1.957"><div class="titlepage"><div><div><h1 class="title"><a name="nxlog_reference_manual"></a>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>NXLOG Community Edition Reference Manual for v2.2.1017</title><meta name="generator" content="DocBook XSL Stylesheets V1.75.2"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div lang="en" class="book" title="NXLOG Community Edition Reference Manual for v2.2.1017"><div class="titlepage"><div><div><h1 class="title"><a name="nxlog_reference_manual"></a>
   NXLOG Community Edition Reference Manual for 
-   v2.1.957
+   v2.2.1017
 
-</h1></div><div><div class="authorgroup"><div class="author"><h3 class="author"><span class="firstname">Botond</span> <span class="surname">Botyanszki</span></h3><code class="email">&lt;<a class="email" href="mailto:boti@nxlog.org">boti@nxlog.org</a>&gt;</code></div></div></div><div><p class="copyright">Copyright © 2009-2012 nxsec.com</p></div><div><p class="pubdate">2009-12-15</p></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="chapter"><a href="#introduction">1. Introduction</a></span></dt><dd><dl><dt><span class="section"><a href="#intro_overview">Overview</a></span></dt><dt><span class="section"><a href="#intro_features">Features</a></span></dt><dd><dl><dt><span class="section"><a href="#features_multiplatform">Multiplatform</a></span></dt><dt><span class="section"><a href="#features_modular">Modular architecture</a></span></dt><dt><span class="section"><a href="#features_client_server_mode">Client-server mode</a></span></dt><dt><span class="section"><a href="#features_srcdst">Log message sources and destinations</a></span></dt><dt><span class="section"><a href="#features_security">Importance of security</a></span></dt><dt><span class="section"><a href="#features_scalable">Scalable multi-threaded architecture</a></span></dt><dt><span class="section"><a href="#features_io">High performance I/O</a></span></dt><dt><span class="section"><a href="#features_buffering">Message buffering</a></span></dt><dt><span class="section"><a href="#features_prioritized_processing">Prioritized processing</a></span></dt><dt><span class="section"><a href="#features_no_message_dropping">Avoiding lost messages</a></span></dt><dt><span class="section"><a href="#features_config_syntax">Apache-style configuration syntax</a></span></dt><dt><span class="section"><a href="#features_config_language">Built-in config language</a></span></dt><dt><span class="section"><a href="#features_scheduling">Scheduled tasks</a></span></dt><dt><span class="section"><a href="#features_log_rotation">Log rotation</a></span></dt><dt><span class="section"><a href="#features_formats">Different log message formats</a></span></dt><dt><span class="section"><a href="#feature_processing">Advanced message processing capabilites</a></span></dt><dt><span class="section"><a href="#features_offline_mode">Offline processing mode</a></span></dt><dt><span class="section"><a href="#features_i18n">Character set and i18n support</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#quickstart">2. Installation and quickstart</a></span></dt><dd><dl><dt><span class="section"><a href="#quickstart_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#quickstart_linux">GNU/Linux</a></span></dt><dd><dl><dt><span class="section"><a href="#quickstart_linux_deb">Installing from DEB packages (Debian, Ubuntu)</a></span></dt><dt><span class="section"><a href="#quickstart_linux_rpm">Installing from RPM packages (CentOS, RedHat)</a></span></dt><dt><span class="section"><a href="#quickstart_linux_common">Configuring nxlog on GNU/Linux</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#architecture">3. Architecture and concepts</a></span></dt><dd><dl><dt><span class="section"><a href="#arch_history">History</a></span></dt><dt><span class="section"><a href="#arch_concepts">Concepts</a></span></dt><dt><span class="section"><a href="#arch_arch">Architecture</a></span></dt></dl></dd><dt><span class="chapter"><a href="#config">4. Configuration</a></span></dt><dd><dl><dt><span class="section"><a href="#config_include">File inclusion</a></span></dt><dt><span class="section"><a href="#config_define">Constant and macro definitions</a></span></dt><dt><span class="section"><a href="#config_global">Global directives</a></span></dt><dt><span class="section"><a href="#config_modules">Modules</a></span></dt><dd><dl><dt><span class="section"><a href="#config_module_common">Common module directives</a></span></dt></dl></dd><dt><span class="section"><a href="#config_routes">Routes</a></span></dt><dd><dl><dt><span class="section"><a href="#config_route_priority">Priority</a></span></dt><dt><span class="section"><a href="#config_route_path">Path</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#lang">5. Language</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_types">Types</a></span></dt><dt><span class="section"><a href="#lang_expressions">Expressions</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_literals">Literals</a></span></dt><dt><span class="section"><a href="#lang_fields">Fields</a></span></dt><dt><span class="section"><a href="#lang_operations">Operations</a></span></dt><dt><span class="section"><a href="#lang_functions">Functions</a></span></dt></dl></dd><dt><span class="section"><a href="#lang_statements">Statements</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_statement_assignment">Assignment</a></span></dt><dt><span class="section"><a href="#lang_statement_block">Block</a></span></dt><dt><span class="section"><a href="#lang_statement_procedures">Procedures</a></span></dt><dt><span class="section"><a href="#lang_statement_if">If-Else</a></span></dt></dl></dd><dt><span class="section"><a href="#lang_variables">Variables</a></span></dt><dt><span class="section"><a href="#lang_stat">Statistical counters</a></span></dt><dt><span class="section"><a href="#lang_exported_funcproc">List of available functions and procedures</a></span></dt><dd><dl><dt><span class="section"><a href="#core_funcproc">Functions and procedures exported by core</a></span></dt><dt><span class="section"><a href="#lang_exported_module_funcproc">Functions and procedures exported by modules</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#modules">6. Modules</a></span></dt><dd><dl><dt><span class="section"><a href="#modules_extension">Extension modules</a></span></dt><dd><dl><dt><span class="section"><a href="#xm_csv">CSV (xm_csv)</a></span></dt><dt><span class="section"><a href="#xm_json">JSON (xm_json)</a></span></dt><dt><span class="section"><a href="#xm_xml">XML (xm_xml)</a></span></dt><dt><span class="section"><a href="#xm_gelf">GELF (xm_gelf)</a></span></dt><dt><span class="section"><a href="#xm_charconv">Character set conversion (xm_charconv)</a></span></dt><dt><span class="section"><a href="#xm_fileop">File operations (xm_fileop)</a></span></dt><dt><span class="section"><a href="#xm_multiline">Multi-line message parser (xm_multiline)</a></span></dt><dt><span class="section"><a href="#xm_syslog">Syslog (xm_syslog)</a></span></dt><dt><span class="section"><a href="#xm_exec">External program execution (xm_exec)</a></span></dt><dt><span class="section"><a href="#xm_perl">Perl (xm_perl)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_input">Input modules</a></span></dt><dd><dl><dt><span class="section"><a href="#core_fields">Fields generated by core</a></span></dt><dt><span class="section"><a href="#im_dbi">DBI (im_dbi)</a></span></dt><dt><span class="section"><a href="#im_exec">Program (im_exec)</a></span></dt><dt><span class="section"><a href="#im_file">File (im_file)</a></span></dt><dt><span class="section"><a href="#im_internal">Internal (im_internal)</a></span></dt><dt><span class="section"><a href="#im_kernel">Kernel (im_kernel)</a></span></dt><dt><span class="section"><a href="#im_mark">Mark (im_mark)</a></span></dt><dt><span class="section"><a href="#im_mseventlog">MS EventLog for Windows XP/2000/2003 (im_mseventlog)</a></span></dt><dt><span class="section"><a href="#im_msvistalog">MS EventLog for Windows 2008/Vista and later (im_msvistatlog)</a></span></dt><dt><span class="section"><a href="#im_null">Null (im_null)</a></span></dt><dt><span class="section"><a href="#im_ssl">TLS/SSL (im_ssl)</a></span></dt><dt><span class="section"><a href="#im_tcp">TCP (im_tcp)</a></span></dt><dt><span class="section"><a href="#im_udp">UDP (im_udp)</a></span></dt><dt><span class="section"><a href="#im_uds">Unix Domain Socket (im_uds)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_processor">Processor modules</a></span></dt><dd><dl><dt><span class="section"><a href="#pm_blocker">Blocker (pm_blocker)</a></span></dt><dt><span class="section"><a href="#pm_buffer">Buffer (pm_buffer)</a></span></dt><dt><span class="section"><a href="#pm_filter">Filter (pm_filter)</a></span></dt><dt><span class="section"><a href="#pm_norepeat">Message deduplicator (pm_norepeat)</a></span></dt><dt><span class="section"><a href="#pm_null">Null (pm_null)</a></span></dt><dt><span class="section"><a href="#pm_pattern">Pattern matcher (pm_pattern)</a></span></dt><dt><span class="section"><a href="#pm_transformer">Message format converter (pm_transformer)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_output">Output modules</a></span></dt><dd><dl><dt><span class="section"><a href="#om_blocker">Blocker (om_blocker)</a></span></dt><dt><span class="section"><a href="#om_dbi">DBI (om_dbi)</a></span></dt><dt><span class="section"><a href="#om_exec">Program (om_exec)</a></span></dt><dt><span class="section"><a href="#om_file">File (om_file)</a></span></dt><dt><span class="section"><a href="#om_http">HTTP(s) (om_http)</a></span></dt><dt><span class="section"><a href="#om_null">Null (om_null)</a></span></dt><dt><span class="section"><a href="#om_ssl">TLS/SSL (om_ssl)</a></span></dt><dt><span class="section"><a href="#om_tcp">TCP (om_tcp)</a></span></dt><dt><span class="section"><a href="#om_udp">UDP (om_udp)</a></span></dt><dt><span class="section"><a href="#om_uds">UDS (om_uds)</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#offline">7. Offline log processing</a></span></dt><dd><dl><dt><span class="section"><a href="#nxlog_processor">nxlog-processor</a></span></dt></dl></dd><dt><span class="chapter"><a href="#sources">8. Reading and receiving logs</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os">Operating Systems</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#sources_os_linux">GNU/Linux</a></span></dt><dt><span class="section"><a href="#sources_os_android">Android</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_network">Network</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_network_udp">UDP</a></span></dt><dt><span class="section"><a href="#sources_network_tcp">TCP</a></span></dt><dt><span class="section"><a href="#sources_network_ssl">TLS/SSL over TCP</a></span></dt><dt><span class="section"><a href="#sources_network_syslog">Syslog</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_database">Database</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_database_dbi">Using im_dbi</a></span></dt><dt><span class="section"><a href="#sources_database_odbc">Using im_odbc</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_file">Files</a></span></dt><dt><span class="section"><a href="#sources_program">External programs and scripts</a></span></dt><dt><span class="section"><a href="#sources_app">Applications</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_app_apache">Apache HTTP Server</a></span></dt><dt><span class="section"><a href="#sources_app_tomcat">Apache Tomcat and java application logs</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_device">Devices</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_devince_cisco">Cisco</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#processing">9. Processing logs</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_parsers">Parsing various formats</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_parsers_w3c">W3C Extended Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_common_log_format">NCSA Common Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_combined_log_format">NCSA Combined Log Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_welf">WebTrends Enhanced Log Format (WELF)</a></span></dt><dt><span class="section"><a href="#processing_parsers_csv">Field delimited formats (CSV)</a></span></dt><dt><span class="section"><a href="#processing_parsers_json">JSON</a></span></dt><dt><span class="section"><a href="#processing_parsers_xml">XML</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_datetime">Parsing date and time strings</a></span></dt><dt><span class="section"><a href="#processing_filtering">Filtering messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_filtering_drop">Using drop()</a></span></dt><dt><span class="section"><a href="#processing_filtering_pm_filter">Filtering through pm_filter</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_multiline">Dealing with multi-line messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_multiline_module_vars">Using module variables</a></span></dt><dt><span class="section"><a href="#processing_multiline_xm_multiline">Using xm_multiline</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_alerting_scripts">Alerting, calling external scripts and programs</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_calling_scripts_om_exec">Sending all messages to an external program</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_xm_exec">Invoking a script or program for each message</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_alerting">Alerting</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_rewrite">Rewriting and modifying messages</a></span></dt><dt><span class="section"><a href="#processing_format_conversion">Message format conversion</a></span></dt><dt><span class="section"><a href="#processing_charset_conversion">Character set conversion</a></span></dt><dt><span class="section"><a href="#processing_discarding">Discarding messages</a></span></dt><dt><span class="section"><a href="#processing_rate_limiting">Rate limiting</a></span></dt><dt><span class="section"><a href="#processing_buffering">Buffering</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching">Pattern matching and message classification</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_pattern_matching_regexp">Regular expressions in the Exec directive</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching_pm_pattern">Using pm_pattern</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_correlation">Event correlation</a></span></dt><dt><span class="section"><a href="#processing_log_rotation">Log rotation and retention</a></span></dt><dt><span class="section"><a href="#processing_explicit_drop">Explicit drop</a></span></dt></dl></dd><dt><span class="chapter"><a href="#forwarding">10. Forwarding and storing logs</a></span></dt><dd><dl><dt><span class="section"><a href="#forwarding_format">Data format of the output</a></span></dt><dt><span class="section"><a href="#forwarding_network">Forwarding over the network</a></span></dt><dt><span class="section"><a href="#forwarding_files_sockets">Sending to sockets and files</a></span></dt><dt><span class="section"><a href="#forwarding_database">Storing logs in a database</a></span></dt></dl></dd><dt><span class="chapter"><a href="#tips">11. Tips and tricks</a></span></dt><dd><dl><dt><span class="section"><a href="#tips_no_logs">Detecting a dead agent or log source</a></span></dt></dl></dd><dt><span class="chapter"><a href="#troubleshooting">12. Troubleshooting</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_logging">nxlog's internal logs</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_logfile">Check the contents of the LogFile</a></span></dt><dt><span class="section"><a href="#troubleshooting_im_internal">Injecting own logs into a route</a></span></dt><dt><span class="section"><a href="#troubleshooting_loglevel">LogLevel</a></span></dt><dt><span class="section"><a href="#troubleshooting_foreground">Running in foreground</a></span></dt><dt><span class="section"><a href="#troubleshooting_exec_log_info">Using log_info() in the Exec directive</a></span></dt></dl></dd><dt><span class="section"><a href="#troubleshooting_common_problems">Common problems</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_common_problems_missing_logdata">Missing logdata</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_invalid_conf">nxlog failed to start, cannot read configuration file</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_nxlog_log_in_use">nxlog.log is in use by another application and cannot be accessed</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_connection_refused">Connection refused when trying to connect to im_tcp or im_ssl</a></span></dt></dl></dd><dt><span class="section"><a href="#troubleshooting_log_message_content">Debugging and dumping messages</a></span></dt></dl></dd></dl></div><div class="list-of-examples"><p><b>List of Examples</b></p><dl><dt>4.1. <a href="#id385348">File inclusion example</a></dt><dt>4.2. <a href="#id385386">Example for using defines</a></dt><dt>4.3. <a href="#id385404">Incorrect use of a define</a></dt><dt>4.4. <a href="#id387082">Two scheduled jobs in the context of the im_tcp module</a></dt><dt>4.5. <a href="#id387148">Exec statement spanning multiple lines</a></dt><dt>4.6. <a href="#id387160">Equivalent use of statements in Exec</a></dt><dt>4.7. <a href="#id387323">TCP input assuming nxlog format</a></dt><dt>4.8. <a href="#id387463">TCP output sending messages in nxlog format</a></dt><dt>4.9. <a href="#id387496">Route block</a></dt><dt>4.10. <a href="#id387528">Prioritized processing</a></dt><dt>4.11. <a href="#config_example_routes">Different routes</a></dt><dt>5.1. <a href="#id394441">Using brackets around expressions</a></dt><dt>5.2. <a href="#id394385">Unsetting a value of a field</a></dt><dt>5.3. <a href="#id394323">Setting an integer value</a></dt><dt>5.4. <a href="#id394186">Setting a string value</a></dt><dt>5.5. <a href="#id394172">A regular expression match operation</a></dt><dt>5.6. <a href="#id394141">Setting a datetime value</a></dt><dt>5.7. <a href="#id394002">Typical use of the 'not' operand</a></dt><dt>5.8. <a href="#id393963">Unary negation</a></dt><dt>5.9. <a href="#lang_defined_example">Use of the unary 'defined' operation</a></dt><dt>5.10. <a href="#id393835">Regular expression based string matching</a></dt><dt>5.11. <a href="#id393729">Regular expression based string matching</a></dt><dt>5.12. <a href="#id393558">Comparing integers</a></dt><dt>5.13. <a href="#id393385">Comparing for inequality</a></dt><dt>5.14. <a href="#id393289">Less</a></dt><dt>5.15. <a href="#id393204">Less or equal</a></dt><dt>5.16. <a href="#id393117">Greater</a></dt><dt>5.17. <a href="#id393034">Greater or equal</a></dt><dt>5.18. <a href="#id392970">And operation</a></dt><dt>5.19. <a href="#id392897">Or</a></dt><dt>5.20. <a href="#id392680">Concatenation</a></dt><dt>5.21. <a href="#id392566">Subtraction</a></dt><dt>5.22. <a href="#id392506">Multiplication</a></dt><dt>5.23. <a href="#id392448">Division</a></dt><dt>5.24. <a href="#id392391">Modulo</a></dt><dt>5.25. <a href="#id392342">Function call</a></dt><dt>5.26. <a href="#id392294">Assignment</a></dt><dt>5.27. <a href="#id392248">Conditional statement block</a></dt><dt>5.28. <a href="#id392217">Procedure call</a></dt><dt>5.29. <a href="#id392200">Conditional statements</a></dt><dt>5.30. <a href="#id392184">Emulating switch with if-else</a></dt><dt>5.31. <a href="#lang_variable_example_corr">Simple event correlation using module variables</a></dt><dt>5.32. <a href="#id391879">Simple event correlation using statistical counters</a></dt><dt>6.1. <a href="#xm_csv_example1">Complex CSV format conversion</a></dt><dt>6.2. <a href="#xm_json_example1">Syslog to JSON format conversion</a></dt><dt>6.3. <a href="#xm_json_example2">Converting Windows EventLog to Syslog encapsulated JSON</a></dt><dt>6.4. <a href="#xm_xml_example1">Syslog to XML format conversion</a></dt><dt>6.5. <a href="#xm_xml_example2">Converting Windows EventLog to Syslog encapsulated XML</a></dt><dt>6.6. <a href="#xm_gelf_example1">Sending Windows EventLog to Graylog2 in GELF</a></dt><dt>6.7. <a href="#xm_gelf_example2">Parsing a CSV file and sending it to Graylog2 in GELF</a></dt><dt>6.8. <a href="#xm_charconv_example">Character set autodetection of various input encodings</a></dt><dt>6.9. <a href="#xm_fileop_example1">Rotation of the internal LogFile</a></dt><dt>6.10. <a href="#xm_multiline_example_4">Parsing DICOM logs</a></dt><dt>6.11. <a href="#xm_multiline_example_1">Multi-line messages with a fixed string header</a></dt><dt>6.12. <a href="#xm_multiline_example_2">Multi-line messages with fixed line count</a></dt><dt>6.13. <a href="#xm_multiline_example_3">Multi-line messages with a syslog header</a></dt><dt>6.14. <a href="#xm_syslog_example_bsd_udp">Collecting BSD style syslog messages over UDP</a></dt><dt>6.15. <a href="#xm_syslog_example_ietf_udp">Collecting IETF style syslog messages over UDP</a></dt><dt>6.16. <a href="#xm_syslog_example_bsd_ietf_udp">Collecting both IETF and BSD style syslog messages over the same UDP port</a></dt><dt>6.17. <a href="#xm_syslog_example_ietf_ssl">Collecting IETF style syslog messages over TLS/SSL</a></dt><dt>6.18. <a href="#xm_syslog_example_ietf_tcpout">Forwarding IETF syslog over TCP</a></dt><dt>6.19. <a href="#xm_syslog_example1">Conditional rewrite of the syslog facility - version 1</a></dt><dt>6.20. <a href="#xm_syslog_example2">Conditional rewrite of the syslog facility - version 2</a></dt><dt>6.21. <a href="#id420451">nxlog acting as a cron daemon</a></dt><dt>6.22. <a href="#id420471">Sending email alerts</a></dt><dt>6.23. <a href="#xm_perl_example1">Using the built-in perl interpreter</a></dt><dt>6.24. <a href="#id421303">Reading from a MySQL database</a></dt><dt>6.25. <a href="#id421465">Emulating im_file</a></dt><dt>6.26. <a href="#id421955">Forwarding logs from a file to a remote host</a></dt><dt>6.27. <a href="#id422488">Forwaring internal messages over syslog udp</a></dt><dt>6.28. <a href="#id422613">Storing raw kernel logs into a file</a></dt><dt>6.29. <a href="#id423100">Using the im_mark module</a></dt><dt>6.30. <a href="#id424048">Forwarding EventLogs from a windows machine to a remote host</a></dt><dt>6.31. <a href="#id425385">Forwarding EventLogs from a windows machine to a remote host</a></dt><dt>6.32. <a href="#id425857">Reading binary data forwarded from another nxlog agent</a></dt><dt>6.33. <a href="#id426144">Using the im_tcp module</a></dt><dt>6.34. <a href="#id426464">Using the im_udp module</a></dt><dt>6.35. <a href="#id426626">Using the im_uds module</a></dt><dt>6.36. <a href="#id426886">Using the pm_blocker module</a></dt><dt>6.37. <a href="#id427264">Using a memory buffer to protect against udp message loss</a></dt><dt>6.38. <a href="#id427329">Dropping messages conditionally</a></dt><dt>6.39. <a href="#id427412">Filtering messages</a></dt><dt>6.40. <a href="#id427821">Filtering out duplicated messages</a></dt><dt>6.41. <a href="#id428075">A simple pattern database</a></dt><dt>6.42. <a href="#id428278">Using the pm_pattern module</a></dt><dt>6.43. <a href="#id428941">Using the pm_transformer module</a></dt><dt>6.44. <a href="#id429028">Testing buffering with the om_blocker module</a></dt><dt>6.45. <a href="#id429228">Storing syslog in a PostgreSQL database</a></dt><dt>6.46. <a href="#id429266">Storing logs in a MySQL database</a></dt><dt>6.47. <a href="#id429444">Piping logs to an external program</a></dt><dt>6.48. <a href="#id429940">Storing raw syslog messages into a file</a></dt><dt>6.49. <a href="#om_file_config_example_rotate1">File rotation based on size</a></dt><dt>6.50. <a href="#id430349">Sending logs over HTTPS</a></dt><dt>6.51. <a href="#id430723">Writing nxlog binary data to another nxlog agent</a></dt><dt>6.52. <a href="#id430895">Transferring raw logs over TCP</a></dt><dt>6.53. <a href="#id431041">Sending raw syslog over udp</a></dt><dt>6.54. <a href="#id431176">Using the om_uds module</a></dt><dt>8.1. <a href="#id390010">Parsing tomcat logs into fields</a></dt><dt>9.1. <a href="#id386248">Parsing the W3C Extended Log File Format using xm_csv</a></dt><dt>9.2. <a href="#processing_parsers_combined_log_format_example">Parsing apache logs in Combined Log Format</a></dt><dt>9.3. <a href="#id409324">Parsing a microsecond resolution timestamp expressed with a fractional part</a></dt><dt>9.4. <a href="#id409374">Parsing date and time from Exchange logs</a></dt><dt>9.5. <a href="#id405044">Parsing multiline messages using module variables</a></dt><dt>9.6. <a href="#id398460">Using sleep for rate limiting</a></dt><dt>9.7. <a href="#id398560">Regular expression based message classification</a></dt><dt>9.8. <a href="#id385771">Rotation of the internal LogFile</a></dt><dt>9.9. <a href="#id385798">File rotation based on size</a></dt><dt>9.10. <a href="#id385849">Explicitly dropping messages when the network module is blocked</a></dt><dt>10.1. <a href="#id386386">Forwarding EventLogs from a windows machine to a remote host in the SNARE Agent format</a></dt><dt>11.1. <a href="#id410159">Alerting on absence of log messages</a></dt><dt>12.1. <a href="#id385987">Assignment after drop()</a></dt><dt>12.2. <a href="#troubleshooting_example_file_write">Writing the values of fields to an external file</a></dt><dt>12.3. <a href="#troubleshooting_example_log_info">Writing the values of fields to the internal log</a></dt><dt>12.4. <a href="#troubleshooting_example_to_json">Dumping all the fields</a></dt></dl></div><div class="chapter" title="Chapter 1. Introduction"><div class="titlepage"><div><div><h2 class="title"><a name="introduction"></a>Chapter 1. Introduction</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#intro_overview">Overview</a></span></dt><dt><span class="section"><a href="#intro_features">Features</a></span></dt><dd><dl><dt><span class="section"><a href="#features_multiplatform">Multiplatform</a></span></dt><dt><span class="section"><a href="#features_modular">Modular architecture</a></span></dt><dt><span class="section"><a href="#features_client_server_mode">Client-server mode</a></span></dt><dt><span class="section"><a href="#features_srcdst">Log message sources and destinations</a></span></dt><dt><span class="section"><a href="#features_security">Importance of security</a></span></dt><dt><span class="section"><a href="#features_scalable">Scalable multi-threaded architecture</a></span></dt><dt><span class="section"><a href="#features_io">High performance I/O</a></span></dt><dt><span class="section"><a href="#features_buffering">Message buffering</a></span></dt><dt><span class="section"><a href="#features_prioritized_processing">Prioritized processing</a></span></dt><dt><span class="section"><a href="#features_no_message_dropping">Avoiding lost messages</a></span></dt><dt><span class="section"><a href="#features_config_syntax">Apache-style configuration syntax</a></span></dt><dt><span class="section"><a href="#features_config_language">Built-in config language</a></span></dt><dt><span class="section"><a href="#features_scheduling">Scheduled tasks</a></span></dt><dt><span class="section"><a href="#features_log_rotation">Log rotation</a></span></dt><dt><span class="section"><a href="#features_formats">Different log message formats</a></span></dt><dt><span class="section"><a href="#feature_processing">Advanced message processing capabilites</a></span></dt><dt><span class="section"><a href="#features_offline_mode">Offline processing mode</a></span></dt><dt><span class="section"><a href="#features_i18n">Character set and i18n support</a></span></dt></dl></dd></dl></div><div class="section" title="Overview"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro_overview"></a>Overview</h2></div></div></div><p>
+</h1></div><div><div class="authorgroup"><div class="author"><h3 class="author"><span class="firstname">Botond</span> <span class="surname">Botyanszki</span></h3><code class="email">&lt;<a class="email" href="mailto:boti@nxlog.org">boti@nxlog.org</a>&gt;</code></div></div></div><div><p class="copyright">Copyright © 2009-2012 nxsec.com</p></div><div><p class="pubdate">2009-12-15</p></div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="chapter"><a href="#introduction">1. Introduction</a></span></dt><dd><dl><dt><span class="section"><a href="#intro_overview">Overview</a></span></dt><dt><span class="section"><a href="#intro_features">Features</a></span></dt><dd><dl><dt><span class="section"><a href="#features_multiplatform">Multiplatform</a></span></dt><dt><span class="section"><a href="#features_modular">Modular architecture</a></span></dt><dt><span class="section"><a href="#features_client_server_mode">Client-server mode</a></span></dt><dt><span class="section"><a href="#features_srcdst">Log message sources and destinations</a></span></dt><dt><span class="section"><a href="#features_security">Importance of security</a></span></dt><dt><span class="section"><a href="#features_scalable">Scalable multi-threaded architecture</a></span></dt><dt><span class="section"><a href="#features_io">High performance I/O</a></span></dt><dt><span class="section"><a href="#features_buffering">Message buffering</a></span></dt><dt><span class="section"><a href="#features_prioritized_processing">Prioritized processing</a></span></dt><dt><span class="section"><a href="#features_no_message_dropping">Avoiding lost messages</a></span></dt><dt><span class="section"><a href="#features_config_syntax">Apache-style configuration syntax</a></span></dt><dt><span class="section"><a href="#features_config_language">Built-in config language</a></span></dt><dt><span class="section"><a href="#features_scheduling">Scheduled tasks</a></span></dt><dt><span class="section"><a href="#features_log_rotation">Log rotation</a></span></dt><dt><span class="section"><a href="#features_formats">Different log message formats</a></span></dt><dt><span class="section"><a href="#feature_processing">Advanced message processing capabilites</a></span></dt><dt><span class="section"><a href="#features_offline_mode">Offline processing mode</a></span></dt><dt><span class="section"><a href="#features_i18n">Character set and i18n support</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#quickstart">2. Installation and quickstart</a></span></dt><dd><dl><dt><span class="section"><a href="#quickstart_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#quickstart_linux">GNU/Linux</a></span></dt><dd><dl><dt><span class="section"><a href="#quickstart_linux_deb">Installing from DEB packages (Debian, Ubuntu)</a></span></dt><dt><span class="section"><a href="#quickstart_linux_rpm">Installing from RPM packages (CentOS, RedHat)</a></span></dt><dt><span class="section"><a href="#quickstart_linux_common">Configuring nxlog on GNU/Linux</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#architecture">3. Architecture and concepts</a></span></dt><dd><dl><dt><span class="section"><a href="#arch_history">History</a></span></dt><dt><span class="section"><a href="#arch_concepts">Concepts</a></span></dt><dt><span class="section"><a href="#arch_arch">Architecture</a></span></dt></dl></dd><dt><span class="chapter"><a href="#config">4. Configuration</a></span></dt><dd><dl><dt><span class="section"><a href="#config_include">File inclusion</a></span></dt><dt><span class="section"><a href="#config_define">Constant and macro definitions</a></span></dt><dt><span class="section"><a href="#config_global">Global directives</a></span></dt><dt><span class="section"><a href="#config_modules">Modules</a></span></dt><dd><dl><dt><span class="section"><a href="#config_module_common">Common module directives</a></span></dt></dl></dd><dt><span class="section"><a href="#config_routes">Routes</a></span></dt><dd><dl><dt><span class="section"><a href="#config_route_priority">Priority</a></span></dt><dt><span class="section"><a href="#config_route_path">Path</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#lang">5. Language</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_types">Types</a></span></dt><dt><span class="section"><a href="#lang_expressions">Expressions</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_literals">Literals</a></span></dt><dt><span class="section"><a href="#lang_fields">Fields</a></span></dt><dt><span class="section"><a href="#lang_operations">Operations</a></span></dt><dt><span class="section"><a href="#lang_functions">Functions</a></span></dt></dl></dd><dt><span class="section"><a href="#lang_statements">Statements</a></span></dt><dd><dl><dt><span class="section"><a href="#lang_statement_assignment">Assignment</a></span></dt><dt><span class="section"><a href="#lang_statement_block">Block</a></span></dt><dt><span class="section"><a href="#lang_statement_procedures">Procedures</a></span></dt><dt><span class="section"><a href="#lang_statement_if">If-Else</a></span></dt></dl></dd><dt><span class="section"><a href="#lang_variables">Variables</a></span></dt><dt><span class="section"><a href="#lang_stat">Statistical counters</a></span></dt><dt><span class="section"><a href="#lang_exported_funcproc">List of available functions and procedures</a></span></dt><dd><dl><dt><span class="section"><a href="#core_funcproc">Functions and procedures exported by core</a></span></dt><dt><span class="section"><a href="#lang_exported_module_funcproc">Functions and procedures exported by modules</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#modules">6. Modules</a></span></dt><dd><dl><dt><span class="section"><a href="#modules_extension">Extension modules</a></span></dt><dd><dl><dt><span class="section"><a href="#xm_csv">CSV (xm_csv)</a></span></dt><dt><span class="section"><a href="#xm_json">JSON (xm_json)</a></span></dt><dt><span class="section"><a href="#xm_xml">XML (xm_xml)</a></span></dt><dt><span class="section"><a href="#xm_gelf">GELF (xm_gelf)</a></span></dt><dt><span class="section"><a href="#xm_charconv">Character set conversion (xm_charconv)</a></span></dt><dt><span class="section"><a href="#xm_fileop">File operations (xm_fileop)</a></span></dt><dt><span class="section"><a href="#xm_multiline">Multi-line message parser (xm_multiline)</a></span></dt><dt><span class="section"><a href="#xm_syslog">Syslog (xm_syslog)</a></span></dt><dt><span class="section"><a href="#xm_exec">External program execution (xm_exec)</a></span></dt><dt><span class="section"><a href="#xm_perl">Perl (xm_perl)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_input">Input modules</a></span></dt><dd><dl><dt><span class="section"><a href="#core_fields">Fields generated by core</a></span></dt><dt><span class="section"><a href="#im_dbi">DBI (im_dbi)</a></span></dt><dt><span class="section"><a href="#im_exec">Program (im_exec)</a></span></dt><dt><span class="section"><a href="#im_file">File (im_file)</a></span></dt><dt><span class="section"><a href="#im_internal">Internal (im_internal)</a></span></dt><dt><span class="section"><a href="#im_kernel">Kernel (im_kernel)</a></span></dt><dt><span class="section"><a href="#im_mark">Mark (im_mark)</a></span></dt><dt><span class="section"><a href="#im_mseventlog">MS EventLog for Windows XP/2000/2003 (im_mseventlog)</a></span></dt><dt><span class="section"><a href="#im_msvistalog">MS EventLog for Windows 2008/Vista and later (im_msvistatlog)</a></span></dt><dt><span class="section"><a href="#im_null">Null (im_null)</a></span></dt><dt><span class="section"><a href="#im_ssl">TLS/SSL (im_ssl)</a></span></dt><dt><span class="section"><a href="#im_tcp">TCP (im_tcp)</a></span></dt><dt><span class="section"><a href="#im_udp">UDP (im_udp)</a></span></dt><dt><span class="section"><a href="#im_uds">Unix Domain Socket (im_uds)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_processor">Processor modules</a></span></dt><dd><dl><dt><span class="section"><a href="#pm_blocker">Blocker (pm_blocker)</a></span></dt><dt><span class="section"><a href="#pm_buffer">Buffer (pm_buffer)</a></span></dt><dt><span class="section"><a href="#pm_filter">Filter (pm_filter)</a></span></dt><dt><span class="section"><a href="#pm_norepeat">Message deduplicator (pm_norepeat)</a></span></dt><dt><span class="section"><a href="#pm_null">Null (pm_null)</a></span></dt><dt><span class="section"><a href="#pm_pattern">Pattern matcher (pm_pattern)</a></span></dt><dt><span class="section"><a href="#pm_transformer">Message format converter (pm_transformer)</a></span></dt></dl></dd><dt><span class="section"><a href="#modules_output">Output modules</a></span></dt><dd><dl><dt><span class="section"><a href="#om_blocker">Blocker (om_blocker)</a></span></dt><dt><span class="section"><a href="#om_dbi">DBI (om_dbi)</a></span></dt><dt><span class="section"><a href="#om_exec">Program (om_exec)</a></span></dt><dt><span class="section"><a href="#om_file">File (om_file)</a></span></dt><dt><span class="section"><a href="#om_http">HTTP(s) (om_http)</a></span></dt><dt><span class="section"><a href="#om_null">Null (om_null)</a></span></dt><dt><span class="section"><a href="#om_ssl">TLS/SSL (om_ssl)</a></span></dt><dt><span class="section"><a href="#om_tcp">TCP (om_tcp)</a></span></dt><dt><span class="section"><a href="#om_udp">UDP (om_udp)</a></span></dt><dt><span class="section"><a href="#om_uds">UDS (om_uds)</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#offline">7. Offline log processing</a></span></dt><dd><dl><dt><span class="section"><a href="#nxlog_processor">nxlog-processor</a></span></dt></dl></dd><dt><span class="chapter"><a href="#sources">8. Reading and receiving logs</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os">Operating Systems</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#sources_os_linux">GNU/Linux</a></span></dt><dt><span class="section"><a href="#sources_os_android">Android</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_network">Network</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_network_udp">UDP</a></span></dt><dt><span class="section"><a href="#sources_network_tcp">TCP</a></span></dt><dt><span class="section"><a href="#sources_network_ssl">TLS/SSL over TCP</a></span></dt><dt><span class="section"><a href="#sources_network_syslog">Syslog</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_database">Database</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_database_dbi">Using im_dbi</a></span></dt><dt><span class="section"><a href="#sources_database_odbc">Using im_odbc</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_file">Files</a></span></dt><dt><span class="section"><a href="#sources_program">External programs and scripts</a></span></dt><dt><span class="section"><a href="#sources_app">Applications</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_app_apache">Apache HTTP Server</a></span></dt><dt><span class="section"><a href="#sources_app_tomcat">Apache Tomcat and java application logs</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_device">Devices</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_device_cisco">Cisco</a></span></dt><dt><span class="section"><a href="#sources_device_checkpoint">Checkpoint</a></span></dt></dl></dd></dl></dd><dt><span class="chapter"><a href="#processing">9. Processing logs</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_parsers">Parsing various formats</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_parsers_w3c">W3C Extended Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_common_log_format">NCSA Common Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_combined_log_format">NCSA Combined Log Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_welf">WebTrends Enhanced Log Format (WELF)</a></span></dt><dt><span class="section"><a href="#processing_parsers_csv">Field delimited formats (CSV)</a></span></dt><dt><span class="section"><a href="#processing_parsers_json">JSON</a></span></dt><dt><span class="section"><a href="#processing_parsers_xml">XML</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_datetime">Parsing date and time strings</a></span></dt><dt><span class="section"><a href="#processing_filtering">Filtering messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_filtering_drop">Using drop()</a></span></dt><dt><span class="section"><a href="#processing_filtering_pm_filter">Filtering through pm_filter</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_multiline">Dealing with multi-line messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_multiline_module_vars">Using module variables</a></span></dt><dt><span class="section"><a href="#processing_multiline_xm_multiline">Using xm_multiline</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_alerting_scripts">Alerting, calling external scripts and programs</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_calling_scripts_om_exec">Sending all messages to an external program</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_xm_exec">Invoking a script or program for each message</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_alerting">Alerting</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_rewrite">Rewriting and modifying messages</a></span></dt><dt><span class="section"><a href="#processing_format_conversion">Message format conversion</a></span></dt><dt><span class="section"><a href="#processing_charset_conversion">Character set conversion</a></span></dt><dt><span class="section"><a href="#processing_discarding">Discarding messages</a></span></dt><dt><span class="section"><a href="#processing_rate_limiting">Rate limiting</a></span></dt><dt><span class="section"><a href="#processing_buffering">Buffering</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching">Pattern matching and message classification</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_pattern_matching_regexp">Regular expressions in the Exec directive</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching_pm_pattern">Using pm_pattern</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_correlation">Event correlation</a></span></dt><dt><span class="section"><a href="#processing_log_rotation">Log rotation and retention</a></span></dt><dt><span class="section"><a href="#processing_explicit_drop">Explicit drop</a></span></dt></dl></dd><dt><span class="chapter"><a href="#forwarding">10. Forwarding and storing logs</a></span></dt><dd><dl><dt><span class="section"><a href="#forwarding_format">Data format of the output</a></span></dt><dt><span class="section"><a href="#forwarding_network">Forwarding over the network</a></span></dt><dt><span class="section"><a href="#forwarding_files_sockets">Sending to sockets and files</a></span></dt><dt><span class="section"><a href="#forwarding_database">Storing logs in a database</a></span></dt></dl></dd><dt><span class="chapter"><a href="#tips">11. Tips and tricks</a></span></dt><dd><dl><dt><span class="section"><a href="#tips_no_logs">Detecting a dead agent or log source</a></span></dt></dl></dd><dt><span class="chapter"><a href="#troubleshooting">12. Troubleshooting</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_logging">nxlog's internal logs</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_logfile">Check the contents of the LogFile</a></span></dt><dt><span class="section"><a href="#troubleshooting_im_internal">Injecting own logs into a route</a></span></dt><dt><span class="section"><a href="#troubleshooting_loglevel">LogLevel</a></span></dt><dt><span class="section"><a href="#troubleshooting_foreground">Running in foreground</a></span></dt><dt><span class="section"><a href="#troubleshooting_exec_log_info">Using log_info() in the Exec directive</a></span></dt></dl></dd><dt><span class="section"><a href="#troubleshooting_common_problems">Common problems</a></span></dt><dd><dl><dt><span class="section"><a href="#troubleshooting_common_problems_missing_logdata">Missing logdata</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_invalid_conf">nxlog failed to start, cannot read configuration file</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_nxlog_log_in_use">nxlog.log is in use by another application and cannot be accessed</a></span></dt><dt><span class="section"><a href="#troubleshooting_common_problems_connection_refused">Connection refused when trying to connect to im_tcp or im_ssl</a></span></dt></dl></dd><dt><span class="section"><a href="#troubleshooting_log_message_content">Debugging and dumping messages</a></span></dt></dl></dd></dl></div><div class="list-of-examples"><p><b>List of Examples</b></p><dl><dt>4.1. <a href="#idp5509696">File inclusion example</a></dt><dt>4.2. <a href="#idp5514112">Example for using defines</a></dt><dt>4.3. <a href="#idp5516320">Incorrect use of a define</a></dt><dt>4.4. <a href="#idp5718032">Two scheduled jobs in the context of the im_tcp module</a></dt><dt>4.5. <a href="#idp5725904">Exec statement spanning multiple lines</a></dt><dt>4.6. <a href="#idp5727296">Equivalent use of statements in Exec</a></dt><dt>4.7. <a href="#idp5746864">TCP input assuming nxlog format</a></dt><dt>4.8. <a href="#idp5763824">TCP output sending messages in nxlog format</a></dt><dt>4.9. <a href="#idp5767776">Route block</a></dt><dt>4.10. <a href="#idp5771632">Prioritized processing</a></dt><dt>4.11. <a href="#config_example_routes">Different routes</a></dt><dt>5.1. <a href="#idp6604080">Using brackets around expressions</a></dt><dt>5.2. <a href="#idp6597360">Unsetting a value of a field</a></dt><dt>5.3. <a href="#idp6591504">Setting an integer value</a></dt><dt>5.4. <a href="#idp6575424">Setting a string value</a></dt><dt>5.5. <a href="#idp6572000">A regular expression match operation</a></dt><dt>5.6. <a href="#idp6568560">Setting a datetime value</a></dt><dt>5.7. <a href="#idp6551552">Typical use of the 'not' operand</a></dt><dt>5.8. <a href="#idp6547088">Unary negation</a></dt><dt>5.9. <a href="#lang_defined_example">Use of the unary 'defined' operation</a></dt><dt>5.10. <a href="#idp6529312">Regular expression based string matching</a></dt><dt>5.11. <a href="#idp6528928">Replace whitespace occurences</a></dt><dt>5.12. <a href="#idp6516416">Regular expression based string matching</a></dt><dt>5.13. <a href="#idp6494784">Comparing integers</a></dt><dt>5.14. <a href="#idp6473792">Comparing for inequality</a></dt><dt>5.15. <a href="#idp6464224">Less</a></dt><dt>5.16. <a href="#idp6452336">Less or equal</a></dt><dt>5.17. <a href="#idp6441888">Greater</a></dt><dt>5.18. <a href="#idp6431056">Greater or equal</a></dt><dt>5.19. <a href="#idp6424816">And operation</a></dt><dt>5.20. <a href="#idp6417088">Or</a></dt><dt>5.21. <a href="#idp6389904">Concatenation</a></dt><dt>5.22. <a href="#idp6375328">Subtraction</a></dt><dt>5.23. <a href="#idp6369232">Multiplication</a></dt><dt>5.24. <a href="#idp6360992">Division</a></dt><dt>5.25. <a href="#idp6354512">Modulo</a></dt><dt>5.26. <a href="#idp6347744">Function call</a></dt><dt>5.27. <a href="#idp6343424">Assignment</a></dt><dt>5.28. <a href="#idp6338960">Conditional statement block</a></dt><dt>5.29. <a href="#idp6334288">Procedure call</a></dt><dt>5.30. <a href="#idp6331744">Conditional statements</a></dt><dt>5.31. <a href="#idp6329088">Emulating switch with if-else</a></dt><dt>5.32. <a href="#lang_variable_example_corr">Simple event correlation using module variables</a></dt><dt>5.33. <a href="#idp6292592">Simple event correlation using statistical counters</a></dt><dt>6.1. <a href="#xm_csv_example1">Complex CSV format conversion</a></dt><dt>6.2. <a href="#xm_json_example1">Syslog to JSON format conversion</a></dt><dt>6.3. <a href="#xm_json_example2">Converting Windows EventLog to Syslog encapsulated JSON</a></dt><dt>6.4. <a href="#xm_xml_example1">Syslog to XML format conversion</a></dt><dt>6.5. <a href="#xm_xml_example2">Converting Windows EventLog to Syslog encapsulated XML</a></dt><dt>6.6. <a href="#xm_gelf_example1">Sending Windows EventLog to Graylog2 in GELF</a></dt><dt>6.7. <a href="#xm_gelf_example2">Parsing a CSV file and sending it to Graylog2 in GELF</a></dt><dt>6.8. <a href="#xm_charconv_example">Character set autodetection of various input encodings</a></dt><dt>6.9. <a href="#xm_fileop_example1">Rotation of the internal LogFile</a></dt><dt>6.10. <a href="#xm_multiline_example_4">Parsing DICOM logs</a></dt><dt>6.11. <a href="#xm_multiline_example_1">Multi-line messages with a fixed string header</a></dt><dt>6.12. <a href="#xm_multiline_example_2">Multi-line messages with fixed line count</a></dt><dt>6.13. <a href="#xm_multiline_example_3">Multi-line messages with a syslog header</a></dt><dt>6.14. <a href="#xm_syslog_example_bsd_udp">Collecting BSD style syslog messages over UDP</a></dt><dt>6.15. <a href="#xm_syslog_example_ietf_udp">Collecting IETF style syslog messages over UDP</a></dt><dt>6.16. <a href="#xm_syslog_example_bsd_ietf_udp">Collecting both IETF and BSD style syslog messages over the same UDP port</a></dt><dt>6.17. <a href="#xm_syslog_example_ietf_ssl">Collecting IETF style syslog messages over TLS/SSL</a></dt><dt>6.18. <a href="#xm_syslog_example_ietf_tcpout">Forwarding IETF syslog over TCP</a></dt><dt>6.19. <a href="#xm_syslog_example1">Conditional rewrite of the syslog facility - version 1</a></dt><dt>6.20. <a href="#xm_syslog_example2">Conditional rewrite of the syslog facility - version 2</a></dt><dt>6.21. <a href="#idp9747952">nxlog acting as a cron daemon</a></dt><dt>6.22. <a href="#idp9750432">Sending email alerts</a></dt><dt>6.23. <a href="#xm_perl_example1">Using the built-in perl interpreter</a></dt><dt>6.24. <a href="#idp9850208">Reading from a MySQL database</a></dt><dt>6.25. <a href="#idp9869712">Emulating im_file</a></dt><dt>6.26. <a href="#idp9928464">Forwarding logs from a file to a remote host</a></dt><dt>6.27. <a href="#idp9992368">Forwaring internal messages over syslog udp</a></dt><dt>6.28. <a href="#idp10007376">Storing raw kernel logs into a file</a></dt><dt>6.29. <a href="#idp10065840">Using the im_mark module</a></dt><dt>6.30. <a href="#idp10179632">Forwarding EventLogs from a windows machine to a remote host</a></dt><dt>6.31. <a href="#idp10342960">Forwarding EventLogs from a windows machine to a remote host</a></dt><dt>6.32. <a href="#idp10399584">Reading binary data forwarded from another nxlog agent</a></dt><dt>6.33. <a href="#idp10434000">Using the im_tcp module</a></dt><dt>6.34. <a href="#idp10475024">Using the im_udp module</a></dt><dt>6.35. <a href="#idp10494416">Using the im_uds module</a></dt><dt>6.36. <a href="#idp10525680">Using the pm_blocker module</a></dt><dt>6.37. <a href="#idp10570944">Using a memory buffer to protect against udp message loss</a></dt><dt>6.38. <a href="#idp10578800">Dropping messages conditionally</a></dt><dt>6.39. <a href="#idp10588784">Filtering messages</a></dt><dt>6.40. <a href="#idp10637808">Filtering out duplicated messages</a></dt><dt>6.41. <a href="#idp10668304">A simple pattern database</a></dt><dt>6.42. <a href="#idp10692672">Using the pm_pattern module</a></dt><dt>6.43. <a href="#idp10772192">Using the pm_transformer module</a></dt><dt>6.44. <a href="#idp10782656">Testing buffering with the om_blocker module</a></dt><dt>6.45. <a href="#idp10806624">Storing syslog in a PostgreSQL database</a></dt><dt>6.46. <a href="#idp10811216">Storing logs in a MySQL database</a></dt><dt>6.47. <a href="#idp10832560">Piping logs to an external program</a></dt><dt>6.48. <a href="#idp10892112">Storing raw syslog messages into a file</a></dt><dt>6.49. <a href="#om_file_config_example_rotate1">File rotation based on size</a></dt><dt>6.50. <a href="#idp10941216">Sending logs over HTTPS</a></dt><dt>6.51. <a href="#idp10986032">Writing nxlog binary data to another nxlog agent</a></dt><dt>6.52. <a href="#idp11006656">Transferring raw logs over TCP</a></dt><dt>6.53. <a href="#idp11026528">Sending raw syslog over udp</a></dt><dt>6.54. <a href="#idp11042800">Using the om_uds module</a></dt><dt>8.1. <a href="#idp5579744">Parsing tomcat logs into fields</a></dt><dt>8.2. <a href="#idp8670736">Cisco Secure Access Control Server</a></dt><dt>8.3. <a href="#idp8676256">Cisco PIX and Cisco ASA</a></dt><dt>9.1. <a href="#idp8646384">Parsing the W3C Extended Log File Format using xm_csv</a></dt><dt>9.2. <a href="#processing_parsers_combined_log_format_example">Parsing apache logs in Combined Log Format</a></dt><dt>9.3. <a href="#idp5598848">Parsing a microsecond resolution timestamp expressed with a fractional part</a></dt><dt>9.4. <a href="#idp5602720">Parsing date and time from Exchange logs</a></dt><dt>9.5. <a href="#idp5619664">Parsing multiline messages using module variables</a></dt><dt>9.6. <a href="#idp6868592">Using sleep for rate limiting</a></dt><dt>9.7. <a href="#idp6880592">Regular expression based message classification</a></dt><dt>9.8. <a href="#idp8330144">Rotation of the internal LogFile</a></dt><dt>9.9. <a href="#idp8333312">File rotation based on size</a></dt><dt>9.10. <a href="#idp8339456">Explicitly dropping messages when the network module is blocked</a></dt><dt>10.1. <a href="#idp8656976">Forwarding EventLogs from a windows machine to a remote host in the SNARE Agent format</a></dt><dt>11.1. <a href="#idp8498784">Alerting on absence of log messages</a></dt><dt>12.1. <a href="#idp8685984">Assignment after drop()</a></dt><dt>12.2. <a href="#troubleshooting_example_file_write">Writing the values of fields to an external file</a></dt><dt>12.3. <a href="#troubleshooting_example_log_info">Writing the values of fields to the internal log</a></dt><dt>12.4. <a href="#troubleshooting_example_to_json">Dumping all the fields</a></dt></dl></div><div class="chapter" title="Chapter 1. Introduction"><div class="titlepage"><div><div><h2 class="title"><a name="introduction"></a>Chapter 1. Introduction</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#intro_overview">Overview</a></span></dt><dt><span class="section"><a href="#intro_features">Features</a></span></dt><dd><dl><dt><span class="section"><a href="#features_multiplatform">Multiplatform</a></span></dt><dt><span class="section"><a href="#features_modular">Modular architecture</a></span></dt><dt><span class="section"><a href="#features_client_server_mode">Client-server mode</a></span></dt><dt><span class="section"><a href="#features_srcdst">Log message sources and destinations</a></span></dt><dt><span class="section"><a href="#features_security">Importance of security</a></span></dt><dt><span class="section"><a href="#features_scalable">Scalable multi-threaded architecture</a></span></dt><dt><span class="section"><a href="#features_io">High performance I/O</a></span></dt><dt><span class="section"><a href="#features_buffering">Message buffering</a></span></dt><dt><span class="section"><a href="#features_prioritized_processing">Prioritized processing</a></span></dt><dt><span class="section"><a href="#features_no_message_dropping">Avoiding lost messages</a></span></dt><dt><span class="section"><a href="#features_config_syntax">Apache-style configuration syntax</a></span></dt><dt><span class="section"><a href="#features_config_language">Built-in config language</a></span></dt><dt><span class="section"><a href="#features_scheduling">Scheduled tasks</a></span></dt><dt><span class="section"><a href="#features_log_rotation">Log rotation</a></span></dt><dt><span class="section"><a href="#features_formats">Different log message formats</a></span></dt><dt><span class="section"><a href="#feature_processing">Advanced message processing capabilites</a></span></dt><dt><span class="section"><a href="#features_offline_mode">Offline processing mode</a></span></dt><dt><span class="section"><a href="#features_i18n">Character set and i18n support</a></span></dt></dl></dd></dl></div><div class="section" title="Overview"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="intro_overview"></a>Overview</h2></div></div></div><p>
      Today's IT infrasturcture can be very demanding in terms of event logs. Hundreds of different
      devices, applications, appliances produce vast amounts of event log messages. These must be
      handled in real time, forwarded or stored in a central location after filtering,
@@ -470,7 +470,7 @@ Message                Accepted publickey for log4ensics from 192.168.1.1 port 4
        with the 'include' directive are relative to the working directory where nxlog was
        started from.
      </p><p>
-       </p><div class="example"><a name="id385348"></a><p class="title"><b>Example 4.1. File inclusion example</b></p><div class="example-contents"><pre class="programlisting">
+       </p><div class="example"><a name="idp5509696"></a><p class="title"><b>Example 4.1. File inclusion example</b></p><div class="example-contents"><pre class="programlisting">
 include modules/module1.conf
 </pre></div></div><p><br class="example-break">
      </p></div><div class="section" title="Constant and macro definitions"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="config_define"></a>Constant and macro definitions</h2></div></div></div><p>
@@ -484,7 +484,7 @@ include modules/module1.conf
        of the defined name with its value, only after this substitution will the configuration check
        occur.
      </p><p>
-       </p><div class="example"><a name="id385386"></a><p class="title"><b>Example 4.2. Example for using defines</b></p><div class="example-contents"><pre class="programlisting">
+       </p><div class="example"><a name="idp5514112"></a><p class="title"><b>Example 4.2. Example for using defines</b></p><div class="example-contents"><pre class="programlisting">
 define BASEDIR /var/log
 define IGNORE_DEBUG if $raw_event =~ /debug/ drop();
 
@@ -502,7 +502,7 @@ define IGNORE_DEBUG if $raw_event =~ /debug/ drop();
        The following example shows an incorrect use if the define directive. After substitution
        the <code class="function">drop()</code> procedure will be always executed, only the warning
        message is emitted conditionally.
-       </p><div class="example"><a name="id385404"></a><p class="title"><b>Example 4.3. Incorrect use of a define</b></p><div class="example-contents"><pre class="programlisting">
+       </p><div class="example"><a name="idp5516320"></a><p class="title"><b>Example 4.3. Incorrect use of a define</b></p><div class="example-contents"><pre class="programlisting">
 define ACTION log_warning("dropping message"); drop();
 
 &lt;Input messages&gt;
@@ -701,7 +701,7 @@ define ACTION log_warning("dropping message"); drop();
 		   Note that it is not possible to use <a class="link" href="#lang_fields" title="Fields">fields</a>
 		   in statements here because execution is not triggered by log messages.
 		 </dd></dl></div><p>
-	   </p><div class="example"><a name="id387082"></a><p class="title"><b>Example 4.4. Two scheduled jobs in the context of the im_tcp module</b></p><div class="example-contents"><pre class="programlisting">
+	   </p><div class="example"><a name="idp5718032"></a><p class="title"><b>Example 4.4. Two scheduled jobs in the context of the im_tcp module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_tcp
     Port	2345
@@ -740,14 +740,14 @@ define ACTION log_warning("dropping message"); drop();
 	   are executed in the order of appearance.
 	   Due to the limitations of the apache configuration file format, each directive
 	   must be one line unless it contains a trailing backslash "\" character.
-	   </p><div class="example"><a name="id387148"></a><p class="title"><b>Example 4.5. Exec statement spanning multiple lines</b></p><div class="example-contents"><pre class="programlisting">
+	   </p><div class="example"><a name="idp5725904"></a><p class="title"><b>Example 4.5. Exec statement spanning multiple lines</b></p><div class="example-contents"><pre class="programlisting">
 Exec	if $Message =~ /something interesting/       \
            log_info("found something interesting");         \
         else                                                \
            log_debug("found nothing interesting");
 </pre></div></div><p><br class="example-break">
 
-	   </p><div class="example"><a name="id387160"></a><p class="title"><b>Example 4.6. Equivalent use of statements in Exec</b></p><div class="example-contents"><pre class="programlisting">
+	   </p><div class="example"><a name="idp5727296"></a><p class="title"><b>Example 4.6. Equivalent use of statements in Exec</b></p><div class="example-contents"><pre class="programlisting">
 Exec	log_info("first"); \
         log_info("second");
 # The above is the same as the following:
@@ -803,7 +803,7 @@ Exec    log_info("second");
 		   it is only recommended to configure InputType to Binary if no compatibility with
 		   other logging software is required.
 		 </dd></dl></div><p>
-	   </p><div class="example"><a name="id387323"></a><p class="title"><b>Example 4.7. TCP input assuming nxlog format</b></p><div class="example-contents"><pre class="programlisting">
+	   </p><div class="example"><a name="idp5746864"></a><p class="title"><b>Example 4.7. TCP input assuming nxlog format</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_tcp
     Port	2345
@@ -855,7 +855,7 @@ Exec    log_info("second");
 		   The output is written in the nxlog binary format which is capable of preserving
 		   parsed fields of the log messages.
 		 </dd></dl></div><p>
-	   </p><div class="example"><a name="id387463"></a><p class="title"><b>Example 4.8. TCP output sending messages in nxlog format</b></p><div class="example-contents"><pre class="programlisting">
+	   </p><div class="example"><a name="idp5763824"></a><p class="title"><b>Example 4.8. TCP output sending messages in nxlog format</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_file
     File	"tmp/input"
@@ -877,7 +877,7 @@ Exec    log_info("second");
 	 </p></div></div></div><div class="section" title="Routes"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="config_routes"></a>Routes</h2></div></div></div><p>
        Routes define the flow and processing order of the log messages. The route must have a
        name and a Path. The name is specified similarly to the instance name in a module block.
-	 </p><div class="example"><a name="id387496"></a><p class="title"><b>Example 4.9. Route block</b></p><div class="example-contents"><pre class="programlisting">
+	 </p><div class="example"><a name="idp5767776"></a><p class="title"><b>Example 4.9. Route block</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Route example&gt;
     Path	in1, in2 =&gt; proc =&gt; out1, out2
 &lt;/Route&gt;	   </pre></div></div><p><br class="example-break">
@@ -893,7 +893,7 @@ Exec    log_info("second");
        </p><p>
 	 This directive can be especially usefull to minimize syslog UDP message loss for
 	 example.
-	 </p><div class="example"><a name="id387528"></a><p class="title"><b>Example 4.10. Prioritized processing</b></p><div class="example-contents"><pre class="programlisting">
+	 </p><div class="example"><a name="idp5771632"></a><p class="title"><b>Example 4.10. Prioritized processing</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input tcpin&gt;
     Module	im_tcp
     Host	localhost
@@ -1080,7 +1080,7 @@ Path	INPUT1[, INPUT2...] =&gt; [PROCESSOR1 [=&gt; PROCESSOR2...] =&gt;] OUTPUT1[
      <a class="link" href="#lang_functions" title="Functions">functions</a>.
      In addition, brackets can be used around expressions as shown in the example below.
      Brackets can also help in writing more readable code.
-     </p><div class="example"><a name="id394441"></a><p class="title"><b>Example 5.1. Using brackets around expressions</b></p><div class="example-contents"><pre class="programlisting">
+     </p><div class="example"><a name="idp6604080"></a><p class="title"><b>Example 5.1. Using brackets around expressions</b></p><div class="example-contents"><pre class="programlisting">
 if 1 + 1 == (1 + 1) log_info("2");
 if (1 + 1) == (1 + 1) log_info("2");
 if ((1 + 1) == (1 + 1)) log_info("2");
@@ -1094,7 +1094,7 @@ if ((1 + 1) == (1 + 1)) log_info("2");
 	       It can be also used in an 
 	       <a class="link" href="#lang_statement_assignment" title="Assignment">assignment</a> to unset a value 
 	       of a <a class="link" href="#lang_fields" title="Fields">field</a>, for example:
-	       </p><div class="example"><a name="id394385"></a><p class="title"><b>Example 5.2. Unsetting a value of a field</b></p><div class="example-contents"><pre class="programlisting">
+	       </p><div class="example"><a name="idp6597360"></a><p class="title"><b>Example 5.2. Unsetting a value of a field</b></p><div class="example-contents"><pre class="programlisting">
 $ProcessID = undef;
 </pre></div></div><p><br class="example-break">
 	     </p></dd><dt><span class="term"><a name="lang_literal_boolean"></a>Boolean</span></dt><dd><p>
@@ -1105,7 +1105,7 @@ $ProcessID = undef;
 	       prepended modifier means a hexadecimal notation.
 	       The "K", "M" and "G" modifiers are also supported which can be appended to
 	       mean Kilo (1024), Mega (1024^2) and Giga (1024^3).
-	       </p><div class="example"><a name="id394323"></a><p class="title"><b>Example 5.3. Setting an integer value</b></p><div class="example-contents"><pre class="programlisting">
+	       </p><div class="example"><a name="idp6591504"></a><p class="title"><b>Example 5.3. Setting an integer value</b></p><div class="example-contents"><pre class="programlisting">
 $Limit = 42M;
 </pre></div></div><p><br class="example-break">
 	     </p></dd><dt><span class="term"><a name="lang_literal_string"></a>String</span></dt><dd><p>
@@ -1130,21 +1130,21 @@ $Limit = 42M;
 		       <em class="replaceable"><code>\x0A</code></em>.
 		     </p></dd></dl></div><p>
 	 
-	       </p><div class="example"><a name="id394186"></a><p class="title"><b>Example 5.4. Setting a string value</b></p><div class="example-contents"><pre class="programlisting">
+	       </p><div class="example"><a name="idp6575424"></a><p class="title"><b>Example 5.4. Setting a string value</b></p><div class="example-contents"><pre class="programlisting">
 $Message = "Test message";
 </pre></div></div><p><br class="example-break">
 	     </p></dd><dt><span class="term"><a name="lang_literal_regexp"></a>Regular expression</span></dt><dd><p>
 	       Regular expressions must be quoted with slashes as in Perl. Captured substrings
 	       are accessible through a numeric reference such as $1. The full subject
 	       string is placed into $0.
-	       </p><div class="example"><a name="id394172"></a><p class="title"><b>Example 5.5. A regular expression match operation</b></p><div class="example-contents"><pre class="programlisting">
+	       </p><div class="example"><a name="idp6572000"></a><p class="title"><b>Example 5.5. A regular expression match operation</b></p><div class="example-contents"><pre class="programlisting">
 if $Message =~ /^Test (\S+)/ log_info("captured: " + $1);
 
 </pre></div></div><p><br class="example-break">
 	     </p></dd><dt><span class="term"><a name="lang_literal_datetime"></a>Datetime</span></dt><dd><p>
 	       The datetime literal is an unquoted representation of a time value expressing
 	       local time in the format of YYYY-MM-DD hh:mm:ss
-	       </p><div class="example"><a name="id394141"></a><p class="title"><b>Example 5.6. Setting a datetime value</b></p><div class="example-contents"><pre class="programlisting">
+	       </p><div class="example"><a name="idp6568560"></a><p class="title"><b>Example 5.6. Setting a datetime value</b></p><div class="example-contents"><pre class="programlisting">
 $EventTime = 2000-01-02 03:04:05;
 </pre></div></div><p><br class="example-break">
 	     </p></dd><dt><span class="term"><a name="lang_literal_ip4addr"></a>IPv4 Address</span></dt><dd><p>
@@ -1189,14 +1189,14 @@ $EventTime = 2000-01-02 03:04:05;
 		 The 'not' operator expects a boolean value. It will evaluate to undef if
 		 the value is undefined. If it receives an unknown value which evaluates to
 		 a non-boolean, it will result in a run-time execution error.
-		 </p><div class="example"><a name="id394002"></a><p class="title"><b>Example 5.7. Typical use of the 'not' operand</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6551552"></a><p class="title"><b>Example 5.7. Typical use of the 'not' operand</b></p><div class="example-contents"><pre class="programlisting">
 if not $success log_error("failure");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_unop_neg"></a>-</span></dt><dd><p>
 		 The unary negation operator before an integer is very similar to a negative 
 		 integer, except that two or more minus "-" signs are not valid for an integer
 		 literal.
-		 </p><div class="example"><a name="id393963"></a><p class="title"><b>Example 5.8. Unary negation</b></p><div class="example-contents"><pre class="programlisting">if - -1 != 1 log_error("this should never be printed");</pre></div></div><p><br class="example-break">
+		 </p><div class="example"><a name="idp6547088"></a><p class="title"><b>Example 5.8. Unary negation</b></p><div class="example-contents"><pre class="programlisting">if - -1 != 1 log_error("this should never be printed");</pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_unop_defined"></a>defined</span></dt><dd><p>
 		 The defined operation will evaluate to TRUE if the operand is defined,
 		 otherwise it is FALSE.
@@ -1236,8 +1236,18 @@ if defined undef log_info("never printed");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393835"></a><p class="title"><b>Example 5.10. Regular expression based string matching</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6529312"></a><p class="title"><b>Example 5.10. Regular expression based string matching</b></p><div class="example-contents"><pre class="programlisting">
 if $Message =~ /^Test message/ log_info("matched");
+</pre></div></div><p><br class="example-break">
+
+		 Regexp based string substitution is also supported with the 
+		 <em class="replaceable"><code>s///</code></em> operator. The <em class="replaceable"><code>/g</code></em>
+		 modifier can be used for global replacement.
+		 Variables and captured substring references cannot be used inside the reqular expression
+		 or the regexp substitution operator and will be treated literally as is.
+		 </p><div class="example"><a name="idp6528928"></a><p class="title"><b>Example 5.11. Replace whitespace occurences</b></p><div class="example-contents"><pre class="programlisting">
+if $SourceName =~ s/\s/_/g log_info("removed all whitespace in SourceName");
+
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_notregmatch"></a>!~</span></dt><dd><p>
 		 This is the opposite of <a class="link" href="#lang_binop_regmatch">=~</a>,
@@ -1263,7 +1273,8 @@ if $Message =~ /^Test message/ log_info("matched");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393729"></a><p class="title"><b>Example 5.11. Regular expression based string matching</b></p><div class="example-contents"><pre class="programlisting">
+		 The <em class="replaceable"><code>s///</code></em> substitution operator is also supported.
+		 </p><div class="example"><a name="idp6516416"></a><p class="title"><b>Example 5.12. Regular expression based string matching</b></p><div class="example-contents"><pre class="programlisting">
 if $Message !~ /^Test message/ log_info("didn't match");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_equal"></a>==</span></dt><dd><p>
@@ -1306,7 +1317,7 @@ if $Message !~ /^Test message/ log_info("didn't match");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393558"></a><p class="title"><b>Example 5.12. Comparing integers</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6494784"></a><p class="title"><b>Example 5.13. Comparing integers</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue == 1 log_info("severity is one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_notequal"></a>!=</span></dt><dd><p>
@@ -1349,7 +1360,7 @@ if $SeverityValue == 1 log_info("severity is one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393385"></a><p class="title"><b>Example 5.13. Comparing for inequality</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6473792"></a><p class="title"><b>Example 5.14. Comparing for inequality</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue != 1 log_info("severity is not one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_less"></a>&lt;</span></dt><dd><p>
@@ -1372,7 +1383,7 @@ if $SeverityValue != 1 log_info("severity is not one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393289"></a><p class="title"><b>Example 5.14. Less</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6464224"></a><p class="title"><b>Example 5.15. Less</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue &lt; 1 log_info("severity is less than one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_le"></a>&lt;=</span></dt><dd><p>
@@ -1395,7 +1406,7 @@ if $SeverityValue &lt; 1 log_info("severity is less than one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393204"></a><p class="title"><b>Example 5.15. Less or equal</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6452336"></a><p class="title"><b>Example 5.16. Less or equal</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue &lt; 1 log_info("severity is less than or equal to one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_greater"></a>&gt;</span></dt><dd><p>
@@ -1414,7 +1425,7 @@ if $SeverityValue &lt; 1 log_info("severity is less than or equal to one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393117"></a><p class="title"><b>Example 5.16. Greater</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6441888"></a><p class="title"><b>Example 5.17. Greater</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue &gt; 1 log_info("severity is greater than one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_ge"></a>&gt;=</span></dt><dd><p>
@@ -1433,7 +1444,7 @@ if $SeverityValue &gt; 1 log_info("severity is greater than one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id393034"></a><p class="title"><b>Example 5.17. Greater or equal</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6431056"></a><p class="title"><b>Example 5.18. Greater or equal</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue &gt;= 1 log_info("severity is greater than or equal to one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_and"></a>and</span></dt><dd><p>
@@ -1450,7 +1461,7 @@ if $SeverityValue &gt;= 1 log_info("severity is greater than or equal to one");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392970"></a><p class="title"><b>Example 5.18. And operation</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6424816"></a><p class="title"><b>Example 5.19. And operation</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue == 1 and $FacilityValue == 2 log_info("1 and 2");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_or"></a>or</span></dt><dd><p>
@@ -1467,7 +1478,7 @@ if $SeverityValue == 1 and $FacilityValue == 2 log_info("1 and 2");
 		       <a class="link" href="#lang_type_boolean">boolean</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392897"></a><p class="title"><b>Example 5.19. Or</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6417088"></a><p class="title"><b>Example 5.20. Or</b></p><div class="example-contents"><pre class="programlisting">
 if $SeverityValue == 1 or $SeverityValue == 2 log_info("1 or 2");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_plus"></a>+</span></dt><dd><p>
@@ -1529,7 +1540,7 @@ if $SeverityValue == 1 or $SeverityValue == 2 log_info("1 or 2");
 		     </span></dt><dd>
 			 Add the number of seconds in the left value to the datetime stored in the right value.
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392680"></a><p class="title"><b>Example 5.20. Concatenation</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6389904"></a><p class="title"><b>Example 5.21. Concatenation</b></p><div class="example-contents"><pre class="programlisting">
 if 1 + "a" == "1a" log_info("this will be printed");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_minus"></a>-</span></dt><dd><p>
@@ -1559,7 +1570,7 @@ if 1 + "a" == "1a" log_info("this will be printed");
 		     </span></dt><dd>
 			 Subtract the number of seconds from the datetime stored in the left value.
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392566"></a><p class="title"><b>Example 5.21. Subtraction</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6375328"></a><p class="title"><b>Example 5.22. Subtraction</b></p><div class="example-contents"><pre class="programlisting">
 if 4 - 1 == 3 log_info("four minus one is three");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_mul"></a>*</span></dt><dd><p>
@@ -1573,7 +1584,7 @@ if 4 - 1 == 3 log_info("four minus one is three");
 		       <a class="link" href="#lang_type_integer">integer</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392506"></a><p class="title"><b>Example 5.22. Multiplication</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6369232"></a><p class="title"><b>Example 5.23. Multiplication</b></p><div class="example-contents"><pre class="programlisting">
 if 4 * 2 == 8 log_info("four times two is eight");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_div"></a>/</span></dt><dd><p>
@@ -1588,7 +1599,7 @@ if 4 * 2 == 8 log_info("four times two is eight");
 		       <a class="link" href="#lang_type_integer">integer</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392448"></a><p class="title"><b>Example 5.23. Division</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6360992"></a><p class="title"><b>Example 5.24. Division</b></p><div class="example-contents"><pre class="programlisting">
 if 9 / 4 == 2 log_info("9 divided by 4 is 2");
 </pre></div></div><p><br class="example-break">
 	       </p></dd><dt><span class="term"><a name="lang_binop_mod"></a>%</span></dt><dd><p>
@@ -1603,7 +1614,7 @@ if 9 / 4 == 2 log_info("9 divided by 4 is 2");
 		       <a class="link" href="#lang_type_integer">integer</a>
 		     </span></dt><dd>
 		       </dd></dl></div><p>
-		 </p><div class="example"><a name="id392391"></a><p class="title"><b>Example 5.24. Modulo</b></p><div class="example-contents"><pre class="programlisting">
+		 </p><div class="example"><a name="idp6354512"></a><p class="title"><b>Example 5.25. Modulo</b></p><div class="example-contents"><pre class="programlisting">
 if 3 % 2 == 1 log_info("three mod two is one");
 </pre></div></div><p><br class="example-break">
 	       </p></dd></dl></div><p>
@@ -1617,7 +1628,7 @@ if 3 % 2 == 1 log_info("three mod two is one");
        <a class="link" href="#lang_type_varargs">varargs</a> argument type.
        
        See the <a class="link" href="#lang_exported_funcproc" title="List of available functions and procedures">list of available functions</a>.
-       </p><div class="example"><a name="id392342"></a><p class="title"><b>Example 5.25. Function call</b></p><div class="example-contents"><pre class="programlisting">
+       </p><div class="example"><a name="idp6347744"></a><p class="title"><b>Example 5.26. Function call</b></p><div class="example-contents"><pre class="programlisting">
 $current.time = now();
 if now() &gt; 2000-01-01 00:00:00 log_info("we are in the 21st century");
 </pre></div></div><p><br class="example-break">
@@ -1633,14 +1644,14 @@ if now() &gt; 2000-01-01 00:00:00 log_info("we are in the 21st century");
    </p><div class="section" title="Assignment"><div class="titlepage"><div><div><h3 class="title"><a name="lang_statement_assignment"></a>Assignment</h3></div></div></div><p>
        The assignment operation "=" loads the value from the expression evaluated on the right
        into a <a class="link" href="#lang_fields" title="Fields">field</a> on the left.
-      </p><div class="example"><a name="id392294"></a><p class="title"><b>Example 5.26. Assignment</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp6343424"></a><p class="title"><b>Example 5.27. Assignment</b></p><div class="example-contents"><pre class="programlisting">
 $event.rcvd = now();
 </pre></div></div><p><br class="example-break">
      </p></div><div class="section" title="Block"><div class="titlepage"><div><div><h3 class="title"><a name="lang_statement_block"></a>Block</h3></div></div></div><p>
        A block consists of one or more statements within curly braces "{}". This is
        typically used with <a class="link" href="#lang_statement_if" title="If-Else">conditional statements</a>
        as in the example below.
-      </p><div class="example"><a name="id392248"></a><p class="title"><b>Example 5.27. Conditional statement block</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp6338960"></a><p class="title"><b>Example 5.28. Conditional statement block</b></p><div class="example-contents"><pre class="programlisting">
 if now() &gt; 2000-01-01 00:00:00
 {
    log_info("we are in the");
@@ -1658,13 +1669,13 @@ if now() &gt; 2000-01-01 00:00:00
        <a class="link" href="#lang_type_varargs">varargs</a> argument type.
        
        See the <a class="link" href="#lang_exported_funcproc" title="List of available functions and procedures">list of available procedures</a>.
-     </p><div class="example"><a name="id392217"></a><p class="title"><b>Example 5.28. Procedure call</b></p><div class="example-contents"><pre class="programlisting">
+     </p><div class="example"><a name="idp6334288"></a><p class="title"><b>Example 5.29. Procedure call</b></p><div class="example-contents"><pre class="programlisting">
 log_info("this is a procedure call");
 </pre></div></div><br class="example-break"></div><div class="section" title="If-Else"><div class="titlepage"><div><div><h3 class="title"><a name="lang_statement_if"></a>If-Else</h3></div></div></div><p>
        A conditional statement starts with the "if" keyword followed by a boolean
        expression and a statement. The "else" with another statement is optional.
        Brackets around the expression are also optional.
-      </p><div class="example"><a name="id392200"></a><p class="title"><b>Example 5.29. Conditional statements</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp6331744"></a><p class="title"><b>Example 5.30. Conditional statements</b></p><div class="example-contents"><pre class="programlisting">
 if now() &gt; 2000-01-01 00:00:00 log_info("we are in the 21st century");
 
 # same as above but with brackets
@@ -1686,7 +1697,7 @@ else log_info("we are not yet in the 21st century");
       Simliarly to Perl, the nxlog language doesn't have a switch statement. This can be
       accomplished by the appropriate use of conditional if-else statements as in the example 
       below.
-      </p><div class="example"><a name="id392184"></a><p class="title"><b>Example 5.30. Emulating switch with if-else</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp6329088"></a><p class="title"><b>Example 5.31. Emulating switch with if-else</b></p><div class="example-contents"><pre class="programlisting">
 if ( $value == 1 )
    log_info("1");
 else if ( $value == 2 )
@@ -1719,7 +1730,7 @@ else
       <a class="link" href="#core_proc_delete_var">delete_var()</a>,
       <a class="link" href="#core_proc_set_var">set_var()</a> and 
       <a class="link" href="#core_func_get_var">get_var()</a> for using module variables.
-      </p><div class="example"><a name="lang_variable_example_corr"></a><p class="title"><b>Example 5.31. Simple event correlation using module variables</b></p><div class="example-contents"><p>
+      </p><div class="example"><a name="lang_variable_example_corr"></a><p class="title"><b>Example 5.32. Simple event correlation using module variables</b></p><div class="example-contents"><p>
 	  If the number of login failures exceeds 3 within 45 seconds, then
 	  we generate an internal log message.
 	</p><pre class="programlisting">
@@ -1806,11 +1817,11 @@ if $Message =~ /login failure/
       both during <a class="link" href="#core_proc_create_stat">creation</a>,
       <a class="link" href="#core_proc_add_stat">update</a> and 
       <a class="link" href="#core_func_get_stat">read</a> making offline log processing possible.
-      </p><div class="example"><a name="id391879"></a><p class="title"><b>Example 5.32. Simple event correlation using statistical counters</b></p><div class="example-contents"><p>
+      </p><div class="example"><a name="idp6292592"></a><p class="title"><b>Example 5.33. Simple event correlation using statistical counters</b></p><div class="example-contents"><p>
 	  If the number of login failures exceeds 3 within 45 seconds, then
 	  we generate an internal log message.
 	  This accomplishes the exact same task as our
-	  <a class="link" href="#lang_variable_example_corr" title="Example 5.31. Simple event correlation using module variables">previous algorithm</a> did
+	  <a class="link" href="#lang_variable_example_corr" title="Example 5.32. Simple event correlation using module variables">previous algorithm</a> did
 	  with module variables, except that this is a lot simpler. 
 	  In addition, this method is more precise, because it uses the timestamp from the
 	  log message instead of relying on the current time, so it is possible to use this
@@ -3549,6 +3560,12 @@ tun0       1500 0    316943      0      0 0        368642      0      0      0 M
         It is required to support Syslog TLS transport defined in RFC 5425.
        </dd></dl></div><p>
   </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+      The <em class="replaceable"><code>Syslog_TLS</code></em> InputType/OutputType can work with any
+      input/output such as <a class="link" href="#im_tcp" title="TCP (im_tcp)">im_tcp</a> or <a class="link" href="#im_file" title="File (im_file)">im_file</a>
+      and it does not depend on SSL transport at all.
+      The name <em class="replaceable"><code>Syslog_TLS</code></em> is a little misleading, it was chosen
+      to refer to the octet-framing method described in RFC 5425 used for TLS transport.
+    </p></div><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
       The <a class="link" href="#pm_transformer" title="Message format converter (pm_transformer)">pm_transformer</a> module can also parse and 
       create BSD and IETF syslog messages but using the functions and procedures provided
       by this module makes it possible to solve more complex tasks which 
@@ -3952,7 +3969,7 @@ tun0       1500 0    316943      0      0 0        368642      0      0      0 M
                </dd><dt><span class="term">args</span></dt><dd>
                 type: <a class="link" href="#lang_type_varargs">varargs</a>
                </dd></dl></div></dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="xm_exec_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id420451"></a><p class="title"><b>Example 6.21. nxlog acting as a cron daemon</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9747952"></a><p class="title"><b>Example 6.21. nxlog acting as a cron daemon</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension exec&gt;
     Module	xm_exec
     &lt;Schedule&gt;
@@ -3962,7 +3979,7 @@ tun0       1500 0    316943      0      0 0        368642      0      0      0 M
 &lt;/Extension&gt;
 
 </pre></div></div><p><br class="example-break">
-      </p><div class="example"><a name="id420471"></a><p class="title"><b>Example 6.22. Sending email alerts</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9750432"></a><p class="title"><b>Example 6.22. Sending email alerts</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension exec&gt;
     Module	xm_exec
 &lt;/Extension&gt;
@@ -4194,7 +4211,7 @@ sub process
  </p></div><div class="section" title="DBI (im_dbi)"><div class="titlepage"><div><div><h3 class="title"><a name="im_dbi"></a>DBI (im_dbi)</h3></div></div></div><p>
     FIXME
   </p><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_dbi_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id421303"></a><p class="title"><b>Example 6.24. Reading from a MySQL database</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9850208"></a><p class="title"><b>Example 6.24. Reading from a MySQL database</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input dbiin&gt;
     Module	im_dbi
     SavePos	TRUE
@@ -4241,7 +4258,7 @@ sub process
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_exec_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id421465"></a><p class="title"><b>Example 6.25. Emulating im_file</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9869712"></a><p class="title"><b>Example 6.25. Emulating im_file</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input input&gt;
     Module	im_exec
     Command	/usr/bin/tail
@@ -4375,7 +4392,7 @@ sub process
      </dd><dt><span class="term">return type</span></dt><dd>
             <a class="link" href="#lang_type_string">string</a>
            </dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_file_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id421955"></a><p class="title"><b>Example 6.26. Forwarding logs from a file to a remote host</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9928464"></a><p class="title"><b>Example 6.26. Forwarding logs from a file to a remote host</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_file
     File	"/var/log/messages"
@@ -4461,7 +4478,7 @@ sub process
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_internal_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id422488"></a><p class="title"><b>Example 6.27. Forwaring internal messages over syslog udp</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp9992368"></a><p class="title"><b>Example 6.27. Forwaring internal messages over syslog udp</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module      xm_syslog
 &lt;/Extension&gt;
@@ -4514,7 +4531,7 @@ sub process
       the <a class="link" href="#xm_syslog" title="Syslog (xm_syslog)">xm_syslog</a> module, this will set the timestamp and
       hostname fields.
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_kernel_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id422613"></a><p class="title"><b>Example 6.28. Storing raw kernel logs into a file</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10007376"></a><p class="title"><b>Example 6.28. Storing raw kernel logs into a file</b></p><div class="example-contents"><pre class="programlisting">
 # drop privileges after being started as root
 User nxlog
 Group nxlog
@@ -4593,7 +4610,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_mark_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id423100"></a><p class="title"><b>Example 6.29. Using the im_mark module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10065840"></a><p class="title"><b>Example 6.29. Using the im_mark module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input mark&gt;
     Module	im_mark
     MarkInterval 1
@@ -4732,7 +4749,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_mseventlog_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id424048"></a><p class="title"><b>Example 6.30. Forwarding EventLogs from a windows machine to a remote host</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10179632"></a><p class="title"><b>Example 6.30. Forwarding EventLogs from a windows machine to a remote host</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module      im_mseventlog
 &lt;/Input&gt;
@@ -4752,12 +4769,11 @@ Group nxlog
     and later. 
     You can refer to the official Microsoft documentation about 
     <a class="ulink" href="http://technet.microsoft.com/en-us/library/cc722404.aspx" target="_top">Event Logs</a>.
-    The module supports reading both Windows Logs and Applications and Services Logs. 
-    It looks up the available EventLog sources stored under the registry key
-    "SYSTEM\CurrentControlSet\Services\Eventlog" and
-    "SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels" and monitors logs in each
-    of these unless the <a class="link" href="#im_msvistalog_config_query">Query</a> and the 
+    The module supports reading all System, Application and Custom events.
+    It looks up the available channels and monitors events in each unless the
+    <a class="link" href="#im_msvistalog_config_query">Query</a> and the 
     <a class="link" href="#im_msvistalog_config_channel">Channel</a> directives are explicitely defined.
+    Event logs can be collected from remote servers over MS RPC (Note: Enterprise Edition only).
   </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
       This module will not work on Windows 2003 and earlier because Windows Vista, Windows 2008
       and later use a new EventLog API which is not available in earlier Windows versions.
@@ -4847,6 +4863,11 @@ Group nxlog
 	      sources defined in the registry.
 	      See the MSDN docs about 
 	      <a class="ulink" href="http://msdn.microsoft.com/en-us/library/aa385231.aspx" target="_top">Event Selection</a>.
+	    </dd><dt><span class="term"><a name="im_msvistalog_config_pollinterval"></a>PollInterval</span></dt><dd>
+	      This directive specifies in seconds how frequently the module will check for
+	      new events. If this directive is not specified it defaults to 1 second.
+	      Fractional seconds may be specified, i.e. to check twice every second you should
+	      set the following: <em class="replaceable"><code>PollInterval 0.5</code></em>
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Fields generated by im_msvistalog"><div class="titlepage"><div><div><h4 class="title"><a name="im_msvistalog_fields"></a>Fields generated by im_msvistalog</h4></div></div></div><p>
   The following fields are set by im_msvistalog:
@@ -4934,7 +4955,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_msvistalog_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id425385"></a><p class="title"><b>Example 6.31. Forwarding EventLogs from a windows machine to a remote host</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10342960"></a><p class="title"><b>Example 6.31. Forwarding EventLogs from a windows machine to a remote host</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module       im_msvistalog
     ReadFromLast TRUE
@@ -5029,7 +5050,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_ssl_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id425857"></a><p class="title"><b>Example 6.32. Reading binary data forwarded from another nxlog agent</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10399584"></a><p class="title"><b>Example 6.32. Reading binary data forwarded from another nxlog agent</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input ssl&gt;
     Module	im_ssl
     Host	localhost
@@ -5095,7 +5116,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_tcp_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id426144"></a><p class="title"><b>Example 6.33. Using the im_tcp module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10434000"></a><p class="title"><b>Example 6.33. Using the im_tcp module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_tcp
     Host	0.0.0.0
@@ -5149,6 +5170,12 @@ Group nxlog
 	      This specifies the port number which the module will listen on for
 	      incoming conenctions.
 	      The default port is 514 if this directive is not specified.
+	    </dd><dt><span class="term"><a name="im_udp_config_sockbufsize"></a>SockBufSize</span></dt><dd>
+	      This optional directive sets the socket buffer size (SO_RCVBUF) to the value
+	      specified. Otherwise the OS defaults are used.
+	      If you are experiencing UDP packet loss at the kernel level, setting this to a
+	      high value (e.g. 150000000) may help. On Microsoft Windows systems the default
+	      socket buffer size is extremely low, using this option is highly recommended.
 	    </dd><dt><span class="term"><a name="im_udp_config_inputtype"></a>InputType</span></dt><dd>
 	      See the description about <a class="link" href="#config_inputtype" title="InputType">InputType</a>
 	      in the global module config section.
@@ -5165,7 +5192,7 @@ Group nxlog
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_udp_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id426464"></a><p class="title"><b>Example 6.34. Using the im_udp module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10475024"></a><p class="title"><b>Example 6.34. Using the im_udp module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_udp
     Host	192.168.1.1
@@ -5210,7 +5237,7 @@ Group nxlog
 	      SOCK_STREAM sockets.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="im_uds_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id426626"></a><p class="title"><b>Example 6.35. Using the im_uds module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10494416"></a><p class="title"><b>Example 6.35. Using the im_uds module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input unix&gt;
     Module	im_uds
     uds		/dev/log
@@ -5253,7 +5280,7 @@ Group nxlog
        if the queue is already full.
      </dd><dt><span class="term">arguments</span></dt><dd><div class="variablelist"><dl><dt><span class="term">mode</span></dt><dd>
                 type: <a class="link" href="#lang_type_boolean">boolean</a>
-               </dd></dl></div></dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_blocker_config_examples"></a>Configuration examples</h4></div></div></div><div class="example"><a name="id426886"></a><p class="title"><b>Example 6.36. Using the pm_blocker module</b></p><div class="example-contents"><p>
+               </dd></dl></div></dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_blocker_config_examples"></a>Configuration examples</h4></div></div></div><div class="example"><a name="idp10525680"></a><p class="title"><b>Example 6.36. Using the pm_blocker module</b></p><div class="example-contents"><p>
 	In this example we collect messages received over UDP and forward it to another host
 	via TCP. The log data is forwarded during non-working hours between 19 pm and 8 am.
 	During the other half of the day data is buffered on the disk to be sent out only after
@@ -5353,7 +5380,7 @@ Group nxlog
      </dd><dt><span class="term">return type</span></dt><dd>
             <a class="link" href="#lang_type_integer">integer</a>
            </dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_buffer_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id427264"></a><p class="title"><b>Example 6.37. Using a memory buffer to protect against udp message loss</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10570944"></a><p class="title"><b>Example 6.37. Using a memory buffer to protect against udp message loss</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input udp&gt;
     Module	im_udp
     Host	0.0.0.0
@@ -5386,7 +5413,7 @@ Group nxlog
       This module has been obsoleted by the nxlog language because filtering is now possible
       in any module using the <a class="link" href="#core_proc_drop">drop()</a> procedure
       conditionally in the <a class="link" href="#config_module_exec" title="Exec">Exec</a> directive.
-      </p><div class="example"><a name="id427329"></a><p class="title"><b>Example 6.38. Dropping messages conditionally</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10578800"></a><p class="title"><b>Example 6.38. Dropping messages conditionally</b></p><div class="example-contents"><pre class="programlisting">
 if $raw_event =~ /^Debug/ drop();
 </pre></div></div><p><br class="example-break">
     </p></div><div class="section" title="Configuration"><div class="titlepage"><div><div><h4 class="title"><a name="pm_filter_config"></a>Configuration</h4></div></div></div><p>
@@ -5398,7 +5425,7 @@ if $raw_event =~ /^Debug/ drop();
 	      If the expression does not evaluate to TRUE, the log message is discarded.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_filter_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id427412"></a><p class="title"><b>Example 6.39. Filtering messages</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10588784"></a><p class="title"><b>Example 6.39. Filtering messages</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input unix&gt;
     Module	im_uds
     uds		/dev/log
@@ -5464,7 +5491,7 @@ if $raw_event =~ /^Debug/ drop();
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_norepeat_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id427821"></a><p class="title"><b>Example 6.40. Filtering out duplicated messages</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10637808"></a><p class="title"><b>Example 6.40. Filtering out duplicated messages</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     UDS		/dev/log
@@ -5562,7 +5589,7 @@ if $raw_event =~ /^Debug/ drop();
 	      <a class="link" href="#pm_pattern_pattern_database" title="Pattern database file">pattern database file</a>.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Pattern database file"><div class="titlepage"><div><div><h4 class="title"><a name="pm_pattern_pattern_database"></a>Pattern database file</h4></div></div></div><p>
-      </p><div class="example"><a name="id428075"></a><p class="title"><b>Example 6.41. A simple pattern database</b></p><div class="example-contents"><p>
+      </p><div class="example"><a name="idp10668304"></a><p class="title"><b>Example 6.41. A simple pattern database</b></p><div class="example-contents"><p>
 	  This pattern database contains two patterns to match ssh authentication messages.
 	  Both extract <em class="replaceable"><code>AuthMethod</code></em>, <em class="replaceable"><code>AccountName</code></em>
 	  and <em class="replaceable"><code>SourceIP4Address</code></em> from the log message when the pattern
@@ -5695,7 +5722,7 @@ if $raw_event =~ /^Debug/ drop();
       </p></dd></dl></div><p>
 
  </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_pattern_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id428278"></a><p class="title"><b>Example 6.42. Using the pm_pattern module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10692672"></a><p class="title"><b>Example 6.42. Using the pm_pattern module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module      xm_syslog
 &lt;/Extension&gt;
@@ -5825,7 +5852,7 @@ if $raw_event =~ /^Debug/ drop();
 	      lines. The field names must have the dollar sign "$" prepended.
   	    </p></dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="pm_transformer_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id428941"></a><p class="title"><b>Example 6.43. Using the pm_transformer module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10772192"></a><p class="title"><b>Example 6.43. Using the pm_transformer module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module      xm_syslog
 &lt;/Extension&gt;
@@ -5862,7 +5889,7 @@ if $raw_event =~ /^Debug/ drop();
     See the <a class="link" href="#core_proc_sleep">sleep()</a> procedure which can delay log message
     output and can also help testing similar situations.
   </p><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_blocker_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id429028"></a><p class="title"><b>Example 6.44. Testing buffering with the om_blocker module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10782656"></a><p class="title"><b>Example 6.44. Testing buffering with the om_blocker module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_udp
     Host	0.0.0.0
@@ -5941,7 +5968,7 @@ if $raw_event =~ /^Debug/ drop();
       Notably the <a class="link" href="#im_msvistalog" title="MS EventLog for Windows 2008/Vista and later (im_msvistatlog)">im_msvistalog</a> and 
       <a class="link" href="#im_mseventlog" title="MS EventLog for Windows XP/2000/2003 (im_mseventlog)">im_mseventlog</a> modules generate different fields 
       which you may want to store in an SQL database similarly to these examples.
-      </p><div class="example"><a name="id429228"></a><p class="title"><b>Example 6.45. Storing syslog in a PostgreSQL database</b></p><div class="example-contents"><p>
+      </p><div class="example"><a name="idp10806624"></a><p class="title"><b>Example 6.45. Storing syslog in a PostgreSQL database</b></p><div class="example-contents"><p>
 	  Below is a table schema which can be used to store syslog data.
 </p><pre class="programlisting">
 CREATE TABLE log (
@@ -5985,7 +6012,7 @@ CREATE TABLE log (
 
 </pre></div></div><p><br class="example-break">
     </p><p>
-      </p><div class="example"><a name="id429266"></a><p class="title"><b>Example 6.46. Storing logs in a MySQL database</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10811216"></a><p class="title"><b>Example 6.46. Storing logs in a MySQL database</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module      xm_syslog
 &lt;/Extension&gt;
@@ -6042,7 +6069,7 @@ CREATE TABLE log (
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_exec_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id429444"></a><p class="title"><b>Example 6.47. Piping logs to an external program</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10832560"></a><p class="title"><b>Example 6.47. Piping logs to an external program</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     uds		/dev/log
@@ -6138,7 +6165,7 @@ CREATE TABLE log (
        This does not need to be called after rotate_to() because that reopens
        the file automatically.
      </dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_file_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id429940"></a><p class="title"><b>Example 6.48. Storing raw syslog messages into a file</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10892112"></a><p class="title"><b>Example 6.48. Storing raw syslog messages into a file</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     UDS		/dev/log
@@ -6246,7 +6273,7 @@ CREATE TABLE log (
      </dd><dt><span class="term">arguments</span></dt><dd><div class="variablelist"><dl><dt><span class="term">path</span></dt><dd>
                 type: <a class="link" href="#lang_type_string">string</a>
                </dd></dl></div></dd></dl></div></dd></dl></div></div></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_http_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id430349"></a><p class="title"><b>Example 6.50. Sending logs over HTTPS</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10941216"></a><p class="title"><b>Example 6.50. Sending logs over HTTPS</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module		im_file
     File		'input.log'
@@ -6331,7 +6358,7 @@ CREATE TABLE log (
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_ssl_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id430723"></a><p class="title"><b>Example 6.51. Writing nxlog binary data to another nxlog agent</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp10986032"></a><p class="title"><b>Example 6.51. Writing nxlog binary data to another nxlog agent</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     UDS		tmp/socket
@@ -6379,7 +6406,7 @@ CREATE TABLE log (
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_tcp_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id430895"></a><p class="title"><b>Example 6.52. Transferring raw logs over TCP</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp11006656"></a><p class="title"><b>Example 6.52. Transferring raw logs over TCP</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     UDS		/dev/log
@@ -6411,12 +6438,15 @@ CREATE TABLE log (
 	    </dd><dt><span class="term"><a name="om_udp_config_port"></a>Port</span></dt><dd>
 	      This specifies the port number which the module will send UDP packets to.
 	      The default port is 514 if this directive is not specified.
+	    </dd><dt><span class="term"><a name="om_udp_config_sockbufsize"></a>SockBufSize</span></dt><dd>
+	      This optional directive sets the socket buffer size (SO_SNDBUF) to the value
+	      specified. Otherwise the OS defaults are used.
 	    </dd><dt><span class="term"><a name="om_udp_config_outputtype"></a>OutputType</span></dt><dd>
 	      See the description about <a class="link" href="#config_outputtype" title="OutputType">OutputType</a>
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_udp_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id431041"></a><p class="title"><b>Example 6.53. Sending raw syslog over udp</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp11026528"></a><p class="title"><b>Example 6.53. Sending raw syslog over udp</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input in&gt;
     Module	im_uds
     UDS		/dev/log
@@ -6453,7 +6483,7 @@ CREATE TABLE log (
 	      in the global module config section.
 	    </dd></dl></div><p>
     </p></div><div class="section" title="Configuration examples"><div class="titlepage"><div><div><h4 class="title"><a name="om_uds_config_examples"></a>Configuration examples</h4></div></div></div><p>
-      </p><div class="example"><a name="id431176"></a><p class="title"><b>Example 6.54. Using the om_uds module</b></p><div class="example-contents"><pre class="programlisting">
+      </p><div class="example"><a name="idp11042800"></a><p class="title"><b>Example 6.54. Using the om_uds module</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module	xm_syslog
 &lt;/Extension&gt;
@@ -6484,7 +6514,7 @@ CREATE TABLE log (
      patterns, doing offline event correlation or HMAC message integrity checking.
    </p><p>
      FIXME manpage and usage
-   </p></div></div><div class="chapter" title="Chapter 8. Reading and receiving logs"><div class="titlepage"><div><div><h2 class="title"><a name="sources"></a>Chapter 8. Reading and receiving logs</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#sources_os">Operating Systems</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#sources_os_linux">GNU/Linux</a></span></dt><dt><span class="section"><a href="#sources_os_android">Android</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_network">Network</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_network_udp">UDP</a></span></dt><dt><span class="section"><a href="#sources_network_tcp">TCP</a></span></dt><dt><span class="section"><a href="#sources_network_ssl">TLS/SSL over TCP</a></span></dt><dt><span class="section"><a href="#sources_network_syslog">Syslog</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_database">Database</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_database_dbi">Using im_dbi</a></span></dt><dt><span class="section"><a href="#sources_database_odbc">Using im_odbc</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_file">Files</a></span></dt><dt><span class="section"><a href="#sources_program">External programs and scripts</a></span></dt><dt><span class="section"><a href="#sources_app">Applications</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_app_apache">Apache HTTP Server</a></span></dt><dt><span class="section"><a href="#sources_app_tomcat">Apache Tomcat and java application logs</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_device">Devices</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_devince_cisco">Cisco</a></span></dt></dl></dd></dl></div><p>
+   </p></div></div><div class="chapter" title="Chapter 8. Reading and receiving logs"><div class="titlepage"><div><div><h2 class="title"><a name="sources"></a>Chapter 8. Reading and receiving logs</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#sources_os">Operating Systems</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_os_windows">Microsoft Windows</a></span></dt><dt><span class="section"><a href="#sources_os_linux">GNU/Linux</a></span></dt><dt><span class="section"><a href="#sources_os_android">Android</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_network">Network</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_network_udp">UDP</a></span></dt><dt><span class="section"><a href="#sources_network_tcp">TCP</a></span></dt><dt><span class="section"><a href="#sources_network_ssl">TLS/SSL over TCP</a></span></dt><dt><span class="section"><a href="#sources_network_syslog">Syslog</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_database">Database</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_database_dbi">Using im_dbi</a></span></dt><dt><span class="section"><a href="#sources_database_odbc">Using im_odbc</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_file">Files</a></span></dt><dt><span class="section"><a href="#sources_program">External programs and scripts</a></span></dt><dt><span class="section"><a href="#sources_app">Applications</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_app_apache">Apache HTTP Server</a></span></dt><dt><span class="section"><a href="#sources_app_tomcat">Apache Tomcat and java application logs</a></span></dt></dl></dd><dt><span class="section"><a href="#sources_device">Devices</a></span></dt><dd><dl><dt><span class="section"><a href="#sources_device_cisco">Cisco</a></span></dt><dt><span class="section"><a href="#sources_device_checkpoint">Checkpoint</a></span></dt></dl></dd></dl></div><p>
      This chapter deals with log sources such as 
      <a class="link" href="#sources_os" title="Operating Systems">operating systems</a>,
      <a class="link" href="#sources_network" title="Network">network</a>,
@@ -6654,7 +6684,7 @@ AxisFault
 2001-01-25 17:57:38,469 INFO [com.nxsec.somepackage.Class] - third log message
 </pre><p>
 	 
-	 </p><div class="example"><a name="id390010"></a><p class="title"><b>Example 8.1. Parsing tomcat logs into fields</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp5579744"></a><p class="title"><b>Example 8.1. Parsing tomcat logs into fields</b></p><div class="example-contents"><p>
 	     This can be very useful to filter messages by the emitting java class for example.
 	   </p><pre class="programlisting">
 &lt;Input log4j&gt;
@@ -6681,9 +6711,118 @@ AxisFault
 	 To parse and process multi-line messages such as the above, see the 
 	 <a class="link" href="#processing_multiline" title="Dealing with multi-line messages">Dealing with multi-line messages</a> section.
        </p></div></div><div class="section" title="Devices"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sources_device"></a>Devices</h2></div></div></div><p>
-       This section deals with special devices such as routers, switches and appliances.
-     </p><div class="section" title="Cisco"><div class="titlepage"><div><div><h3 class="title"><a name="sources_devince_cisco"></a>Cisco</h3></div></div></div><p>
-	 See <a class="link" href="#xm_syslog" title="Syslog (xm_syslog)">xm_syslog</a>. FIXME
+       This section deals with special devices such as routers, firewalls, switches and other
+       appliances.
+     </p><div class="section" title="Cisco"><div class="titlepage"><div><div><h3 class="title"><a name="sources_device_cisco"></a>Cisco</h3></div></div></div><p>
+	 Cisco devices can be instructed to log over syslog. Unfortunately the lousy syslog RFC
+	 standards compliance and the different formats of cisco devices make it hard to have a
+	 universal cisco syslog parser. Some examples follow.
+       </p><div class="example"><a name="idp8670736"></a><p class="title"><b>Example 8.2. Cisco Secure Access Control Server</b></p><div class="example-contents"><p>
+	   Refer to the <a class="ulink" href="http://www.cisco.com/en/US/docs/net_mgmt/cisco_secure_access_control_server_for_windows/4.1/configuration/guide/syslog.html#wp999729" target="_top">Configuring Syslog Logging</a> 
+	   section in the Cisco Configuration Guide.
+	   An example syslog record from a Cisco ACS device looks like the following:
+	   </p><pre class="programlisting">&lt;38&gt;Oct 16 21:01:29 10.0.1.1 CisACS_02_FailedAuth 1k1fg93nk 1 0 Message-Type=Authen failed,User-Name=John,NAS-IP-Address=10.0.1.2,AAA Server=acs01</pre><p>
+	   The following configuration file instructs nxlog to accept syslog messages on UDP port 
+	   1514. The payload is parsed as syslog and then the ACS specific fields are
+	   extracted. The output is written to a file in JSON format.
+	   </p><pre class="programlisting">
+&lt;Extension json&gt;
+    Module      xm_json
+&lt;/Extension&gt;
+
+&lt;Extension syslgo&gt;
+    Module      xm_syslog
+&lt;/Extension&gt;
+
+&lt;Input in&gt;
+    Module	im_udp
+    Host	0.0.0.0
+    Port	1514
+    Exec	parse_syslog_bsd();
+    Exec	if ( $Message =~ /^CisACS_(\d\d)_(\S+) (\S+) (\d+) (\d+) (.*)$/ ) \
+                { \
+                   $ACSCategoryNumber = $1; \
+                   $ACSCategoryName = $2; \
+                   $ACSMessageId = $3; \
+                   $ACSTotalSegments = $4; \
+                   $ACSSegmentNumber = $5; \
+                   $Message = $6; \
+                   if ( $Message =~ /Message-Type=([^\,]+)/ ) { $ACSMessageType = $1; } \
+                   if ( $Message =~ /User-Name=([^\,]+)/ ) { $AccountName = $1; } \
+                   if ( $Message =~ /NAS-IP-Address=([^\,]+)/ ) { $ACSNASIPAddress = $1; } \
+                   if ( $Message =~ /AAA Server=([^\,]+)/ ) { $ACSAAAServer = $1; } \
+                }
+#                else log_warning("does not match: " + to_json());   
+                 
+&lt;/Input&gt;
+
+&lt;Output out&gt;
+    Module	om_file
+    File	"tmp/output.txt"
+    Exec	to_json();
+&lt;/Output&gt;
+
+&lt;Route 1&gt;
+    Path	in =&gt; out
+&lt;/Route&gt;
+
+</pre><p>
+	 </p></div></div><br class="example-break"><div class="example"><a name="idp8676256"></a><p class="title"><b>Example 8.3. Cisco PIX and Cisco ASA</b></p><div class="example-contents"><p>
+	   The PIX  <a class="ulink" href="http://www.cisco.com/en/US/docs/security/pix/pix63/system/message/pixemint.html#wp1020170" target="_top">Log Message Format</a> 
+	   is described in the <em class="replaceable"><code>Cisco PIX Firewall System Log Messages</code></em> 
+	   document.
+	   An example syslog record from a Cisco ASA device looks like the following:
+	   </p><pre class="programlisting">&lt;38&gt;Oct 12 2004 22:45:15 : %ASA-2-106006: Deny inbound UDP from 10.0.1.2/137 to 10.0.1.1/137 on interface inside</pre><p>
+	   The following configuration file instructs nxlog to accept syslog messages on UDP port 
+	   1514. The payload is parsed as syslog and then the ASA/PIX specific fields are
+	   extracted. The output is written to a file in JSON format.
+	   </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+	       The <a class="ulink" href="http://www.cisco.com/en/US/docs/security/pix/pix63/system/message/pixemint.html#wp1040486" target="_top">variables</a>
+	       can be extracted into fields with further parsing rules based on <em class="replaceable"><code>CiscoMessageNumber</code></em>.
+	       See the <a class="ulink" href="http://www.cisco.com/en/US/docs/security/asa/asa72/system/message/logmsgs.html" target="_top">System Log Messages</a>
+	       for a complete list.
+	       If you intend to create parsing rules for a lot of message types, consider using
+	       the <a class="link" href="#pm_pattern" title="Pattern matcher (pm_pattern)">pm_pattern</a> module.
+	     </p></div><p>
+	   </p><pre class="programlisting">
+&lt;Extension json&gt;
+    Module      xm_json
+&lt;/Extension&gt;
+
+&lt;Extension syslgo&gt;
+    Module      xm_syslog
+&lt;/Extension&gt;
+
+&lt;Input in&gt;
+    Module	im_udp
+    Host	0.0.0.0
+    Port	1514
+    Exec	parse_syslog_bsd();
+    Exec	if ( $Message =~ /^\: \%(ASA|PIX)-(\d)-(\d\d\d\d\d\d)\: (.*)$/ ) \
+                { \
+                   $CiscoSeverityNumber = $2; \
+                   $CiscoMessageNumber = $3; \
+                   $Message = $4; \
+                } \
+                else log_warning("does not match: " + $raw_event);   
+                 
+&lt;/Input&gt;
+
+&lt;Output out&gt;
+    Module	om_file
+    File	"tmp/output.txt"
+    Exec	to_json();
+&lt;/Output&gt;
+
+&lt;Route 1&gt;
+    Path	in =&gt; out
+&lt;/Route&gt;
+
+</pre><p>
+	   
+	 </p></div></div><br class="example-break"></div><div class="section" title="Checkpoint"><div class="titlepage"><div><div><h3 class="title"><a name="sources_device_checkpoint"></a>Checkpoint</h3></div></div></div><p>
+	 The im_checkpoint module can collect logs from Checkpoint devices over the OPSEC LEA protocol.
+	 (Note: available in the Enterprise Edition only).
        </p></div></div></div><div class="chapter" title="Chapter 9. Processing logs"><div class="titlepage"><div><div><h2 class="title"><a name="processing"></a>Chapter 9. Processing logs</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#processing_parsers">Parsing various formats</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_parsers_w3c">W3C Extended Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_common_log_format">NCSA Common Log File Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_combined_log_format">NCSA Combined Log Format</a></span></dt><dt><span class="section"><a href="#processing_parsers_welf">WebTrends Enhanced Log Format (WELF)</a></span></dt><dt><span class="section"><a href="#processing_parsers_csv">Field delimited formats (CSV)</a></span></dt><dt><span class="section"><a href="#processing_parsers_json">JSON</a></span></dt><dt><span class="section"><a href="#processing_parsers_xml">XML</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_datetime">Parsing date and time strings</a></span></dt><dt><span class="section"><a href="#processing_filtering">Filtering messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_filtering_drop">Using drop()</a></span></dt><dt><span class="section"><a href="#processing_filtering_pm_filter">Filtering through pm_filter</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_multiline">Dealing with multi-line messages</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_multiline_module_vars">Using module variables</a></span></dt><dt><span class="section"><a href="#processing_multiline_xm_multiline">Using xm_multiline</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_alerting_scripts">Alerting, calling external scripts and programs</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_calling_scripts_om_exec">Sending all messages to an external program</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_xm_exec">Invoking a script or program for each message</a></span></dt><dt><span class="section"><a href="#processing_calling_scripts_alerting">Alerting</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_rewrite">Rewriting and modifying messages</a></span></dt><dt><span class="section"><a href="#processing_format_conversion">Message format conversion</a></span></dt><dt><span class="section"><a href="#processing_charset_conversion">Character set conversion</a></span></dt><dt><span class="section"><a href="#processing_discarding">Discarding messages</a></span></dt><dt><span class="section"><a href="#processing_rate_limiting">Rate limiting</a></span></dt><dt><span class="section"><a href="#processing_buffering">Buffering</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching">Pattern matching and message classification</a></span></dt><dd><dl><dt><span class="section"><a href="#processing_pattern_matching_regexp">Regular expressions in the Exec directive</a></span></dt><dt><span class="section"><a href="#processing_pattern_matching_pm_pattern">Using pm_pattern</a></span></dt></dl></dd><dt><span class="section"><a href="#processing_correlation">Event correlation</a></span></dt><dt><span class="section"><a href="#processing_log_rotation">Log rotation and retention</a></span></dt><dt><span class="section"><a href="#processing_explicit_drop">Explicit drop</a></span></dt></dl></div><p>
      This chapter deals with various tasks that might be required after a log message is 
      received by nxlog.
@@ -6723,7 +6862,7 @@ AxisFault
 	 using regular expressions directly (similarly to how it's done in the
 	 <a class="link" href="#processing_parsers_combined_log_format_example" title="Example 9.2. Parsing apache logs in Combined Log Format">Parsing apache logs in Combined Log Format</a>
 	 example).
-	 </p><div class="example"><a name="id386248"></a><p class="title"><b>Example 9.1. Parsing the W3C Extended Log File Format using xm_csv</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp8646384"></a><p class="title"><b>Example 9.1. Parsing the W3C Extended Log File Format using xm_csv</b></p><div class="example-contents"><p>
 	     Here is a sample log in this format which we need to parse:
 	     </p><pre class="programlisting">#Version: 1.0
 #Date: 2011-07-01 00:00:00
@@ -6874,10 +7013,18 @@ Sun, 06-Nov-1994 08:49:37 GMT  ; RFC 850 with four digit years</pre><p>
 2011-5-29 0:3:21.004
 2011-5-29 0:3:21.004+02:00</pre><p>
 	       </p></dd><dt><span class="term"><a name="processing_datetime_cisco"></a>CISCO syslog date</span></dt><dd><p>
-		 This is RFC 3164 format with millisecond precision. Example:
+		 This is an RFC 3164 format with millisecond precision. Example:
 		 </p><pre class="programlisting">Nov 3 14:50:30.403
 Nov  3 14:50:30.403
 Nov 03 14:50:30.403
+</pre><p>
+		 The following format is also recognized (with or without millisecond precision):
+		 </p><pre class="programlisting">Nov 3 2005 14:50:30.403
+Nov  3 2005 14:50:30.403
+Nov 03 2005 14:50:30.403
+Nov 3 2005 14:50:30
+Nov  3 2005 14:50:30
+Nov 03 2005 14:50:30
 </pre><p>
 	       </p></dd><dt><span class="term"><a name="processing_datetime_windows"></a>Windows timestamp format</span></dt><dd><p>
 		 Example:
@@ -6893,7 +7040,7 @@ Nov 03 14:50:30.403
      </p><p>
        The <a class="link" href="#core_func_datetime">datetime()</a> function can be used to convert
        an integer expressing the number of microseconds elapsed since the epoch (Unix timestamp format).
-	 </p><div class="example"><a name="id409324"></a><p class="title"><b>Example 9.3. Parsing a microsecond resolution timestamp expressed with a fractional part</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp5598848"></a><p class="title"><b>Example 9.3. Parsing a microsecond resolution timestamp expressed with a fractional part</b></p><div class="example-contents"><p>
 	     The integer format of nxlog does not support fractional parts, so we use a regular
 	     expression to get around this.
 	     </p><pre class="programlisting">
@@ -6904,16 +7051,11 @@ if $raw_event =~ /(\d+)\.(\d+)/
 }
 
 </pre><p>
-	     </p><div class="note" title="Note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
-		 The <em class="replaceable"><code>%s</code></em> formatter for 
-		 <a class="link" href="#core_func_strptime">strptime()</a> is a GLIBC extension on
-		 GNU/Linux and is not available on other platforms. 
-	       </p></div><p>
 	   </p></div></div><p><br class="example-break">
      </p><p>
        If the above doesn't cut it, there is also <a class="link" href="#core_func_strptime">strptime()</a>
        to parse more exotic formats.
-	 </p><div class="example"><a name="id409374"></a><p class="title"><b>Example 9.4. Parsing date and time from Exchange logs</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp5602720"></a><p class="title"><b>Example 9.4. Parsing date and time from Exchange logs</b></p><div class="example-contents"><p>
 	     The following example is from an Exchange log. The date and time are delimited by a tab
 	     (i.e. they are two distinct fields). Also it uses a non standard single digit format instead
 	     of fixed width with double digits:
@@ -6976,7 +7118,7 @@ if $raw_event =~ /^(\d+-\d+-\d+\t\d+:\d+:\d+) GMT/ {
      </p><div class="section" title="Using module variables"><div class="titlepage"><div><div><h3 class="title"><a name="processing_multiline_module_vars"></a>Using module variables</h3></div></div></div><p>
 	 This example uses regular expressions and module variables to concatenate
 	 lines belonging to a single event.
-       </p><div class="example"><a name="id405044"></a><p class="title"><b>Example 9.5. Parsing multiline messages using module variables</b></p><div class="example-contents"><pre class="programlisting">
+       </p><div class="example"><a name="idp5619664"></a><p class="title"><b>Example 9.5. Parsing multiline messages using module variables</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Input log4j&gt;
 	Module	im_file
 	File	"/var/log/tomcat6/catalina.out"
@@ -7127,7 +7269,7 @@ if $raw_event =~ /^(aaaa)(replaceME)(.+)/ $raw_event = $1 + 'replaceMENT' + $3;
      </p></div><div class="section" title="Rate limiting"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="processing_rate_limiting"></a>Rate limiting</h2></div></div></div><p>
        The poor man's tool for rate limiting is the <a class="link" href="#core_proc_sleep">sleep()</a>
        procedure.
-      </p><div class="example"><a name="id398460"></a><p class="title"><b>Example 9.6. Using sleep for rate limiting</b></p><div class="example-contents"><p>
+      </p><div class="example"><a name="idp6868592"></a><p class="title"><b>Example 9.6. Using sleep for rate limiting</b></p><div class="example-contents"><p>
 	  In the following example <code class="function">sleep</code> is invoked with 500 microseconds. This means that
 	  the input module will be able to read at most 2000 messages per second.
 	  </p><pre class="programlisting">
@@ -7168,7 +7310,7 @@ if $raw_event =~ /^(aaaa)(replaceME)(.+)/ $raw_event = $1 + 'replaceMENT' + $3;
 	 The first option is to use the <a class="link" href="#lang_binop_regmatch">=~</a> operator in
 	 an <a class="link" href="#config_module_exec" title="Exec">Exec</a> directive.
 	 The following code snippet shows an example for message classification.
-	 </p><div class="example"><a name="id398560"></a><p class="title"><b>Example 9.7. Regular expression based message classification</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp6880592"></a><p class="title"><b>Example 9.7. Regular expression based message classification</b></p><div class="example-contents"><p>
 	     When the contents of the Message field match against the regular expression,
 	     the <code class="varname">AccountName</code> and <code class="varname">AccountID</code> fields are filled
 	     with the appropriate values from the referenced captured substrings. Additionally
@@ -7248,7 +7390,7 @@ if $Message =~ /^pam_unix\(sshd:session\): session opened for user (\S+) by \(ui
        Should these native language construct be insufficient, it is always possible
        to <a class="link" href="#xm_exec" title="External program execution (xm_exec)">call an exeternal script or program</a>.
        
-     </p><div class="example"><a name="id385771"></a><p class="title"><b>Example 9.8. Rotation of the internal LogFile</b></p><div class="example-contents"><p>
+     </p><div class="example"><a name="idp8330144"></a><p class="title"><b>Example 9.8. Rotation of the internal LogFile</b></p><div class="example-contents"><p>
 	 This example shows how to rotate the internal logfile based on time and size.
        </p><pre class="programlisting">
 define LOGFILE "/var/log/nxlog/nxlog.log"
@@ -7269,7 +7411,7 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
     &lt;/Schedule&gt;
 &lt;/Extension&gt;
 
-</pre></div></div><br class="example-break"><div class="example"><a name="id385798"></a><p class="title"><b>Example 9.9. File rotation based on size</b></p><div class="example-contents"><pre class="programlisting">
+</pre></div></div><br class="example-break"><div class="example"><a name="idp8333312"></a><p class="title"><b>Example 9.9. File rotation based on size</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension exec&gt;
     Module	xm_exec
 &lt;/Extension&gt;
@@ -7306,7 +7448,7 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
        in some situations when it is preferable to drop messages than to block.
        The following example illustrates the use of the <a class="link" href="#core_proc_drop">drop()</a>
        procedure used in conjunction with <a class="link" href="#pm_buffer" title="Buffer (pm_buffer)">pm_buffer</a>.
-     </p><div class="example"><a name="id385849"></a><p class="title"><b>Example 9.10. Explicitly dropping messages when the network module is blocked</b></p><div class="example-contents"><p>
+     </p><div class="example"><a name="idp8339456"></a><p class="title"><b>Example 9.10. Explicitly dropping messages when the network module is blocked</b></p><div class="example-contents"><p>
 	 In the following configuration we use two routes which send the input read from the UDP
 	 socket to two outputs, a file and a TCP destination.
 	 Without this setup when the TCP connection can transmit slower than the rate of incoming 
@@ -7376,7 +7518,7 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
 	      procedure call can construct SNARE syslog formatted messages.
 	      The following example shows a configuration for reading the windows eventlog and
 	      forwarding it over UDP in the SNARE Agent format.
-	      </p><div class="example"><a name="id386386"></a><p class="title"><b>Example 10.1. Forwarding EventLogs from a windows machine to a remote host in the SNARE Agent format</b></p><div class="example-contents"><pre class="programlisting">
+	      </p><div class="example"><a name="idp8656976"></a><p class="title"><b>Example 10.1. Forwarding EventLogs from a windows machine to a remote host in the SNARE Agent format</b></p><div class="example-contents"><pre class="programlisting">
 &lt;Extension syslog&gt;
     Module      xm_syslog
 &lt;/Extension&gt;
@@ -7468,7 +7610,7 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
        as sending out an alert email or generating an internal warning message.
        Note that probably there are other ways to solve this issue and this method
        might not be the optimal for all situations.
-     </p><div class="example"><a name="id410159"></a><p class="title"><b>Example 11.1. Alerting on absence of log messages</b></p><div class="example-contents"><p>
+     </p><div class="example"><a name="idp8498784"></a><p class="title"><b>Example 11.1. Alerting on absence of log messages</b></p><div class="example-contents"><p>
 	 The following configuration example creates a statistical counter in the context of
 	 the im_tcp module to calculate the number of events received per hour.
 	 The <a class="link" href="#config_module_schedule" title="Schedule">Schedule</a> block within the
@@ -7567,7 +7709,7 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
 	 procedure calls which access fields such as 
 	 <a class="link" href="#xm_charconv_proc_convert_fields">convert_fields()</a>.
 	 Consider the following example.
-	 </p><div class="example"><a name="id385987"></a><p class="title"><b>Example 12.1. Assignment after drop()</b></p><div class="example-contents"><p>
+	 </p><div class="example"><a name="idp8685984"></a><p class="title"><b>Example 12.1. Assignment after drop()</b></p><div class="example-contents"><p>
 	     In this example the message is conditionally dropped. When the $raw_event field
 	     matches the keyword, the <a class="link" href="#core_proc_drop">drop()</a> operation is
 	     invoked which discards the log completely. If a subsequent statement follows

@@ -24,11 +24,9 @@
 
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
-#define NX_IM_MSVISTALOG_READ_INTERVAL 1
 
 #define msvistalog_throw(fmt, args...) throw((apr_status_t) APR_FROM_OS_ERROR(GetLastError()), fmt, ## args)
 #define msvistalog_error(fmt, args...) log_aprerror((apr_status_t) APR_FROM_OS_ERROR(GetLastError()), fmt, ## args)
-
 
 static nx_string_t *nx_logdata_set_string_from_wide(nx_logdata_t *logdata,
 						    const char *key,
@@ -66,6 +64,7 @@ static nx_string_t *nx_logdata_set_string_from_wide(nx_logdata_t *logdata,
  * so this xml parser is needed.
  */
 // TODO: use TdhGetEventInformation() instead
+// Alternatively use EvtRenderContextUser
 static void im_msvistalog_parse_event_xml(nx_module_t *module,
 					  EVT_HANDLE event,
 					  nx_logdata_t *logdata)
@@ -88,7 +87,7 @@ static void im_msvistalog_parse_event_xml(nx_module_t *module,
 	if ( EvtRender(NULL, event, EvtRenderEventXml, imconf->renderbufsize,
 		       imconf->renderbuf, &bufferused, &propertycount) != TRUE )
 	{
-	    msvistalog_throw("Couldn't to retrieve eventlog fields from xml, EvtRender() failed");
+	    msvistalog_throw("Couldn't retrieve eventlog fields from xml, EvtRender() failed");
 	}
 
 	size = (size_t) bufferused * 3 + 1;
@@ -168,7 +167,7 @@ static nx_msvistalog_publisher_t *im_msvistalog_get_message(nx_module_t *module,
     if ( publisher == NULL )
     {
 	publisher = apr_pcalloc(imconf->publisherpool, sizeof(nx_msvistalog_publisher_t));
-	publisher->handle = EvtOpenPublisherMetadata(NULL, publishername, NULL, 0, 0);
+	publisher->handle = EvtOpenPublisherMetadata(imconf->session, publishername, NULL, 0, 0);
 	// set even if it is NULL
 	apr_hash_set(imconf->publisherhash, apr_pstrdup(imconf->publisherpool, sourcename),
 		     APR_HASH_KEY_STRING, publisher);
@@ -403,10 +402,9 @@ static void im_msvistalog_event_to_logdata(nx_module_t *module,
 
 
 /* For testing
-	if ( EventID != 1100 ) throw_msg("other event");
+	if ( EventID != 4624 ) throw_msg("other event");
 	else log_info("Got event");
 */
-
 	sourcename = nx_logdata_set_string_from_wide(logdata, "SourceName",
 						     imconf->renderbuf[EvtSystemProviderName].StringVal);
 	publishername = imconf->renderbuf[EvtSystemProviderName].StringVal;
@@ -491,6 +489,7 @@ static void im_msvistalog_event_to_logdata(nx_module_t *module,
 		    nx_string_append(logdata->raw_event, " ", 1);
 		}
 	    }
+
 	    if (ConvertSidToStringSid(imconf->renderbuf[EvtSystemUserID].SidVal, &sidstr))
 	    {
 		nx_logdata_set_string(logdata, "UserID", user);
@@ -566,7 +565,7 @@ static void im_msvistalog_event_to_logdata(nx_module_t *module,
 
 
 
-LPCWSTR mbtowide(apr_pool_t *pool, const char *str)
+LPWSTR mbtowide(apr_pool_t *pool, const char *str)
 {
     int size;
     LPWSTR retval = NULL;
@@ -613,13 +612,13 @@ const char *widetoutf8(apr_pool_t *pool, LPCWSTR str)
 
 
 
-
 static void im_msvistalog_read(nx_module_t *module)
 {
     nx_event_t *event;
     nx_im_msvistalog_conf_t *imconf;
     DWORD evcnt = 0;
     int i;
+    DWORD status;
 
     ASSERT(module != NULL);
 
@@ -632,12 +631,12 @@ static void im_msvistalog_read(nx_module_t *module)
 	return;
     }
 
-    //switch ( WaitForSingleObject(imconf->waithandle, 500) )
+    log_debug("im_msvistalog checking for new events...");
 
     if ( EvtNext(imconf->subscription, IM_MSVISTALOG_BATCH_SIZE,
 		 imconf->eventarray, 500, 0, &evcnt ) != TRUE )
     {
-	switch ( GetLastError() )
+	switch ( status = GetLastError() )
 	{
 	    case ERROR_NO_MORE_ITEMS:
 	    case ERROR_INVALID_OPERATION:
@@ -647,12 +646,19 @@ static void im_msvistalog_read(nx_module_t *module)
 		ASSERT(evcnt == 0);
 		//msvistalog_error("EvtNext timeout");
 		break;
+	    case ERROR_INVALID_HANDLE:
+		nx_module_stop_self(module);
+		nx_module_start(module);
+		SetLastError(status);
+		msvistalog_throw("Couldn't read next event, invalid handle");
 	    default:
-		msvistalog_error("EvtNext failed with error %d", (int) GetLastError());
+		msvistalog_error("EvtNext failed with error %d", (int) status);
+		nx_module_stop_self(module);
+		nx_module_start(module);
 		break;
 	}
     }
-    log_debug("read %d events", (int) evcnt);
+    log_debug("im_msvistalog read %d events", (int) evcnt);
 
     if ( evcnt > 0 )
     {
@@ -681,7 +687,7 @@ static void im_msvistalog_read(nx_module_t *module)
 	if ( evcnt < IM_MSVISTALOG_BATCH_SIZE )
 	{
 	    event->delayed = TRUE;
-	    event->time = apr_time_now() + APR_USEC_PER_SEC * NX_IM_MSVISTALOG_READ_INTERVAL;
+	    event->time = apr_time_now() + (int) APR_USEC_PER_SEC * imconf->poll_interval;
 	}
 	else
 	{
@@ -743,6 +749,13 @@ static void im_msvistalog_config(nx_module_t *module)
 	    }
 	    imconf->channel = apr_pstrdup(module->pool, curr->args);
 	}
+	else if ( strcasecmp(curr->directive, "PollInterval") == 0 )
+	{
+	    if ( sscanf(curr->args, "%f", &(imconf->poll_interval)) != 1 )
+	    {
+		nx_conf_error(curr, "invalid PollInterval: %s", curr->args);
+            }
+	}
 	else
 	{
 	    nx_conf_error(curr, "invalid keyword: %s", curr->directive);
@@ -757,6 +770,11 @@ static void im_msvistalog_config(nx_module_t *module)
     if ( imconf->query != NULL )
     {
 	imconf->_query = mbtowide(module->pool, imconf->query);
+    }
+
+    if ( imconf->poll_interval == 0 )
+    {
+	imconf->poll_interval = IM_MSVISTALOG_DEFAULT_POLL_INTERVAL;
     }
 
     imconf->savepos = TRUE;
@@ -789,7 +807,8 @@ static void dump_query_xml(const char *xml)
  * Instead of doing such heuristics we check directly by trying to subscribe
  * to that single source.
  */
-static boolean _source_subscription_ok(nx_module_t *module,
+static boolean _source_subscription_ok(EVT_HANDLE session,
+				       nx_module_t *module,
 				       const char *source)
 {
     boolean retval = TRUE;
@@ -820,7 +839,7 @@ static boolean _source_subscription_ok(nx_module_t *module,
     {
 	flags = EvtSubscribeStartAtOldestRecord;
     }
-    subscription = EvtSubscribe(NULL, waithandle, NULL, _query,
+    subscription = EvtSubscribe(session, waithandle, NULL, _query,
 				NULL, NULL, NULL, flags);
     if ( subscription == NULL )
     { // failed to subscribe
@@ -843,35 +862,155 @@ static boolean _source_subscription_ok(nx_module_t *module,
 
 
 
+static const char *get_query_xml(EVT_HANDLE session, nx_module_t *module, apr_pool_t *pool)
+{
+    EVT_HANDLE channels = NULL;
+    EVT_HANDLE channelcfg = NULL;
+    WCHAR name[256];
+    const char *nameutf8;
+    DWORD used = 0;
+    nx_exception_t e;
+    boolean enabled;
+    uint8_t propbuf[16];
+    PEVT_VARIANT property = (PEVT_VARIANT) propbuf;
+    EVT_CHANNEL_TYPE type;
+    int query_id = 0;
+    const char *tmpstr;
+    const char *query;
+    nx_im_msvistalog_conf_t *imconf;
+    DWORD status;
+
+    imconf = (nx_im_msvistalog_conf_t *) module->config;
+
+    // Event Selection
+    // http://msdn.microsoft.com/en-us/library/aa385231.aspx
+    query = apr_pstrdup(pool, "<QueryList>");
+
+    try
+    {
+	if ( (channels = EvtOpenChannelEnum(session, 0)) == NULL )
+	{
+	    msvistalog_throw("Failed to query available channels");
+	}
+
+	for ( ; ; )
+	{
+	    if ( EvtNextChannelPath(channels, sizeof(name)/sizeof(WCHAR), name, &used) == TRUE )
+	    {
+		nameutf8 = widetoutf8(pool, name);
+		if ( (channelcfg = EvtOpenChannelConfig(session, name, 0)) == NULL )
+		{
+		    // Security event log gives Access Denied when running under a service account
+		    log_debug("EvtOpenChannelConfig failed for %s (errorcode: %d)",
+			      nameutf8, (int) GetLastError());
+		    tmpstr = apr_psprintf(pool, "<Query Id='%d'><Select Path='%s'>*</Select></Query>",
+					  query_id, nameutf8);
+		    query_id++;
+		    
+		    if ( _source_subscription_ok(session, module, tmpstr) == TRUE )
+		    {
+			query = apr_pstrcat(pool, query, tmpstr, NULL);
+		    }
+		}
+		else
+		{
+		    if ( EvtGetChannelConfigProperty(channelcfg, EvtChannelConfigEnabled,
+						     0, sizeof(propbuf), property, &used) != TRUE )
+		    {
+			msvistalog_throw("EvtGetChannelConfigProperty(Enabled) failed");
+		    }
+		    if ( property->BooleanVal == FALSE )
+		    {
+			enabled = FALSE;
+		    }
+		    else
+		    {
+			enabled = TRUE;
+		    }
+		    
+		    if ( EvtGetChannelConfigProperty(channelcfg, EvtChannelConfigType,
+						     0, sizeof(propbuf), property, &used) != TRUE )
+		    {
+			msvistalog_throw("EvtGetChannelConfigProperty(Type) failed");
+		    }
+		    type = (EVT_CHANNEL_TYPE) property->UInt32Val;
+
+		    if ( (enabled == TRUE) &&
+			 ((type == EvtChannelTypeAdmin) || (type == EvtChannelTypeOperational)) )
+		    {
+			tmpstr = apr_psprintf(pool, "<Query Id='%d'><Select Path='%s'>*</Select></Query>",
+					      query_id, nameutf8);
+			query_id++;
+
+			if ( _source_subscription_ok(session, module, tmpstr) == TRUE )
+			{
+			    query = apr_pstrcat(pool, query, tmpstr, NULL);
+			}
+		    }
+		}
+		if ( channelcfg != NULL )
+		{
+		    EvtClose(channelcfg);
+		}
+	    }
+	    else
+	    {
+		if ( GetLastError() == ERROR_NO_MORE_ITEMS )
+		{
+		    break;
+		}
+		else
+		{
+		    msvistalog_throw("EvtNextPublisherId failed");
+		}
+	    }
+	}
+    }
+    catch(e)
+    {
+	if ( channels != NULL )
+	{
+	    EvtClose(channels);
+	}
+	if ( channelcfg != NULL )
+	{
+	    EvtClose(channelcfg);
+	}
+	rethrow(e);
+    }
+    if ( channels != NULL )
+    {
+	EvtClose(channels);
+    }
+
+    query = apr_pstrcat(pool, query, "</QueryList>", NULL);
+
+    return ( query );
+}
+
+
+
 static void im_msvistalog_start(nx_module_t *module)
 {
     nx_im_msvistalog_conf_t *imconf;
     nx_event_t *event;
-    HKEY reg, reg2;
-    int	reg_iter = 0;
-    int	query_id = 0;
-    char regvalbuf[IM_MSVISTALOG_REG_BUFFER_LEN];
-    char regvalbuf2[256];
-    char regvalnamebuf[64];
     apr_pool_t *pool;
     const char *query = NULL;
     LPCWSTR _query;
-    const char *tmpstr;
-    const char *regname;
     nx_exception_t e;
     EVT_HANDLE bookmark = NULL;
     boolean needseek = TRUE;
-    LONG rc;
 
     ASSERT(module->config != NULL);
 
     imconf = (nx_im_msvistalog_conf_t *) module->config;
 
     pool = nx_pool_create_child(module->pool);
+    
+    log_debug("initiating eventlog collection process");
 
     try
     {
-
 	if ( imconf->publisherpool == NULL )
 	{
 	    imconf->publisherpool = nx_pool_create_child(module->pool);
@@ -879,128 +1018,9 @@ static void im_msvistalog_start(nx_module_t *module)
 	    imconf->publisherhash = apr_hash_make(imconf->publisherpool);
 	}
 
-	if ( (imconf->query == NULL) && 
-	     (imconf->channel == NULL) )
-	{ // no parameters provided so we look up all available eventlogs and build a query xml
-
-	    // Event Selection
-	    // http://msdn.microsoft.com/en-us/library/aa385231.aspx
-	    query = apr_pstrdup(pool, "<QueryList>");
-	    if ( (rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-				    IM_MSVISTALOG_REGISTRY_PATH_SYSTEM,
-				    0, KEY_READ, &reg)) == ERROR_SUCCESS )
-	    {
-		reg_iter = 0;
-		while ( RegEnumKey(reg, (DWORD) reg_iter++, regvalbuf,
-				   sizeof(regvalbuf) / sizeof(TCHAR)) == ERROR_SUCCESS )
-		{
-		    query_id++;
-		    tmpstr = apr_psprintf(pool, "<Query Id='%d'><Select Path='%s'>*</Select></Query>",
-					  query_id, regvalbuf);
-		    if ( _source_subscription_ok(module, tmpstr) == TRUE )
-		    {
-			query = apr_pstrcat(pool, query, tmpstr, NULL);
-		    }
-		}
-		RegCloseKey(reg);
-	    }
-	    else
-	    {
-		throw(APR_FROM_OS_ERROR(rc),
-		      "Failed to get registry values from "IM_MSVISTALOG_REGISTRY_PATH_SYSTEM
-		      " (errorcode: %ld)", rc);
-	    }
-
-	    // KEY_WOW64_64KEY is required for 32-bit
-	    // FIXME ifdef 32bit
-	    if ( (rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-				    IM_MSVISTALOG_REGISTRY_PATH_CHANNELS,
-				    0, KEY_READ | KEY_WOW64_64KEY, &reg)) == ERROR_SUCCESS )
-	    {
-		reg_iter = 0;
-		while ( RegEnumKey(reg, (DWORD) reg_iter++, regvalbuf,
-				   sizeof(regvalbuf) / sizeof(TCHAR)) == ERROR_SUCCESS )
-		{
-		    regname = apr_psprintf(pool, IM_MSVISTALOG_REGISTRY_PATH_CHANNELS"\\%s", regvalbuf);
-		    if ( (rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-					    regname,
-					    0, KEY_READ | KEY_WOW64_64KEY, &reg2)) == ERROR_SUCCESS )
-		    {
-			DWORD validx = 0;
-			DWORD regvalnamebufsize = sizeof(regvalnamebuf);
-			DWORD regvalbuf2size = sizeof(regvalbuf2);
-			DWORD enabled = 1;
-			DWORD type = 0;
-			size_t namelen;
-
-			while ( (rc = RegEnumValue(reg2, validx++, regvalnamebuf, &regvalnamebufsize,
-						NULL, NULL, regvalbuf2, &regvalbuf2size)) == ERROR_SUCCESS )
-			{
-			    if ( strcmp(regvalnamebuf, "Enabled") == 0 )
-			    {
-				enabled = *((LPDWORD) regvalbuf2);
-			    }
-			    else if ( strcmp(regvalnamebuf, "Type") == 0 )
-			    {
-				type = *((LPDWORD) regvalbuf2);
-			    }
-			}
-			if ( enabled == 1 )
-			{
-			    // There is no clean way to detect the type of the channel so we check the name
-			    namelen = strlen(regvalbuf);
-			    if ( (namelen > sizeof("/Debug") - 1) &&
-				 (strcmp(regvalbuf + namelen - (sizeof("/Debug") - 1), "/Debug") == 0) )
-			    {
-				log_debug("Ignoring enabled debug channel: %s", regvalbuf);
-				enabled = 0;
-			    }
-			    else if ( (namelen > sizeof("/Analytic") - 1) &&
-				      (strcmp(regvalbuf + namelen - (sizeof("/Analytic") - 1), "/Analytic") == 0) )
-			    {
-				log_debug("Ignoring enabled analytic channel: %s", regvalbuf);
-				enabled = 0;
-			    }
-			    else if ( (namelen > sizeof("/Diagnostic") - 1) &&
-				      (strcmp(regvalbuf + namelen - (sizeof("/Diagnostic") - 1), "/Diagnostic") == 0) )
-			    {
-				log_debug("Ignoring enabled diagnostic channel: %s", regvalbuf);
-				enabled = 0;
-			    }
-			}
-			if ( (enabled == 1) && (type < 2) )
-			{
-			    query_id++;
-			    tmpstr = apr_psprintf(pool, "<Query Id='%d'><Select Path='%s'>*</Select></Query>",
-						  query_id, regvalbuf);
-			    
-			    if ( _source_subscription_ok(module, tmpstr) == TRUE )
-			    {
-				query = apr_pstrcat(pool, query, tmpstr, NULL);
-			    }
-			}
-
-			RegCloseKey(reg2);
-		    }
-		    else
-		    {
-			log_aprerror(APR_FROM_OS_ERROR(rc),
-				     "Failed to read registry values from %s (errorcode: %ld)",
-				     regname, rc);
-		    }
-		}
-		RegCloseKey(reg);
-	    }
-	    else
-	    {
-		log_aprerror(APR_FROM_OS_ERROR(rc),
-			     "Failed to get registry values from "IM_MSVISTALOG_REGISTRY_PATH_CHANNELS
-			     " (errorcode: %ld)", rc);
-	    }
-
-	    query = apr_pstrcat(pool, query, "</QueryList>", NULL);
-	    log_debug("msvistalog query xml: %s", query);
-	    _query = mbtowide(pool, query);
+	if ( (imconf->query == NULL) && (imconf->channel == NULL) )
+	{ // no parameters provided so we look up all available channels and build a query xml
+	    _query = mbtowide(pool, get_query_xml(imconf->session, module, pool));
 	}
 	else
 	{
@@ -1032,7 +1052,8 @@ static void im_msvistalog_start(nx_module_t *module)
 		}
 		else
 		{
-		    imconf->subscription = EvtSubscribe(NULL, imconf->waithandle, imconf->_path, _query,
+		    imconf->subscription = EvtSubscribe(imconf->session,
+							imconf->waithandle, imconf->_path, _query,
 							bookmark, NULL, NULL,
 							EvtSubscribeStartAfterBookmark);
 		    if ( imconf->subscription == NULL )
@@ -1042,6 +1063,7 @@ static void im_msvistalog_start(nx_module_t *module)
 		    else
 		    {
 			needseek = FALSE;
+			log_debug("im_msvistalog subscribed successfully using a bookmark");
 		    }
 		}
 	    }
@@ -1058,7 +1080,8 @@ static void im_msvistalog_start(nx_module_t *module)
 	    {
 		flags = EvtSubscribeStartAtOldestRecord;
 	    }
-	    imconf->subscription = EvtSubscribe(NULL, imconf->waithandle, imconf->_path, _query,
+	    imconf->subscription = EvtSubscribe(imconf->session, 
+						imconf->waithandle, imconf->_path, _query,
 						NULL, NULL, NULL, flags);
 	    if ( imconf->subscription == NULL )
 	    {
@@ -1069,6 +1092,9 @@ static void im_msvistalog_start(nx_module_t *module)
 
 		switch ( status = GetLastError() )
 		{
+		    case 5: //ACCESS_DENIED
+			msvistalog_throw("failed to subscribe to msvistalog events,"
+					 "access denied [%d]", (int) status);
 		    case 15009: //ERROR_EVT_SUBSCRIPTION_TO_DIRECT_CHANNEL
 			msvistalog_throw("failed to subscribe to msvistalog events,"
 					 "direct channel (analytic and debug) subscription is not supported [%d]", (int) status);
@@ -1099,6 +1125,7 @@ static void im_msvistalog_start(nx_module_t *module)
 					 "[error: %d]", (int) status);
 		}
 	    }
+	    log_debug("im_msvistalog subscribed successfully using a query/channel");
 	}
 
 	imconf->renderer_system = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
@@ -1131,6 +1158,8 @@ static void im_msvistalog_start(nx_module_t *module)
     event->type = NX_EVENT_READ;
     event->priority = module->priority;
     nx_event_add(event);
+
+    log_debug("im_msvistalog instance %s started", module->name);
 }
 
 
@@ -1225,9 +1254,19 @@ static void im_msvistalog_stop(nx_module_t *module)
 	apr_pool_destroy(imconf->publisherpool);
 	imconf->publisherpool = NULL;
     }
- 
-    EvtClose(imconf->subscription);
-    EvtClose(imconf->waithandle);
+
+    if ( imconf->subscription != NULL )
+    {
+	EvtClose(imconf->subscription);
+    }
+    if ( imconf->waithandle != NULL )
+    {
+	EvtClose(imconf->waithandle);
+    }
+    if ( imconf->session != NULL )
+    {
+	EvtClose(imconf->session);
+    }
     imconf->event = NULL;
 }
 

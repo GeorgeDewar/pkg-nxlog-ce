@@ -1,8 +1,8 @@
 #! /bin/bash
 
 # libtool - Provide generalized library-building support services.
-# Generated automatically by config.status (nxlog-ce) 2.1.957
-# Libtool was configured on host esx0-squeeze0:
+# Generated automatically by config.status (nxlog-ce) 2.2.1017
+# Libtool was configured on host debian-squeeze-amd64:
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 #
 #   Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2003, 2004, 2005,
@@ -138,7 +138,7 @@ old_postuninstall_cmds=""
 LTCC="gcc"
 
 # LTCC compiler flags.
-LTCFLAGS="  -DLINUX=2 -D_REENTRANT -D_GNU_SOURCE -pipe -W -Wall -Wshadow -Wno-address -Wcast-qual -Wbad-function-cast -Wsign-compare -Wconversion -funsigned-char -Werror-implicit-function-declaration -Wswitch-default -fstrict-aliasing -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-noreturn -Wmissing-format-attribute -rdynamic -ggdb3"
+LTCFLAGS="  -DLINUX=2 -D_REENTRANT -D_GNU_SOURCE -pipe -W -Wall -Wshadow -Wno-address -Wcast-qual -Wbad-function-cast -Wsign-compare -Wconversion -funsigned-char -Werror-implicit-function-declaration -Wswitch-default -fstrict-aliasing -Wpointer-arith -Wcast-align -Wwrite-strings -Wmissing-noreturn -Wmissing-format-attribute -Wformat -Wextra -Werror=format-security -rdynamic -ggdb3"
 
 # Take the output of nm and produce a listing of raw symbols and C names.
 global_symbol_pipe="sed -n -e 's/^.*[	 ]\\([ABCDGIRSTW][ABCDGIRSTW]*\\)[	 ][	 ]*\\([_A-Za-z][_A-Za-z0-9]*\\)\$/\\1 \\2 \\2/p'"
@@ -243,7 +243,7 @@ hardcode_into_libs=yes
 sys_lib_search_path_spec="/usr/lib/gcc/x86_64-linux-gnu/4.4.5 /usr/lib /lib"
 
 # Run-time system search path for libraries.
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/local/lib /usr/lib/vmware-tools/lib32/libvmGuestLib.so /usr/lib/vmware-tools/lib64/libvmGuestLib.so /usr/lib/vmware-tools/lib32/libvmGuestLibJava.so /usr/lib/vmware-tools/lib64/libvmGuestLibJava.so /usr/lib/vmware-tools/lib32/libDeployPkg.so /usr/lib/vmware-tools/lib64/libDeployPkg.so /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu "
+sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/local/lib /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu "
 
 # Whether dlopen is supported.
 dlopen_support=unknown

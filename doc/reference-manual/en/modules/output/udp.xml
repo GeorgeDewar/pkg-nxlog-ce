@@ -36,6 +36,16 @@
 	</varlistentry>
 
 	<varlistentry>
+	  <term><anchor id="om_udp_config_sockbufsize"/>SockBufSize</term>
+	  <listitem>
+	    <simpara>
+	      This optional directive sets the socket buffer size (SO_SNDBUF) to the value
+	      specified. Otherwise the OS defaults are used.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+
+	<varlistentry>
 	  <term><anchor id="om_udp_config_outputtype"/>OutputType</term>
 	  <listitem>
 	    <simpara>

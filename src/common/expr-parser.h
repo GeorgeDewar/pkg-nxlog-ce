@@ -19,6 +19,7 @@ typedef union nx_expr_parser_yystype
 {
     nx_expr_t	*expr;
     char	*string;
+    char	*regexp[3]; // regexp, replacement, options
     boolean	bool;
     nx_expr_arg_list_t *args;
     nx_expr_statement_list_t *statement_list;
@@ -41,10 +42,13 @@ struct nx_expr_parser_t
     nx_module_t *module;
 };
 
+void nx_expr_parser_error_fmt(nx_expr_parser_t	*parser,
+			      void *scanner UNUSED,
+			      const char *fmt,
+			      ...) NORETURN;
 void nx_expr_parser_error(nx_expr_parser_t *parser,
-			  void *scanner,
-			  const char	*fmt,
-			  ...) PRINTF_FORMAT(3,4) NORETURN;
+			  void *scanner UNUSED,
+			  const char *msg) NORETURN;
 void nx_expr_parser_append_string(char **dst, const char *src);
 void nx_expr_parser_unescape_string(char *str);
 const char *nx_expr_parser_new_string(nx_expr_parser_t *parser, const char *src);

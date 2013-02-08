@@ -7,12 +7,11 @@
     and later. 
     You can refer to the official Microsoft documentation about 
     <ulink url="http://technet.microsoft.com/en-us/library/cc722404.aspx">Event Logs</ulink>.
-    The module supports reading both Windows Logs and Applications and Services Logs. 
-    It looks up the available EventLog sources stored under the registry key
-    "SYSTEM\CurrentControlSet\Services\Eventlog" and
-    "SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels" and monitors logs in each
-    of these unless the <link linkend="im_msvistalog_config_query">Query</link> and the 
+    The module supports reading all System, Application and Custom events.
+    It looks up the available channels and monitors events in each unless the
+    <link linkend="im_msvistalog_config_query">Query</link> and the 
     <link linkend="im_msvistalog_config_channel">Channel</link> directives are explicitely defined.
+    Event logs can be collected from remote servers over MS RPC (Note: Enterprise Edition only).
   </para>
   <note>
     <para>
@@ -135,6 +134,17 @@
 	      sources defined in the registry.
 	      See the MSDN docs about 
 	      <ulink url="http://msdn.microsoft.com/en-us/library/aa385231.aspx">Event Selection</ulink>.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_msvistalog_config_pollinterval"/>PollInterval</term>
+	  <listitem>
+	    <simpara>
+	      This directive specifies in seconds how frequently the module will check for
+	      new events. If this directive is not specified it defaults to 1 second.
+	      Fractional seconds may be specified, i.e. to check twice every second you should
+	      set the following: <replaceable>PollInterval 0.5</replaceable>
 	    </simpara>
 	  </listitem>
 	</varlistentry>

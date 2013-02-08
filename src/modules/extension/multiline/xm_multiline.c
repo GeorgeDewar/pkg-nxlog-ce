@@ -18,8 +18,8 @@
 static nx_logdata_t *xm_multiline_input_func(nx_module_input_t *input,
 					     void *data)
 {
-    int i;
-    nx_logdata_t *retval = NULL;
+    volatile int i;
+    nx_logdata_t * volatile retval = NULL;
     boolean foundcr = FALSE;
     nx_xm_multiline_ctx_t *ctx;
     nx_xm_multiline_conf_t *modconf;
@@ -27,7 +27,7 @@ static nx_logdata_t *xm_multiline_input_func(nx_module_input_t *input,
     boolean appendline;
     int pcre_result;
     boolean gotline;
-    boolean done = FALSE;
+    volatile boolean done = FALSE;
 
     ASSERT(input != NULL);
     ASSERT(input->buflen >= 0);
@@ -284,7 +284,7 @@ static nx_logdata_t *xm_multiline_input_func(nx_module_input_t *input,
 static void xm_multiline_config(nx_module_t *module)
 {
     nx_xm_multiline_conf_t *modconf;
-    const nx_directive_t *curr;
+    const nx_directive_t * volatile curr;
     nx_exception_t e;
 
     modconf = apr_pcalloc(module->pool, sizeof(nx_xm_multiline_conf_t));

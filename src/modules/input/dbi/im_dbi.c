@@ -166,10 +166,11 @@ static void im_dbi_read(nx_module_t *module)
     nx_event_t *event;
     nx_im_dbi_conf_t *imconf;
     nx_logdata_t *logdata;
-    unsigned long long i, numrows;
+    unsigned long long i;
+    volatile unsigned long long numrows;
     unsigned int j;
     unsigned int numfields;
-    dbi_result result;
+    volatile dbi_result result;
     const char *limit = "";
     nx_exception_t e;
 

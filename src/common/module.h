@@ -199,6 +199,7 @@ struct nx_module_t
     nx_module_declaration_t *decl;
     apr_pool_t 		*pool;
     NX_DLIST_ENTRY(nx_module_t) link;
+    boolean		has_config_errors;
     nx_module_status_t	status;
     apr_array_header_t	*routes;	///< array of routes the module belongs to
     nx_logqueue_t	*queue; 	///< the queue for the module

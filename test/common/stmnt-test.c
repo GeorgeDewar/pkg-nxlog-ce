@@ -62,7 +62,7 @@ static void load_conf(const char *fname, nx_ctx_t *ctx)
 static void fail(const char *errormsg) NORETURN;
 static void fail(const char *errormsg)
 {
-    log_error(errormsg);
+    log_error("%s", errormsg);
     exit(1);
 }
 
@@ -70,7 +70,7 @@ static void fail(const char *errormsg)
 
 int main(int argc, const char * const *argv, const char * const *env)
 {
-    apr_pool_t *pool;
+    apr_pool_t *pool = NULL;
     nx_expr_eval_ctx_t eval_ctx;
     nx_logdata_t *logdata;
     nx_value_t result;

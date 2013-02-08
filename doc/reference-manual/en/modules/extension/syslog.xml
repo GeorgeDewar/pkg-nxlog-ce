@@ -52,6 +52,16 @@
 
   <note>
     <para>
+      The <replaceable>Syslog_TLS</replaceable> InputType/OutputType can work with any
+      input/output such as <link linkend="im_tcp">im_tcp</link> or <link linkend="im_file">im_file</link>
+      and it does not depend on SSL transport at all.
+      The name <replaceable>Syslog_TLS</replaceable> is a little misleading, it was chosen
+      to refer to the octet-framing method described in RFC 5425 used for TLS transport.
+    </para>
+  </note>
+
+  <note>
+    <para>
       The <link linkend="pm_transformer">pm_transformer</link> module can also parse and 
       create BSD and IETF syslog messages but using the functions and procedures provided
       by this module makes it possible to solve more complex tasks which 

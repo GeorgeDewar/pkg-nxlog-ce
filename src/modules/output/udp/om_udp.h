@@ -15,8 +15,8 @@ typedef struct nx_om_udp_conf_t
     const char		*host;
     apr_port_t		port;
     apr_socket_t	*sock;
+    int			sockbufsize;
 } nx_om_udp_conf_t;
-
 
 
 #endif	/* __NX_OM_UDP_H */

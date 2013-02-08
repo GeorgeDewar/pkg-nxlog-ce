@@ -16,32 +16,77 @@
 
 nxlog_t nxlog;
 
-
-static nx_module_t *loadmodule(const char *modulename,
-			       const char *type,
-			       nx_ctx_t *ctx)
+static nx_module_t *load_modules(nx_ctx_t *ctx, const char *currmodule)
 {
     nx_module_t *module;
-    char dsoname[4096];
+    nx_module_t * volatile retval = NULL;
+    char pathname[APR_PATH_MAX];
+    char dsoname[APR_PATH_MAX];
+    const char *types[] = { "extension", "input", "processor", "output" };
+    int i;
+    apr_dir_t *dir = NULL;
+    apr_status_t rv;
+    apr_finfo_t finfo;
+    size_t len;
+    nx_exception_t e;
+    char modulename[128];
 
-    module = apr_pcalloc(ctx->pool, sizeof(nx_module_t));
-    module->dsoname = modulename;
-    module->name = modulename;
-    module->pool = ctx->pool;
+    ASSERT(ctx->pool != NULL);
 
-    if ( nxlog.ctx->moduledir == NULL )
+    if ( ctx->moduledir == NULL )
     {
-	nxlog.ctx->moduledir = NX_MODULEDIR;
+	ctx->moduledir = apr_pstrdup(ctx->pool, NX_MODULEDIR);
     }
 
-    apr_snprintf(dsoname, sizeof(dsoname),
-		 "%s"NX_DIR_SEPARATOR"%s"NX_DIR_SEPARATOR"%s"NX_MODULE_DSO_EXTENSION,
-		 nxlog.ctx->moduledir, type, modulename);
+    for ( i = 0; i < 4; i++ )
+    {
+	apr_snprintf(pathname, sizeof(pathname), "%s"NX_DIR_SEPARATOR"%s",
+		     ctx->moduledir, types[i]);
+	
+	dir = NULL;
+	CHECKERR_MSG(apr_dir_open(&dir, pathname, ctx->pool),
+		     "failed to open directory %s", pathname);
+	while ( (rv = apr_dir_read(&finfo, APR_FINFO_NAME, dir)) != APR_ENOENT )
+	{
+	    len = strlen(finfo.name);
 
-    nx_module_load_dso(module, ctx, dsoname);
-    nx_module_register_exports(ctx, module);
+	    if ( len <= strlen(NX_MODULE_DSO_EXTENSION) + 3 )
+	    {
+		continue;
+	    }
+	    if ( !((strncmp(finfo.name, "xm_", 3) == 0) ||
+		   (strncmp(finfo.name, "im_", 3) == 0) ||
+		   (strncmp(finfo.name, "pm_", 3) == 0) ||
+		   (strncmp(finfo.name, "om_", 3) == 0)) )
+	    {
+		continue;
+	    }
+	    apr_cpystrn(modulename, finfo.name, len - 2);
+	    try
+	    {
+		apr_snprintf(dsoname, sizeof(dsoname), "%s"NX_DIR_SEPARATOR"%s",
+			     pathname, finfo.name);
+		module = apr_pcalloc(ctx->pool, sizeof(nx_module_t));
+		module->dsoname = apr_pstrdup(ctx->pool, modulename);
+		module->name = apr_pstrdup(ctx->pool, modulename);
+		module->pool = ctx->pool;
+		
+		if ( (currmodule != NULL) && (strcmp(currmodule, module->name) == 0) )
+		{
+		    retval = module;
+		}
+		nx_module_load_dso(module, ctx, dsoname);
+		nx_module_register_exports(ctx, module);
+	    }
+	    catch(e)
+	    {
+		log_exception(e);
+	    }
+  	}
+    	CHECKERR(apr_dir_close(dir));
+    }
 
-    return ( module );
+    return ( retval );
 }
 
 
@@ -54,16 +99,9 @@ int main(int argc, const char * const *argv, const char * const *env)
     apr_size_t inputlen;
     nx_expr_statement_list_t *statements = NULL;
     nx_exception_t e;
-    nx_module_t *module = NULL;
-    apr_getopt_t *opt;
-    int ch;
-    const char *opt_arg;
-    apr_status_t rv;
-
-    static const apr_getopt_option_t options[] = {
-	{ "moduledir", 'm', 1, "module direcotry" }, 
-	{ NULL, 0, 1, NULL }, 
-    };
+    const char *modulename = NULL;
+    int i;
+    nx_module_t *module;
 
     nx_init(&argc, &argv, &env);
 
@@ -75,25 +113,36 @@ int main(int argc, const char * const *argv, const char * const *env)
     nxlog.ctx->loglevel = NX_LOGLEVEL_INFO;
     pool = nx_pool_create_child(NULL);
 
-    apr_getopt_init(&opt, pool, argc, argv);
-    while ( (rv = apr_getopt_long(opt, options, &ch, &opt_arg)) == APR_SUCCESS )
+
+    for ( i = 1; i < argc; i++ )
     {
-	switch ( ch )
+	if ( strcmp(argv[i], "-m") == 0 )
 	{
-	    case 'm':	/* configuration file */
-		nxlog.ctx->moduledir = apr_pstrdup(pool, opt_arg);
-		break;
-	    default:
-		log_error("invalid argument(s)");
-		exit(-1);
+	    if ( i + 1 >= argc )
+	    {
+		log_error("missing argument for %s", argv[i]);
+	    }
+	    nxlog.ctx->moduledir = apr_pstrdup(pool, argv[i + 1]);
+	    i++;
+	}
+	else if ( strncmp(argv[i], "--moduledir=", strlen("--moduledir=")) == 0 )
+	{
+	    nxlog.ctx->moduledir = apr_pstrdup(pool, argv[i] + strlen("--moduledir="));
+	}
+	else if ( argv[i][0] != '-' )
+	{
+	    modulename = argv[i];
+	}
+	else
+	{
+	    log_error("invalid argument(s): %s", argv[i]);
+	    exit(-1);
 	}
     }
 
     nx_ctx_register_builtins(nxlog.ctx);
 
-    module = loadmodule("xm_syslog", "extension", nxlog.ctx);
-    module = loadmodule("xm_charconv", "extension", nxlog.ctx);
-    module = loadmodule("xm_exec", "extension", nxlog.ctx);
+    module = load_modules(nxlog.ctx, modulename);
 
     CHECKERR_MSG(apr_file_open_stdin(&input, pool), "couldn't open stdin");
 
@@ -104,7 +153,7 @@ int main(int argc, const char * const *argv, const char * const *env)
 
     try
     {
-	statements = nx_expr_parse_statements(NULL, inputstr, pool, NULL, 1, 1);
+	statements = nx_expr_parse_statements(module, inputstr, pool, NULL, 1, 1);
     }
     catch(e)
     {

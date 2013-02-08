@@ -15,6 +15,7 @@ typedef struct nx_im_udp_conf_t
     const char		*host;
     apr_port_t		port;
     nx_module_input_func_decl_t *inputfunc;
+    int			sockbufsize;
 } nx_im_udp_conf_t;
 
 

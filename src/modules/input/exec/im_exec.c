@@ -15,7 +15,7 @@
 
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
-static void im_exec_read_from_pipe(nx_module_input_t *input)
+static void im_exec_fill_buffer(nx_module_input_t *input)
 {
     apr_status_t rv;
     apr_size_t len;
@@ -59,20 +59,12 @@ static void im_exec_read_from_pipe(nx_module_input_t *input)
 	    throw(rv, "Module %s couldn't read from pipe", input->module->name);
 	}
     }
+    else
+    {
+	log_debug("im_exec read %d bytes", (int) len);
+    }
     input->buflen += (int) len;
     ASSERT(input->buflen <= input->bufsize);
-}
-
-
-
-static void im_exec_fill_buffer(nx_module_input_t *input)
-{
-    ASSERT(input != NULL);
-
-    if ( input->bufsize - (input->buflen + input->bufstart) > 0 )
-    {
-	im_exec_read_from_pipe(input);
-    }
 }
 
 
@@ -92,7 +84,6 @@ static void im_exec_read(nx_module_t *module)
     im_exec_fill_buffer(&(module->input));
     while ( (logdata = module->input.inputfunc->func(&(module->input), module->input.inputfunc->data)) != NULL )
     {
-	//log_debug("read: [%s]", logdata->data);
 	nx_module_add_logdata_input(module, &(module->input), logdata);
     }
 }
@@ -272,22 +263,25 @@ static void im_exec_stop(nx_module_t *module)
 		}
 		else if ( i >= 30 )
 		{ // still running, kill it after 3 sec
-		    if ( sigterm_sent == TRUE )
+		    if ( sigterm_sent == FALSE )
 		    {
-#ifdef WIN32
-			sig_num = 1;
-#else
-			sig_num = SIGKILL;
-#endif
-		    }
-		    else
-		    {
-			log_warn("process %s did not exit, killing it.", imconf->cmd);
 			sigterm_sent = TRUE;
 #ifdef WIN32
 			sig_num = 1;
 #else
 			sig_num = SIGTERM;
+#endif
+		    }
+		    else
+		    {
+			if ( i <= 31 )
+			{
+			    log_warn("process %s did not exit, killing it.", imconf->cmd);
+			}
+#ifdef WIN32
+			sig_num = 1;
+#else
+			sig_num = SIGKILL;
 #endif
 		    }
 		    if ( (rv = apr_proc_kill(&(imconf->proc), sig_num)) != APR_SUCCESS )

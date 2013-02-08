@@ -73,7 +73,7 @@ static void im_udp_read(nx_module_t *module)
 	log_debug("UDP log message received from %s", ipstr);
     }
 #else
-    apr_cpystrn(ipstr, sizeof(ipstr), "unknown");
+    apr_cpystrn(ipstr, "unknown", sizeof(ipstr));
 #endif
 
     while ( (logdata = module->input.inputfunc->func(&(module->input), module->input.inputfunc->data)) != NULL )
@@ -123,6 +123,17 @@ static void im_udp_config(nx_module_t *module)
 		nx_conf_error(curr, "invalid port: %s", curr->args);
 	    }
 	    imconf->port = (apr_port_t) port;
+	}
+	else if ( strcasecmp(curr->directive, "sockbufsize") == 0 )
+	{
+	    if ( imconf->sockbufsize != 0 )
+	    {
+		nx_conf_error(curr, "SockBufSize is already defined");
+	    }
+	    if ( sscanf(curr->args, "%u", &(imconf->sockbufsize)) != 1 )
+	    {
+		nx_conf_error(curr, "invalid SockBufSize: %s", curr->args);
+	    }
 	}
 	else if ( strcasecmp(curr->directive, "InputType") == 0 )
 	{
@@ -200,6 +211,12 @@ static void im_udp_start(nx_module_t *module)
 			 "couldn't set SO_NONBLOCK on udp socket");
 	    CHECKERR_MSG(apr_socket_timeout_set(module->input.desc.s, 0),
 			 "couldn't set socket timeout on udp socket");
+	    if ( imconf->sockbufsize != 0 )
+	    {
+		CHECKERR_MSG(apr_socket_opt_set(module->input.desc.s, APR_SO_RCVBUF,
+						imconf->sockbufsize),
+			     "couldn't set SO_RCVBUF on udp socket");
+	    }
 	}
         else
 	{
