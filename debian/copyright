@@ -11,6 +11,24 @@ License: GPL-2+
  found in the /usr/share/common-licenses/GPL-2 file.
 
 Files:
+ src/common/date.{c,h}
+ src/common/cfgfile.h
+ src/common/dlist.h
+ src/common/confparser.c
+License: Apache
+ The ASF licenses this file to You under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance with the License.
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ License for the specific language governing permissions and limitations under
+ the License.
+ .
+ On Debian systems, the complete text of the Apache License can be found in the
+ /usr/share/common-licenses/Apache-2.0 file.
+
+Files:
  src/common
  src/core
  src/utils
