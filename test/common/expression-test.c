@@ -198,7 +198,7 @@ int main(int argc, const char * const *argv, const char * const *env)
 		}
 		break;
 	    case NX_VALUE_TYPE_DATETIME:
-		CHECKERR(nx_date_to_iso(datestr, result.datetime));
+		CHECKERR(nx_date_to_iso(datestr, sizeof(datestr), result.datetime));
 		if ( strcmp(datestr, testcases[i].result.string) != 0 )
 		{
 		    nx_abort("expected '%s' for expression '%s', got '%s'", 

@@ -391,6 +391,9 @@ all-local: stamp-examples
 
 stamp-examples: $(wildcard *.conf) $(wildcard *.stmnt) example-xml.sh         \
                 ../../../test/modules/processor/pattern/patterndb.xml         \
+                ../../../test/modules/processor/evcorr/evcorr2.conf           \
+                ../../../test/modules/processor/evcorr/testinput_evcorr2.txt  \
+                ../../../test/modules/processor/evcorr/testoutput_evcorr2.txt \
                 ../../../test/modules/extension/multiline/xm_multiline1.conf  \
                 ../../../test/modules/extension/multiline/xm_multiline1.in    \
                 ../../../test/modules/extension/multiline/xm_multiline1.out   \

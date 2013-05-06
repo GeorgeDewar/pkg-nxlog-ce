@@ -267,7 +267,7 @@ void nx_log(apr_status_t	code,
 
 	    if ( ctx->formatlog == TRUE )
 	    {
-		nx_date_to_iso(message, now);
+		nx_date_to_iso(message, sizeof(message), now);
 		message[19] = ' ';
 		offs = 20;
 		loglevelstr = nx_loglevel_to_string(loglevel);
@@ -367,7 +367,7 @@ void nx_log(apr_status_t	code,
 
 			if ( ctx->formatlog == TRUE )
 			{
-			    nx_date_to_iso(tmpmsg, now);
+			    nx_date_to_iso(tmpmsg, sizeof(tmpmsg), now);
 			    msgoffs = strlen(tmpmsg);
 			    msgoffs += (apr_size_t) apr_snprintf(tmpmsg + msgoffs, NX_LOGBUF_SIZE - msgoffs,
 								 " %s last message repeated %d times"NX_LINEFEED,

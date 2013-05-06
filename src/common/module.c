@@ -37,6 +37,14 @@ nxlog_t *nxlog_get()
 }
 
 
+const nx_string_t *nx_get_hostname()
+{
+    ASSERT(_nxlog != NULL);
+
+    return ( &(_nxlog->hostname) );
+}
+
+
 
 const char *nx_module_type_to_string(nx_module_type_t type)
 {
@@ -341,19 +349,19 @@ void nx_module_data_available(nx_module_t *module)
 
 
 
-boolean nx_module_can_send(nx_module_t *module, int queuelimit)
+boolean nx_module_can_send(nx_module_t *module, double multiplier)
 {
     nx_module_t *curr = NULL;
     nx_route_t *route;
     int i, j;
 
     ASSERT(module != NULL);
-    ASSERT(queuelimit > 0 );
+    ASSERT(multiplier > 0 );
     
     switch ( module->type )
     {
 	case NX_MODULE_TYPE_OUTPUT:
-	    if ( nx_logqueue_size(module->queue) >= queuelimit )
+	    if ( nx_logqueue_size(module->queue) >= module->queue->limit * multiplier)
 	    {
 		return ( FALSE );
 	    }
@@ -373,7 +381,7 @@ boolean nx_module_can_send(nx_module_t *module, int queuelimit)
 
 	    if ( curr->type == NX_MODULE_TYPE_PROCESSOR )
 	    {
-		if ( nx_logqueue_size(curr->queue) >= queuelimit )
+		if ( nx_logqueue_size(curr->queue) >= curr->queue->limit * multiplier )
 		{
 		    return ( FALSE );
 		}
@@ -384,7 +392,7 @@ boolean nx_module_can_send(nx_module_t *module, int queuelimit)
 		{
 		    curr = ((nx_module_t **) route->modules->elts)[i];
 		    ASSERT(curr->type == NX_MODULE_TYPE_OUTPUT);
-		    if ( nx_logqueue_size(curr->queue) >= queuelimit )
+		    if ( nx_logqueue_size(curr->queue) >= curr->queue->limit * multiplier )
 		    {
 			return ( FALSE );
 		    }
@@ -400,14 +408,14 @@ boolean nx_module_can_send(nx_module_t *module, int queuelimit)
 		    curr = ((nx_module_t **) route->modules->elts)[j];
 		    if ( curr->type == NX_MODULE_TYPE_OUTPUT )
 		    {
-			if ( nx_logqueue_size(curr->queue) >= queuelimit )
+			if ( nx_logqueue_size(curr->queue) >= curr->queue->limit * multiplier )
 			{
 			    return ( FALSE );
 			}
 		    }
 		    else if ( curr->type == NX_MODULE_TYPE_PROCESSOR )
 		    {
-			if ( nx_logqueue_size(curr->queue) >= queuelimit )
+			if ( nx_logqueue_size(curr->queue) >= curr->queue->limit * multiplier )
 			{
 			    return ( FALSE );
 			}
@@ -461,7 +469,7 @@ void nx_module_add_logdata_to_route(nx_module_t *module,
 	    {
 		nx_module_pause(module);
 	    }
-	    if ( nx_module_can_send(curr, NX_LOGQUEUE_LIMIT) == TRUE )
+	    if ( nx_module_can_send(curr, 1.0) == TRUE )
 	    {
 		nx_module_data_available(curr);
 	    }
@@ -479,6 +487,7 @@ void nx_module_add_logdata_input(nx_module_t *module,
     nx_logdata_t *tmp = logdata;
     nx_route_t *route;
     nx_module_t *curr;
+    boolean sent = FALSE;
 
     ASSERT(module != NULL);
     ASSERT(logdata != NULL);
@@ -524,10 +533,6 @@ void nx_module_add_logdata_input(nx_module_t *module,
 	nx_expr_eval_ctx_destroy(&eval_ctx);
     }
 
-    nx_module_lock(module);
-    (module->evt_fwd)++;
-    nx_module_unlock(module);
-
     // count how many we need to add
     for ( i = 0; i < module->routes->nelts; i++ )
     {
@@ -571,14 +576,31 @@ void nx_module_add_logdata_input(nx_module_t *module,
 		{
 		    tmp = logdata;
 		}
-		if ( (nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit) &&
-		     (nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING) )
+		if ( module->flowcontrol == FALSE )
 		{
-		    nx_module_pause(module);
+		    if ( nx_logqueue_size(curr->queue) >= curr->queue->limit )
+		    { // cannot forward, drop it
+			nx_logdata_free(tmp);
+		    }
+		    else
+		    {
+			nx_logqueue_push(curr->queue, tmp);
+			sent = TRUE;
+		    }
+		    nx_module_data_available(curr);
 		}
 		else
-		{
-		    nx_module_data_available(curr);
+		{ // flow-control enabled
+		    if ( (nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit) &&
+			 (nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING) )
+		    {
+			nx_module_pause(module);
+		    }
+		    else
+		    {
+			nx_module_data_available(curr);
+		    }
+		    sent = TRUE;
 		}
 		cnt--;
 		break; //skip remaining modules
@@ -594,18 +616,42 @@ void nx_module_add_logdata_input(nx_module_t *module,
 		{
 		    tmp = logdata;
 		}
-		if ( (nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit) &&
-		     (nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING) )
+		if ( module->flowcontrol == FALSE )
 		{
-		    nx_module_pause(module);
-		}
-		if ( nx_module_can_send(curr, NX_LOGQUEUE_LIMIT) == TRUE )
-		{
+		    if ( nx_logqueue_size(curr->queue) >= curr->queue->limit )
+		    { // cannot forward, drop it
+			nx_logdata_free(tmp);
+		    }
+		    else
+		    {
+			nx_logqueue_push(curr->queue, tmp);
+			sent = TRUE;
+		    }
 		    nx_module_data_available(curr);
+		}
+		else
+		{ // flow-control enabled
+		    if ( (nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit) &&
+			 (nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING) )
+		    {
+			nx_module_pause(module);
+		    }
+		    if ( nx_module_can_send(curr, 1.0) == TRUE )
+		    {
+			nx_module_data_available(curr);
+		    }
+		    sent = TRUE;
 		}
 		cnt--;
 	    }
 	}
+    }
+
+    if ( sent == TRUE )
+    {
+	nx_module_lock(module);
+	(module->evt_fwd)++;
+	nx_module_unlock(module);
     }
 }
 
@@ -617,6 +663,7 @@ void nx_module_progress_logdata(nx_module_t *module, nx_logdata_t *logdata)
     nx_route_t *route;
     nx_logdata_t *tmp = logdata;
     int i;
+    boolean sent = FALSE;
 
     ASSERT(module != NULL);
     ASSERT(logdata != NULL);
@@ -632,10 +679,6 @@ void nx_module_progress_logdata(nx_module_t *module, nx_logdata_t *logdata)
     {
 	nx_module_logqueue_pop(module, logdata);
     }
-    // increase counters
-    nx_module_lock(module);
-    (module->evt_fwd)++;
-    nx_module_unlock(module);
 
     route = ((nx_route_t **)module->routes->elts)[0];
     // find next module
@@ -650,13 +693,32 @@ void nx_module_progress_logdata(nx_module_t *module, nx_logdata_t *logdata)
     }
     if ( curr->type == NX_MODULE_TYPE_PROCESSOR )
     {
-	if ( nx_logqueue_push(curr->queue, tmp) >= NX_LOGQUEUE_LIMIT )
+	if ( module->flowcontrol == FALSE )
 	{
-	    nx_module_pause(module);
+	    if ( nx_logqueue_size(curr->queue) >= curr->queue->limit )
+	    { // cannot forward, drop it
+		nx_logdata_free(tmp);
+	    }
+	    else
+	    {
+		nx_logqueue_push(curr->queue, tmp);
+		// increase counters
+		sent = TRUE;
+	    }
+	    nx_module_data_available(curr);
 	}
 	else
-	{
-	    nx_module_data_available(curr);
+	{ // flow-control enabled
+	    if ( nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit )
+	    {
+		nx_module_pause(module);
+	    }
+	    else
+	    {
+		nx_module_data_available(curr);
+	    }
+	    // increase counters
+	    sent = TRUE;
 	}
     }
     else
@@ -673,15 +735,41 @@ void nx_module_progress_logdata(nx_module_t *module, nx_logdata_t *logdata)
 	    {
 		tmp = logdata;
 	    }
-	    if ( nx_logqueue_push(curr->queue, tmp) >= NX_LOGQUEUE_LIMIT )
+	    if ( module->flowcontrol == FALSE )
 	    {
-		nx_module_pause(module);
-	    }
-	    else
-	    {
+		if ( nx_logqueue_size(curr->queue) >= curr->queue->limit )
+		{ // cannot forward, drop it
+		    nx_logdata_free(tmp);
+		}
+		else
+		{
+		    nx_logqueue_push(curr->queue, tmp);
+		    // increase counters
+		    sent = TRUE;
+		}
 		nx_module_data_available(curr);
 	    }
+	    else
+	    { // flow-control enabled
+		if ( nx_logqueue_push(curr->queue, tmp) >= curr->queue->limit )
+		{
+		    nx_module_pause(module);
+		}
+		else
+		{
+		    nx_module_data_available(curr);
+		}
+		// increase counters
+		sent = TRUE;
+	    }
 	}
+    }
+
+    if ( sent == TRUE )
+    {
+	nx_module_lock(module);
+	(module->evt_fwd)++;
+	nx_module_unlock(module);
     }
 }
 
@@ -707,7 +795,11 @@ boolean nx_module_common_keyword(const char *keyword)
     {
 	return ( TRUE );
     }
-    
+    if ( strcasecmp(keyword, "FlowControl") == 0 )
+    {
+	return ( TRUE );
+    }
+
     return ( FALSE );
 }
 
@@ -764,7 +856,7 @@ static void resume_senders(nx_module_t *module)
 		curr = ((nx_module_t **) route->modules->elts)[j];
 		if ( curr->type == NX_MODULE_TYPE_PROCESSOR )
 		{
-		    if ( nx_module_can_send(curr, NX_LOGQUEUE_LIMIT * 3 / 2) == TRUE )
+		    if ( nx_module_can_send(curr, 0.7) == TRUE )
 		    {
 			nx_module_resume(curr);
 			if ( nx_module_get_status(curr) == NX_MODULE_STATUS_RUNNING )
@@ -779,7 +871,7 @@ static void resume_senders(nx_module_t *module)
 		    {
 			curr = ((nx_module_t **) route->modules->elts)[j];
 			ASSERT(curr->type == NX_MODULE_TYPE_INPUT);
-			if ( nx_module_can_send(curr, NX_LOGQUEUE_LIMIT * 3 / 2) == TRUE )
+			if ( nx_module_can_send(curr, 0.7) == TRUE )
 			{
 			    nx_module_resume(curr);
 			}

@@ -67,6 +67,7 @@
    </para>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/blocker.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/buffer.xml" /> 
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/evcorr.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/filter.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/norepeat.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/processor/null.xml" /> 

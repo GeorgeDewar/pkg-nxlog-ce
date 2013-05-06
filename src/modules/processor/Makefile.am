@@ -1,1 +1,1 @@
-SUBDIRS	= null filter transformer norepeat buffer blocker pattern
+SUBDIRS	= evcorr null filter transformer norepeat buffer blocker pattern

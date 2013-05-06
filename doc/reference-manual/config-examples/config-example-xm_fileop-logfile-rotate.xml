@@ -17,5 +17,4 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
         Exec    file_cycle(%LOGFILE%, 2);
     </Schedule>
 </Extension>
-
 ]]></programlisting>

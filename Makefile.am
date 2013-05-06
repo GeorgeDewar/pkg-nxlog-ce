@@ -32,6 +32,7 @@ EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_D
 	     packaging/windows/README.txt \
 	     packaging/windows/wininst.sh \
 	     packaging/redhat/nxlog.spec \
+	     packaging/redhat/nxlog.spec.RHEL5 \
 	     packaging/redhat/nxlog.conf \
 	     packaging/redhat/init \
 	     packaging/redhat/make_rpm.sh

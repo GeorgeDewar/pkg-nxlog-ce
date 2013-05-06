@@ -1,4 +1,4 @@
-NXLOG Community Edition Reference Manual for v2.2.1017
+NXLOG Community Edition Reference Manual for v2.4.1054
 
 Botond Botyanszki
 
@@ -126,6 +126,7 @@ Botond Botyanszki
 
               Blocker (pm_blocker)
               Buffer (pm_buffer)
+              Event correlator (pm_evcorr)
               Filter (pm_filter)
               Message deduplicator (pm_norepeat)
               Null (pm_null)
@@ -263,16 +264,17 @@ Botond Botyanszki
    List of Examples
 
    4.1. File inclusion example
-   4.2. Example for using defines
-   4.3. Incorrect use of a define
-   4.4. Two scheduled jobs in the context of the im_tcp module
-   4.5. Exec statement spanning multiple lines
-   4.6. Equivalent use of statements in Exec
-   4.7. TCP input assuming nxlog format
-   4.8. TCP output sending messages in nxlog format
-   4.9. Route block
-   4.10. Prioritized processing
-   4.11. Different routes
+   4.2. Config file inclusion with wildcards
+   4.3. Example for using defines
+   4.4. Incorrect use of a define
+   4.5. Two scheduled jobs in the context of the im_tcp module
+   4.6. Exec statement spanning multiple lines
+   4.7. Equivalent use of statements in Exec
+   4.8. TCP input assuming nxlog format
+   4.9. TCP output sending messages in nxlog format
+   4.10. Route block
+   4.11. Prioritized processing
+   4.12. Different routes
    5.1. Using brackets around expressions
    5.2. Unsetting a value of a field
    5.3. Setting an integer value
@@ -349,23 +351,24 @@ Botond Botyanszki
    6.35. Using the im_uds module
    6.36. Using the pm_blocker module
    6.37. Using a memory buffer to protect against udp message loss
-   6.38. Dropping messages conditionally
-   6.39. Filtering messages
-   6.40. Filtering out duplicated messages
-   6.41. A simple pattern database
-   6.42. Using the pm_pattern module
-   6.43. Using the pm_transformer module
-   6.44. Testing buffering with the om_blocker module
-   6.45. Storing syslog in a PostgreSQL database
-   6.46. Storing logs in a MySQL database
-   6.47. Piping logs to an external program
-   6.48. Storing raw syslog messages into a file
-   6.49. File rotation based on size
-   6.50. Sending logs over HTTPS
-   6.51. Writing nxlog binary data to another nxlog agent
-   6.52. Transferring raw logs over TCP
-   6.53. Sending raw syslog over udp
-   6.54. Using the om_uds module
+   6.38. Correlation rules
+   6.39. Dropping messages conditionally
+   6.40. Filtering messages
+   6.41. Filtering out duplicated messages
+   6.42. A simple pattern database
+   6.43. Using the pm_pattern module
+   6.44. Using the pm_transformer module
+   6.45. Testing buffering with the om_blocker module
+   6.46. Storing syslog in a PostgreSQL database
+   6.47. Storing logs in a MySQL database
+   6.48. Piping logs to an external program
+   6.49. Storing raw syslog messages into a file
+   6.50. File rotation based on size
+   6.51. Sending logs over HTTPS
+   6.52. Writing nxlog binary data to another nxlog agent
+   6.53. Transferring raw logs over TCP
+   6.54. Sending raw syslog over udp
+   6.55. Using the om_uds module
    8.1. Parsing tomcat logs into fields
    8.2. Cisco Secure Access Control Server
    8.3. Cisco PIX and Cisco ASA
@@ -1042,12 +1045,19 @@ File inclusion
    which will be included in the current config file. Special care
    must be taken when specifing files with relative filenames. The
    SpoolDir directive will only take effect after the
-   configuration was parsed, so files specified with the 'include'
-   directive are relative to the working directory where nxlog was
-   started from.
+   configuration was parsed, so relative paths specified with the
+   'include' directive are relative to the working directory where
+   nxlog was started from.
+
+   The include directive also supports wildcarded file names (e.g.
+   *.conf) so that it is possible to include a set of files within
+   a directory without the need to explicitly list all.
 
    Example 4.1. File inclusion example
 include modules/module1.conf
+
+   Example 4.2. Config file inclusion with wildcards
+include /etc/nxlog.d/*.conf
 
 Constant and macro definitions
 
@@ -1063,7 +1073,7 @@ Constant and macro definitions
    occurences of the defined name with its value, only after this
    substitution will the configuration check occur.
 
-   Example 4.2. Example for using defines
+   Example 4.3. Example for using defines
 define BASEDIR /var/log
 define IGNORE_DEBUG if $raw_event =~ /debug/ drop();
 
@@ -1083,7 +1093,7 @@ define IGNORE_DEBUG if $raw_event =~ /debug/ drop();
    always executed, only the warning message is emitted
    conditionally.
 
-   Example 4.3. Incorrect use of a define
+   Example 4.4. Incorrect use of a define
 define ACTION log_warning("dropping message"); drop();
 
 <Input messages>
@@ -1198,6 +1208,12 @@ Global directives
           is not defined. You should not set this unless you know
           what you are doing.
 
+   FlowControl
+          This optional boolean directive specifies whether all
+          input and processor modules should use flow-control.
+          This defaults to TRUE. See the description of the module
+          level FlowControl directive for more information.
+
    NoFreeOnExit
           This directive has only a debugging purpuse. When set to
           TRUE, nxlog will not free module resources on exit.
@@ -1276,6 +1292,44 @@ Module
    instantiated multiple times. Different module instances may
    have different configuration.
 
+FlowControl
+
+   This optional boolean directive specifies whether the module
+   should be using flow-control. This can be used only in Input
+   and Processor modules. Flow-control is enabled by default if
+   this directive is not sepcified. This module-level directive
+   can be used to override the global FlowControl directive.
+
+   When flow-control is in effect, a module (input or processor)
+   which tries to forward log data to the next module in the route
+   will be suspended if the next module cannot accept more data.
+   For example if a network module (e.g. om_tcp) cannot forward
+   logs because of a network error, the proceeding module in the
+   route will be paused. When flow-control is disabled, the module
+   will drop the log record if the queue of the next module in the
+   route is full.
+
+   Disabling flow-control can be also useful when more output
+   modules are configured to store or forward log data. When
+   flow-control is enabled, the output modules will only
+   store/forward log data if all outputs are functional. Consider
+   the case when log data is stored in a file using om_file and
+   also forwarded over the network using om_tcp. When flow-control
+   is enabled, a network disconnection will make the data flow
+   stall and log data will not be written into the local file
+   either. With flow-control disabled, nxlog will write log data
+   to the file and will drop messages that the om_tcp network
+   module cannot forward.
+
+Note
+
+   It is recommended to disable FlowControl when the im_uds module
+   is used to collect local syslog from the /dev/log unix domain
+   socket. Otherwise the syslog() system call will block in all
+   programs which are trying to write to the system log if the
+   Output queue becomes full and this will result in an
+   unresponsive system.
+
 Schedule
 
    The Schedule block can be used to execute periodic jobs such as
@@ -1327,7 +1381,7 @@ Schedule
           Note that it is not possible to use fields in statements
           here because execution is not triggered by log messages.
 
-   Example 4.4. Two scheduled jobs in the context of the im_tcp
+   Example 4.5. Two scheduled jobs in the context of the im_tcp
    module
 <Input in>
     Module      im_tcp
@@ -1354,7 +1408,6 @@ Schedule
     Path        in => out
 </Route>
 
-
 Exec
 
    The Exec directive contains statements in the nxlog language
@@ -1367,13 +1420,13 @@ Exec
    file format, each directive must be one line unless it contains
    a trailing backslash "\" character.
 
-   Example 4.5. Exec statement spanning multiple lines
+   Example 4.6. Exec statement spanning multiple lines
 Exec    if $Message =~ /something interesting/       \
            log_info("found something interesting");         \
         else                                                \
            log_debug("found nothing interesting");
 
-   Example 4.6. Equivalent use of statements in Exec
+   Example 4.7. Equivalent use of statements in Exec
 Exec    log_info("first"); \
         log_info("second");
 # The above is the same as the following:
@@ -1440,7 +1493,7 @@ InputType
           only recommended to configure InputType to Binary if no
           compatibility with other logging software is required.
 
-   Example 4.7. TCP input assuming nxlog format
+   Example 4.8. TCP input assuming nxlog format
 <Input in>
     Module      im_tcp
     Port        2345
@@ -1455,7 +1508,6 @@ InputType
 <Route 1>
     Path        in => out
 </Route>
-
 
 
 OutputType
@@ -1497,7 +1549,7 @@ OutputType
           is capable of preserving parsed fields of the log
           messages.
 
-   Example 4.8. TCP output sending messages in nxlog format
+   Example 4.9. TCP output sending messages in nxlog format
 <Input in>
     Module      im_file
     File        "tmp/input"
@@ -1515,14 +1567,13 @@ OutputType
 </Route>
 
 
-
 Routes
 
    Routes define the flow and processing order of the log
    messages. The route must have a name and a Path. The name is
    specified similarly to the instance name in a module block.
 
-   Example 4.9. Route block
+   Example 4.10. Route block
 <Route example>
     Path        in1, in2 => proc => out1, out2
 </Route>
@@ -1543,7 +1594,7 @@ Priority
    This directive can be especially usefull to minimize syslog UDP
    message loss for example.
 
-   Example 4.10. Prioritized processing
+   Example 4.11. Prioritized processing
 <Input tcpin>
     Module      im_tcp
     Host        localhost
@@ -1579,7 +1630,6 @@ Priority
 
 
 
-
 Path
 
    The Path directive is where the data flow is defined. First the
@@ -1598,7 +1648,7 @@ Path    INPUT1[, INPUT2...] => [PROCESSOR1 [=> PROCESSOR2...] =>] OUTPUT
    The Path must contain at least an input and an output module.
    The following example shows different routes.
 
-   Example 4.11. Different routes
+   Example 4.12. Different routes
 <Input in1>
     Module      im_null
 </Input>
@@ -1637,7 +1687,6 @@ Path    INPUT1[, INPUT2...] => [PROCESSOR1 [=> PROCESSOR2...] =>] OUTPUT
     # multiple modules
     Path        in1, in2 => p1 => p2 => out1, out2
 </Route>
-
 
 
 Chapter 5. Language
@@ -2739,7 +2788,17 @@ Functions exported by core
    string hostname();
 
         description
-                Return the hostname.
+                Return the hostname (short form).
+
+        return type
+                string
+
+   string hostname_fqdn();
+
+        description
+                Return the FQDN hostname. This function will
+                return the sort form if the FQDN hostname cannot
+                be determined.
 
         return type
                 string
@@ -3334,6 +3393,7 @@ Chapter 6. Modules
 
         Blocker (pm_blocker)
         Buffer (pm_buffer)
+        Event correlator (pm_evcorr)
         Filter (pm_filter)
         Message deduplicator (pm_norepeat)
         Null (pm_null)
@@ -3619,7 +3679,6 @@ Configuration examples
     Path        filein => fileout
 </Route>
 
-
    Samples for the input and output files processed by the above
    config are shown below.
 1, "John K.", 42
@@ -3708,7 +3767,6 @@ Configuration examples
 <Route r>
     Path        in => out
 </Route>
-
 
    A sample is shown for the input and its corresponding output:
 <30>Sep 30 15:45:43 host44.localdomain.hu acpid: 1 client rule loaded
@@ -3840,7 +3898,6 @@ Configuration examples
 <Route r>
     Path        in => out
 </Route>
-
 
    A sample is shown for the input and its corresponding output:
 <30>Sep 30 15:45:43 host44.localdomain.hu acpid: 1 client rule loaded
@@ -3991,7 +4048,6 @@ Configuration examples
     Path        in => out
 </Route>
 
-
 Character set conversion (xm_charconv)
 
    This module provides functions and procedures to convert
@@ -4087,7 +4143,6 @@ Configuration examples
 <Route 1>
     Path        filein => fileout
 </Route>
-
 
 File operations (xm_fileop)
 
@@ -4539,7 +4594,6 @@ er than 1Mb
         Exec    file_cycle(%LOGFILE%, 2);
     </Schedule>
 </Extension>
-
 
 Multi-line message parser (xm_multiline)
 
@@ -5037,6 +5091,12 @@ Configuration
           directive is not specified, the default replacement
           character is space.
 
+   IETFTimestampInGMT
+          This optional boolean directive can be used to format
+          the timestamps produced by to_syslog_ietf() in GMT
+          instead of local time. This defaults to FALSE so that
+          local time is used by default with a timezone indicator.
+
 Functions and procedures exported by xm_syslog
 
 Functions exported by xm_syslog
@@ -5295,7 +5355,6 @@ Configuration examples
     Path        in => out
 </Route>
 
-
    Example 6.15. Collecting IETF style syslog messages over UDP
 
    To collect IETF style syslog messages over UDP as defined by
@@ -5322,7 +5381,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
    Example 6.16. Collecting both IETF and BSD style syslog
    messages over the same UDP port
@@ -5354,7 +5412,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
    Example 6.17. Collecting IETF style syslog messages over
    TLS/SSL
@@ -5390,7 +5447,6 @@ Configuration examples
     Path        in => out
 </Route>
 
-
    Example 6.18. Forwarding IETF syslog over TCP
 
    The following configuration uses the to_syslog_ietf() procedure
@@ -5416,7 +5472,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
    Because of the Syslog_TLS framing, the raw data sent over TCP
    will look like the following:
@@ -5451,7 +5506,6 @@ value("error");
 <Route 1>
     Path        in => fileout
 </Route>
-
 
    Example 6.20. Conditional rewrite of the syslog facility -
    version 2
@@ -5492,7 +5546,6 @@ value("error");
 <Route 1>
     Path        in => rewrite => fileout
 </Route>
-
 
 External program execution (xm_exec)
 
@@ -5563,7 +5616,6 @@ Configuration examples
     </Schedule>
 </Extension>
 
-
    Example 6.22. Sending email alerts
 <Extension exec>
     Module      xm_exec
@@ -5592,7 +5644,6 @@ n\nRawEvent:\n' + $raw_event + \
 <Route r>
     Path        in => out
 </Route>
-
 
    For another example see this configuration for file rotation.
 
@@ -5886,19 +5937,12 @@ Configuration examples
     Path        dbiin => out
 </Route>
 
-
 Program (im_exec)
 
    This module will execute a program or script on startup and
-   will read its standard output.
-
-Note
-
-   The executed program or script should not exit because im_exec
-   will not restart it. Support for restart will be added in a
-   future version. Restarting can lead to a significant overhead
-   if it occurs frequently, this is the main reason why this
-   feature was left out in order to avoid abusing the module.
+   will read its standard output. It can be used to easily
+   integrate with exotic log sources which can be read only with
+   the help of scripts or programs.
 
 Configuration
 
@@ -5921,6 +5965,15 @@ Configuration
           See the description about InputType in the global module
           config section.
 
+   Restart
+          Restart the process if it exits. There is a 1 second
+          delay before it is restarted in order not to DOS the
+          system when a process is not behaving nicely. Looping
+          should be implemented in the script itself, this
+          directive is only to provide some safety against
+          malfunctioning scripts and programs. This boolean
+          directive defaults to FALSE.
+
 Configuration examples
 
    Example 6.25. Emulating im_file
@@ -5939,7 +5992,6 @@ Configuration examples
 <Route 1>
     Path        input => fileout
 </Route>
-
 
    This exact same configuration is not recommended for real use
    because im_file was designed to read log messages from files.
@@ -6111,7 +6163,6 @@ Configuration examples
     Path        in => out
 </Route>
 
-
 Internal (im_internal)
 
    This module makes it possible to insert internal log messages
@@ -6236,7 +6287,6 @@ Configuration examples
 </Route>
 
 
-
 Kernel (im_kernel)
 
    This module can collect kernel log messages from the kernel log
@@ -6288,7 +6338,6 @@ Group nxlog
 <Route 1>
     Path        kern => fileout
 </Route>
-
 
 Mark (im_mark)
 
@@ -6397,7 +6446,6 @@ Configuration examples
 <Route 1>
     Path        mark => fileout
 </Route>
-
 
 
 MS EventLog for Windows XP/2000/2003 (im_mseventlog)
@@ -7069,7 +7117,6 @@ Configuration examples
 </Route>
 
 
-
 TCP (im_tcp)
 
    This module accepts TCP connections on the address and port
@@ -7145,7 +7192,6 @@ Configuration examples
 <Route r>
     Path        in => out
 </Route>
-
 
 
 UDP (im_udp)
@@ -7240,7 +7286,6 @@ Configuration examples
 </Route>
 
 
-
 Unix Domain Socket (im_uds)
 
    This module allows log messages to be received over a unix
@@ -7252,7 +7297,16 @@ Unix Domain Socket (im_uds)
 Note
 
    This module supports SOCK_DGRAM type sockets only. SOCK_STREAM
-   type sockets will be supported in the future.
+   type sockets may be supported in the future.
+
+Note
+
+   It is recommended to disable FlowControl when this module is
+   used to collect local syslog from the /dev/log unix domain
+   socket. Otherwise the syslog() system call will block in all
+   programs which are trying to write to the system log if the
+   Output queue becomes full and this will result in an
+   unresponsive system.
 
    For parsing syslog messages, take a look at the pm_transformer
    module or the parse_syslog_bsd() procedure of the xm_syslog.
@@ -7288,7 +7342,6 @@ Configuration examples
 <Route 1>
        Path unix => out
 </Route>
-
 
 
 Processor modules
@@ -7376,7 +7429,6 @@ Configuration examples
 <Route 1>
     Path        in => buffer => blocker => out
 </Route>
-
 
 Buffer (pm_buffer)
 
@@ -7485,6 +7537,401 @@ Configuration examples
     Path        udp => buffer => tcp
 </Route>
 
+Event correlator (pm_evcorr)
+
+   The pm_evcorr module provides event correlation functionality
+   in addition to the already available nxlog language features
+   such as variables and statistical counters which can be also
+   used for event correlation purposes.
+
+   This module was greatly inspired by the Perl based correlation
+   tool SEC. Some of the rules of the pm_evcorr module were
+   designed to mimic those available in SEC. This module aims to
+   be a better alternative to SEC with the following advantages:
+     * The correlation rules in SEC work with the current time.
+       With pm_evcorr it is possible to specify a time field wich
+       is used for elapsed time calculation making offline event
+       correlation also possible.
+     * SEC uses regular expressions extensively which can become
+       quite slow in case of many correlation rules. In contrast
+       this module can correlate preprocessed messages using
+       fields for example from the pattern matcher and the syslog
+       parser without requiring the use of regular expressions
+       (though these are also available for use by correlation
+       rules). Thus testing conditions can be significantly faster
+       when simple comparison is used instead of regular
+       expression based pattern matching.
+     * This module was designed to operate on fields thus making
+       it possible to correlate structured logs in addition to
+       simple free-form log messages.
+     * Most importantly, this module is written in C and SEC is
+       pure Perl which could have major performance benefits.
+
+   The rulesets of this module can use a context. A context is an
+   expression which is evaluated during runtime to a value and the
+   correlation rule is checked in the context of this value. For
+   example if we wanted to count the number of failed logins per
+   user and alert if the failed logins exceed 3 for the user, then
+   we'd use the $AccountName as the context. There is a separate
+   context storage is for each correlation rule instance. If you
+   need global contexts accessible from all rule instances, take a
+   look at module variables and statistical counters.
+
+Configuration
+
+   The pm_evcorr configuration contains correlation rules which
+   are evaluated for each log message processed by the module.
+   Currently there are five rule types supported by pm_evcorr:
+   Simple, Suppressed, Pair, Absence and Thresholded. These rules
+   are defined in config blocks. The order of the rules is
+   important because the rules are evaluated in the order they are
+   defined. For example a correlation rule can change a state,
+   variable or field which can be then used by a later rule. File
+   inclusion can be useful to move the correlation rules into a
+   standalone file.
+
+   In addition to the common module directives, the following can
+   be used to configure the pm_evcorr module instance.
+
+   TimeField
+          Specifies the name of the field to use for calculating
+          elapsed time such as 'EventTime'. The name of the field
+          must be specified without the leading dollar "$" sign.
+          If this parameter is not specified, the current time is
+          assumed. This directive makes it possible to accurately
+          correlate events based on the event time recorded in the
+          logs and to do non real-time event correlation also.
+
+   ContextCleanTime
+          When a Context is used in the correlation rules, these
+          must be purged from memory after they are expired,
+          otherwise using too many context values could result in
+          a high memory usage. This optional directive specifies
+          the interval between context cleanups in seconds. By
+          default a 1 minute cleanup interval is used if any rules
+          use a Context and this directive is not specified.
+
+   Simple
+          This rule is essentially the same as the Exec directive
+          supported by all modules. Because Execs are evaluated
+          before the correlation rules, the Simple rule was also
+          needed to be able to evaluate a statement as the other
+          rules do, following the rule order. The Simple block has
+          one directive also with the same name.
+
+        Exec
+                One or more Exec directives must be specified
+                which takes a statement as argument.
+
+   Suppressed
+          This rule matches the given condition. If the condition
+          evaluates to TRUE, the statement specified with the Exec
+          directive is evaluated. The rule will then ignore any
+          log messages for the time specified with Interval
+          directive. For example this rule is useful to suppress
+          creating many alerts in a short period when a condition
+          is satisfied.
+
+        Condition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+
+        Interval
+                This mandatory directive takes an integer argument
+                specifying the number of seconds to ignore the
+                condition. The TimeField directive is used to
+                calculate time.
+
+        Context
+                This optional directive specifies an expression to
+                be used as the context. It must evaluate to a
+                value. Most often a field is specified here.
+
+        Exec
+                One or more Exec directives must be specified
+                which takes a statement as argument.
+
+   Pair
+          When TriggerCondition evaluates to TRUE, this rule type
+          will wait Interval seconds for RequiredCondition to
+          become TRUE, it then executes the statement(s) in the
+          Exec directive(s).
+
+        TriggerCondition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+
+        RequiredCondition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+                When this evaluates to TRUE after TriggerCondition
+                evaluated to TRUE within Interval seconds, the
+                statement(s) in the Exec directive(s) are
+                executed.
+
+        Interval
+                Thisdirective takes an integer argument specifying
+                the number of seconds to wait for
+                RequiredCondition to become TRUE. If this
+                directive is 0 or not specified, the rule will
+                wait indefinitely for RequiredCondition to become
+                TRUE. The TimeField directive is used to calculate
+                time.
+
+        Context
+                This optional directive specifies an expression to
+                be used as the context. It must evaluate to a
+                value. Most often a field is specified here.
+
+        Exec
+                One or more Exec directives must be specified
+                which takes a statement as argument.
+
+   Absence
+          This rule type does the opposite of Pair. When
+          TriggerCondition evaluates to TRUE, this rule type will
+          wait Interval seconds for RequiredCondition to become
+          TRUE. If it does not become TRUE it then executes the
+          statement(s) in the Exec directive(s).
+
+        TriggerCondition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+
+        RequiredCondition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+                When this evaluates to TRUE after TriggerCondition
+                evaluated to TRUE within Interval seconds, the
+                statement(s) in the Exec directive(s) are NOT
+                executed.
+
+        Interval
+                This mandatory directive takes an integer argument
+                specifying the number of seconds to wait for
+                RequiredCondition to become TRUE. Its value must
+                be greater than 0. The TimeField directive is used
+                to calculate time.
+
+        Context
+                This optional directive specifies an expression to
+                be used as the context. It must evaluate to a
+                value. Most often a field is specified here.
+
+        Exec
+                One or more Exec directives must be specified
+                which takes a statement as argument.
+
+Note
+
+                The evaluation of this Exec is not triggered by a
+                log event, thus it does not make sense to use log
+                data related operations such as accessing fields.
+
+   Thresholded
+          This rule will execute the statement(s) in the Exec
+          directive(s) if the Condition evaluates to TRUE
+          Threshold or more times during the Interval specified.
+          The advantage of this rule over the use of statistical
+          counters is that the time window is dynamic and shifts
+          as log messages are processed. Thus the problem
+          described in this example is not present with this rule.
+
+        Condition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+
+        Interval
+                This mandatory directive takes an integer argument
+                specifying a time window for Condition to become
+                TRUE. Its value must be greater than 0. The
+                TimeField directive is used to calculate time.
+                This time window is dynamic, meaning that it will
+                shift.
+
+        Threshold
+                This mandatory directive takes an integer argument
+                specifying the number of times Condition must
+                evaluate to TRUE within the given time Interval.
+                When the treshold is reached, the module executes
+                the statement(s) in the Exec directive(s).
+
+        Context
+                This optional directive specifies an expression to
+                be used as the context. It must evaluate to a
+                value. Most often a field is specified here.
+
+        Exec
+                One or more Exec directives must be specified
+                which takes a statement as argument.
+
+   Stop
+          This rule will stop evaluating successive rules if the
+          Condition evaluates to TRUE. The optional Exec directive
+          will be evaluated in this case.
+
+        Condition
+                This mandatory directive takes an expression as
+                argument which must evaluate to a boolean value.
+                When it evaluates to TRUE, the correlation rule
+                engine will stop checking any further rules.
+
+        Exec
+                One or more Exec directives can be specified which
+                takes a statement as argument. This will be
+                evaluated when the specified Condition is
+                satisfied. This Exec directive is optional.
+
+Configuration examples
+
+   Example 6.38. Correlation rules
+
+   This following configuration sample contains a rule for each
+   type.
+<Input in>
+    Module      im_file
+    File        "modules/processor/evcorr/testinput_evcorr2.txt"
+    SavePos     FALSE
+    ReadFromLast FALSE
+    Exec        if ($raw_event =~ /^(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)
+(.+)/) {  \
+                    $EventTime = parsedate($1);
+          \
+                    $Message = $2;
+          \
+                    $raw_event = $Message;
+          \
+                }
+</Input>
+
+<Input internal>
+    Module      im_internal
+    Exec        $raw_event = $Message;
+    Exec        $EventTime = 2010-01-01 00:01:00;
+</Input>
+
+<Output out>
+    Module      om_file
+    File        'tmp/output'
+</Output>
+
+<Processor evcorr>
+    Module         pm_evcorr
+    TimeField      EventTime
+
+    <Simple>
+        Exec       if $Message =~ /^simple/ $raw_event = "got simple";
+    </Simple>
+
+    <Suppressed>
+        # match input event and execute an action list, but ignore the f
+ollowing
+        # matching events for the next t seconds.
+        Condition  $Message =~ /^suppressed/
+        Interval   30
+        Exec       $raw_event = "suppressing..";
+    </Suppressed>
+
+    <Pair>
+        # If TriggerCondition is true, wait Interval seconds for Require
+dCondition to be true and then do the Exec
+        # If Interval is 0, there is no window on matching
+        TriggerCondition  $Message =~ /^pair-first/
+        RequiredCondition $Message =~ /^pair-second/
+        Interval   30
+        Exec       $raw_event = "got pair";
+    </Pair>
+
+    <Absence>
+        # If TriggerCondition is true, wait Interval seconds for Require
+dCondition to be true.
+        # If RequiredCondition does not become true within the specified
+ interval then do the Exec
+        TriggerCondition  $Message =~ /^absence-trigger/
+        RequiredCondition $Message =~ /^absence-required/
+        Interval          10
+        Exec              log_info("'absence-required' not received with
+in 10 secs");
+    </Absence>
+
+    <Thresholded>
+        # if the number of events exceeeds the given threshold within th
+e interval do the Exec
+        # Same as SingleWithThreshold in SEC
+        Condition  $Message =~ /^thresholded/
+        Threshold  3
+        Interval   60
+        Exec       $raw_event = "got thresholded";
+    </Thresholded>
+
+    <Stop>
+        Condition  $EventTime < 2010-01-02 00:00:00
+        Exec       log_debug("got stop");
+    </Stop>
+
+    <Simple>
+        # This will be rewritten only if the previous Stop condition is
+FALSE
+        Exec    $raw_event = "rewritten";
+    </Simple>
+
+</Processor>
+
+<Route 1>
+    Path        in, internal => evcorr => out
+</Route>
+
+
+
+   The contents of the input file are the following:
+2010-01-01 00:00:00 Not simple
+2010-01-01 00:00:01 suppressed1 - Suppress kicks in, will log 'suppressi
+ng..'
+2010-01-01 00:00:10 simple1
+2010-01-01 00:00:12 pair-first - now look for pair-second
+2010-01-01 00:00:13 thresholded1
+2010-01-01 00:00:15 thresholded2
+2010-01-01 00:00:19 simple2
+2010-01-01 00:00:20 thresholded3 - will log 'got thresholded'
+2010-01-01 00:00:21 suppressed2 - suppressed and logged as is
+2010-01-01 00:00:22 pair-second - will log 'got pair'
+2010-01-01 00:00:23 suppressed3 - suppressed and logged as is
+2010-01-01 00:00:25 pair-first
+2010-01-01 00:00:26 absence-trigger
+2010-01-01 00:00:29 absence-required - will not log 'got absence'
+2010-01-01 00:00:46 absence-trigger
+2010-01-01 00:00:56 pair-second - will not log 'got pair' because it is
+over the interval
+2010-01-01 00:00:57 absence-required - will log an additional 'absence-r
+equired not received within 10 secs'
+2010-01-02 00:00:00 this will be rewritten
+2010-01-02 00:00:10 this too
+
+
+   After this is processed, the resulting output will contain
+   these lines:
+Not simple
+suppressing..
+got simple
+pair-first - now look for pair-second
+thresholded1
+thresholded2
+got simple
+got thresholded
+suppressed2 - suppressed and logged as is
+got pair
+suppressed3 - suppressed and logged as is
+pair-first
+absence-trigger
+absence-required - will not log 'got absence'
+absence-trigger
+pair-second - will not log 'got pair' because it is over the interval
+absence-required - will log an additional 'absence-required not received
+ within 10 secs'
+rewritten
+rewritten
+'absence-required' not received within 10 secs
+
 
 Filter (pm_filter)
 
@@ -7497,7 +7944,7 @@ Note
    filtering is now possible in any module using the drop()
    procedure conditionally in the Exec directive.
 
-   Example 6.38. Dropping messages conditionally
+   Example 6.39. Dropping messages conditionally
 if $raw_event =~ /^Debug/ drop();
 
 Configuration
@@ -7513,7 +7960,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.39. Filtering messages
+   Example 6.40. Filtering messages
 <Input unix>
     Module      im_uds
     uds         /dev/log
@@ -7532,7 +7979,6 @@ Configuration examples
 <Route 1>
     Path unix => filter => out
 </Route>
-
 
 Message deduplicator (pm_norepeat)
 
@@ -7609,7 +8055,7 @@ Fields generated by pm_norepeat
 
 Configuration examples
 
-   Example 6.40. Filtering out duplicated messages
+   Example 6.41. Filtering out duplicated messages
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -7629,7 +8075,6 @@ Configuration examples
 <Route 1>
     Path        in => norepeat => out
 </Route>
-
 
 
 Null (pm_null)
@@ -7687,6 +8132,16 @@ Pattern matcher (pm_pattern)
    no need to convert all fields into a single string as it can
    work with multiple fields.
 
+   Patterns can be grouped together under pattern groups. Pattern
+   groups serve an optimization purpose. The group can have an
+   optional matchfield block which can check a condition. If the
+   condtion (such as $SourceName matches sshd) is satisfied, the
+   pm_pattern module will dive into the group and check each
+   pattern against the log. If the pattern group's condition
+   didn't match (i.e. $SourceName wasn't sshd), the module can
+   thus skip all patterns in the group without having to check
+   each pattern one by one.
+
    When the pm_pattern module finds a matching pattern, the
    PatternID and PatternName fields are set on the log message.
    These can be used later in conditional processing and
@@ -7724,13 +8179,16 @@ Configuration
 
 Pattern database file
 
-   Example 6.41. A simple pattern database
+   Example 6.42. A simple pattern database
 
    This pattern database contains two patterns to match ssh
-   authentication messages. Both extract AuthMethod, AccountName
-   and SourceIP4Address from the log message when the pattern
-   matches the log. Additionally TaxonomyStatus and TaxonomyAction
-   are set. The second pattern utilizes the Exec block which is
+   authentication messages. The patterns are under a group named
+   ssh which checks whether the field SourceName is sshd and only
+   tries to match the patterns if the logs are indeed from sshd.
+   The patterns both extract AuthMethod, AccountName and
+   SourceIP4Address from the log message when the pattern matches
+   the log. Additionally TaxonomyStatus and TaxonomyAction are
+   set. The second pattern utilizes the Exec block which is
    evaluated when the pattern matches.
 
 Note
@@ -7747,6 +8205,11 @@ Note
  <group>
    <name>ssh</name>
    <id>42</id>
+   <matchfield>
+    <name>SourceName</name>
+    <type>exact</type>
+    <value>sshd</value>
+   </matchfield>
 
    <pattern>
     <id>1</id>
@@ -7868,7 +8331,7 @@ Fields generated by pm_pattern
 
 Configuration examples
 
-   Example 6.42. Using the pm_pattern module
+   Example 6.43. Using the pm_pattern module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -7892,7 +8355,6 @@ Configuration examples
 <Route 1>
     Path        in => pattern => out
 </Route>
-
 
 Message format converter (pm_transformer)
 
@@ -8013,7 +8475,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.43. Using the pm_transformer module
+   Example 6.44. Using the pm_transformer module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8041,7 +8503,6 @@ ation, $pid, $message
     Path        filein => transformer => fileout
 </Route>
 
-
 Output modules
 
 Blocker (om_blocker)
@@ -8055,7 +8516,7 @@ Blocker (om_blocker)
 
 Configuration examples
 
-   Example 6.44. Testing buffering with the om_blocker module
+   Example 6.45. Testing buffering with the om_blocker module
 <Input in>
     Module      im_udp
     Host        0.0.0.0
@@ -8090,7 +8551,6 @@ Configuration examples
 <Route 1>
     Path        in => buffer => blocker => out
 </Route>
-
 
 DBI (om_dbi)
 
@@ -8152,7 +8612,7 @@ Configuration examples
    generate different fields which you may want to store in an SQL
    database similarly to these examples.
 
-   Example 6.45. Storing syslog in a PostgreSQL database
+   Example 6.46. Storing syslog in a PostgreSQL database
 
    Below is a table schema which can be used to store syslog data.
 CREATE TABLE log (
@@ -8196,8 +8656,7 @@ ventTime', $SourceName, $Message)
     Path        in => dbi
 </Route>
 
-
-   Example 6.46. Storing logs in a MySQL database
+   Example 6.47. Storing logs in a MySQL database
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8224,7 +8683,6 @@ ventTime', $SourceName, $Message)
 <Route 1>
     Path        in => dbi
 </Route>
-
 
 Program (om_exec)
 
@@ -8265,7 +8723,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.47. Piping logs to an external program
+   Example 6.48. Piping logs to an external program
 <Input in>
     Module      im_uds
     uds         /dev/log
@@ -8280,7 +8738,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
    This exact same configuration is not recommended for real use
    because im_file was designed to read log messages from files.
@@ -8390,7 +8847,7 @@ Procedures exported by om_file
 
 Configuration examples
 
-   Example 6.48. Storing raw syslog messages into a file
+   Example 6.49. Storing raw syslog messages into a file
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -8405,8 +8862,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-
-   Example 6.49. File rotation based on size
+   Example 6.50. File rotation based on size
 <Extension exec>
     Module      xm_exec
 </Extension>
@@ -8437,7 +8893,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
 HTTP(s) (om_http)
 
@@ -8528,7 +8983,7 @@ Procedures exported by om_http
 
 Configuration examples
 
-   Example 6.50. Sending logs over HTTPS
+   Example 6.51. Sending logs over HTTPS
 <Input in>
     Module              im_file
     File                'input.log'
@@ -8547,7 +9002,6 @@ Configuration examples
 <Route httpout>
     Path        in => out
 </Route>
-
 
 Null (om_null)
 
@@ -8584,9 +9038,9 @@ Configuration
           connect to.
 
    Reconnect
-          Specifies an optional interval in seconds to wait after
-          the remote end has disconnected. The default value is 10
-          seconds.
+          This directive has been deprecated as of version 2.4.
+          The module will try to reconnect automatically at
+          increasing intervals on all errors.
 
    CertFile
           This specifies the path of the certificate file to be
@@ -8639,7 +9093,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.51. Writing nxlog binary data to another nxlog agent
+   Example 6.52. Writing nxlog binary data to another nxlog agent
 <Input in>
     Module      im_uds
     UDS         tmp/socket
@@ -8661,7 +9115,6 @@ Configuration examples
 <Route 1>
     Path        in => sslout
 </Route>
-
 
 
 TCP (om_tcp)
@@ -8686,9 +9139,9 @@ Configuration
           not specified.
 
    Reconnect
-          Specifies an optional interval in seconds to wait after
-          the remote end has disconnected. The default value is 10
-          seconds.
+          This directive has been deprecated as of version 2.4.
+          The module will try to reconnect automatically at
+          increasing intervals on all errors.
 
    OutputType
           See the description about OutputType in the global
@@ -8696,7 +9149,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.52. Transferring raw logs over TCP
+   Example 6.53. Transferring raw logs over TCP
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -8711,7 +9164,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
 UDP (om_udp)
 
@@ -8748,7 +9200,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.53. Sending raw syslog over udp
+   Example 6.54. Sending raw syslog over udp
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -8763,7 +9215,6 @@ Configuration examples
 <Route 1>
     Path        in => out
 </Route>
-
 
 UDS (om_uds)
 
@@ -8795,7 +9246,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.54. Using the om_uds module
+   Example 6.55. Using the om_uds module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8815,7 +9266,6 @@ Configuration examples
 <Route 1>
        Path in => out
 </Route>
-
 
 Chapter 7. Offline log processing
 
@@ -9114,7 +9564,6 @@ essage
     Path        log4j => out
 </Route>
 
-
    To parse and process multi-line messages such as the above, see
    the Dealing with multi-line messages section.
 
@@ -9188,7 +9637,6 @@ ver = $1; } \
     Path        in => out
 </Route>
 
-
    Example 8.3. Cisco PIX and Cisco ASA
 
    The PIX Log Message Format is described in the Cisco PIX
@@ -9242,7 +9690,6 @@ Note
 <Route 1>
     Path        in => out
 </Route>
-
 
 Checkpoint
 
@@ -9390,7 +9837,6 @@ W3C Extended Log File Format
     Path        in => out
 </Route>
 
-
 NCSA Common Log File Format
 
    FIXME
@@ -9429,7 +9875,6 @@ NCSA Combined Log Format
 <Route apache>
     Path        access_log => out
 </Route>
-
 
 WebTrends Enhanced Log Format (WELF)
 
@@ -9600,7 +10045,6 @@ Using drop()
     Path file => => out
 </Route>
 
-
 Filtering through pm_filter
 
    The other option is to use the pm_filter module as in the
@@ -9623,7 +10067,6 @@ Filtering through pm_filter
 <Route 1>
     Path unix => filter => out
 </Route>
-
 
 Dealing with multi-line messages
 
@@ -9668,7 +10111,6 @@ Using module variables
 <Route tomcat>
     Path        log4j => out
 </Route>
-
 
    Unfortunately this solution has a minor flaw. The log message
    of an event is only forwarded if a new log is read, otherwise
@@ -9734,7 +10176,6 @@ n\nRawEvent:\n' + $raw_event + \
     Path        in => out
 </Route>
 
-
 Rewriting and modifying messages
 
    There are many ways to modify log messages. A simple method
@@ -9776,7 +10217,6 @@ Message format conversion
 <Route 1>
     Path        in => out
 </Route>
-
 
    Take a look at the pm_transformer module which can do format
    conversion.
@@ -9824,7 +10264,6 @@ Rate limiting
 <Route r>
     Path        in => out
 </Route>
-
 
    While this is not very precise because the module can do
    additional processing which can add some to the total execution
@@ -9959,7 +10398,6 @@ er than 1Mb
     </Schedule>
 </Extension>
 
-
    Example 9.9. File rotation based on size
 <Extension exec>
     Module      xm_exec
@@ -9991,7 +10429,6 @@ er than 1Mb
 <Route 1>
     Path        in => out
 </Route>
-
 
 Explicit drop
 
@@ -10050,7 +10487,6 @@ Explicit drop
 <Route file>
     Path        udpin => fileout
 </Route>
-
 
 Chapter 10. Forwarding and storing logs
 
@@ -10250,7 +10686,6 @@ Note
 <Route 1>
     Path        in => out
 </Route>
-
 
 
 Chapter 12. Troubleshooting
@@ -10472,7 +10907,6 @@ ity + ", Hostname: " + $Hostname);
     Path        in => out
 </Route>
 
-
    Example 12.3. Writing the values of fields to the internal log
 
    Using the log_info procedure the values can be sent to the
@@ -10501,7 +10935,6 @@ ity + ", Hostname: " + $Hostname);
 <Route r>
     Path        in => out
 </Route>
-
 
    Example 12.4. Dumping all the fields
 
@@ -10534,7 +10967,6 @@ ity + ", Hostname: " + $Hostname);
 <Route r>
     Path        in => out
 </Route>
-
 
    This will produce the following output in the logs:
 2012-05-18 13:11:35 INFO raw event is: <27>2010-10-12 12:49:06 host app[

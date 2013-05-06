@@ -7,6 +7,7 @@
 
 #include "gelf.h"
 #include "../../../common/exception.h"
+#include "../../../common/module.h"
 
 #include "../../extension/json/yajl/api/yajl_gen.h"
 #include "../../extension/json/yajl/api/yajl_parse.h"
@@ -140,18 +141,10 @@ nx_string_t *nx_logdata_to_gelf(nx_gelf_ctx_t *ctx)
     }
     else
     {
-	char hoststr[100];
+	nx_string_t *hoststr = nx_get_hostname();
 
-	if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) != APR_SUCCESS )
-	{
-	    ASSERT(yajl_gen_string(gen, (const unsigned char *) "localhost",
-				   9) == yajl_gen_status_ok);
-	}
-	else
-	{
-	    ASSERT(yajl_gen_string(gen, (const unsigned char *) hoststr,
-				   strlen(hoststr)) == yajl_gen_status_ok);
-	}
+	ASSERT(yajl_gen_string(gen, (const unsigned char *) hoststr->buf,
+			       hoststr->len) == yajl_gen_status_ok);
     }
 
     if ( message != NULL )

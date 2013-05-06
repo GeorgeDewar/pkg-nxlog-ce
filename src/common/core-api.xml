@@ -666,7 +666,15 @@ If the lifetime expires, the variable is deleted automatically and get_var(name)
    <type>global</type>
    <cb>nx_expr_func__hostname</cb>
    <rettype>string</rettype>
-   <description><en>Return the hostname.</en></description>
+   <description><en>Return the hostname (short form).</en></description>
+ </function>
+
+ <function>
+   <name>hostname_fqdn</name>
+   <type>global</type>
+   <cb>nx_expr_func__hostname_fqdn</cb>
+   <rettype>string</rettype>
+   <description><en>Return the FQDN hostname. This function will return the sort form if the FQDN hostname cannot be determined.</en></description>
  </function>
 
  <function>

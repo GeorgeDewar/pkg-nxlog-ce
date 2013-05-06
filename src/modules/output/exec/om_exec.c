@@ -44,7 +44,7 @@ static void om_exec_write(nx_module_t *module)
 	    if ( nbytes < module->output.buflen )
 	    {
 		nx_module_pollset_add_file(module, omconf->desc,
-					   APR_POLLOUT | APR_POLLOUT | APR_POLLHUP);
+					   APR_POLLOUT | APR_POLLHUP);
 		nx_module_add_poll_event(module);
 		done = TRUE;
 	    }

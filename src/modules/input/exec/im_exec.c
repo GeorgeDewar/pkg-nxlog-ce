@@ -15,6 +15,55 @@
 
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
+#define IM_EXEC_DEFAULT_POLL_INTERVAL 1 /* The number of seconds to check the files for new data */
+#define IM_EXEC_DEFAULT_RESTART_INTERVAL 1 /* The number of seconds to wait between restarts */
+
+static void im_exec_stop(nx_module_t *module);
+
+#ifdef WIN32
+static void im_exec_add_read_event(nx_module_t *module, int delay)
+{
+    nx_event_t *event;
+    nx_im_exec_conf_t *imconf;
+
+    imconf = (nx_im_exec_conf_t *) module->config;
+    ASSERT(imconf->event == NULL);
+
+    event = nx_event_new();
+    event->module = module;
+    event->delayed = TRUE;
+    event->time = apr_time_now() + delay;
+    event->type = NX_EVENT_READ;
+    event->priority = module->priority;
+    nx_event_add(event);
+    imconf->event = event;
+}
+#endif
+
+
+static void im_exec_add_restart_event(nx_module_t *module)
+{
+    nx_event_t *event;
+    nx_im_exec_conf_t *imconf;
+
+    imconf = (nx_im_exec_conf_t *) module->config;
+
+    nx_module_stop_self(module);
+
+    if ( imconf->restart == TRUE )
+    {
+	event = nx_event_new();
+	event->module = module;
+	event->delayed = TRUE;
+	event->time = apr_time_now() + IM_EXEC_DEFAULT_RESTART_INTERVAL * APR_USEC_PER_SEC;
+	event->type = NX_EVENT_MODULE_START;
+	event->priority = module->priority;
+	nx_event_add(event);
+    }
+}
+
+
+
 static void im_exec_fill_buffer(nx_module_input_t *input)
 {
     apr_status_t rv;
@@ -45,12 +94,18 @@ static void im_exec_fill_buffer(nx_module_input_t *input)
     {
 	if ( rv == APR_EOF )
 	{
-	    throw(rv, "Module %s got EOF", input->module->name);
-	    // FIXME: restart process?
+	    throw_msg("Module %s got EOF, process exited? ", input->module->name);
 	}
 	else if ( rv == APR_EAGAIN )
-	{
+	{ 
+#ifdef WIN32
+	    // on windows EAGAIN is normal because we are using NON-BLOCKING reads
+	    // so we try again after 500 ms
+	    im_exec_add_read_event(input->module, 500);
+	    log_debug("got EAGAIN");
+#else
 	    log_error("got EAGAIN for blocking read in module %s", input->module->name);
+#endif
 	    ASSERT(len == 0);
 	    return;
 	}
@@ -72,8 +127,12 @@ static void im_exec_fill_buffer(nx_module_input_t *input)
 static void im_exec_read(nx_module_t *module)
 {
     nx_logdata_t *logdata;
+    nx_im_exec_conf_t *imconf;
+    int evcnt = 0;
 
     ASSERT(module != NULL);
+    imconf = (nx_im_exec_conf_t *) module->config;
+    imconf->event = NULL;
 
     if ( nx_module_get_status(module) != NX_MODULE_STATUS_RUNNING )
     {
@@ -85,7 +144,24 @@ static void im_exec_read(nx_module_t *module)
     while ( (logdata = module->input.inputfunc->func(&(module->input), module->input.inputfunc->data)) != NULL )
     {
 	nx_module_add_logdata_input(module, &(module->input), logdata);
+	evcnt++;
     }
+#ifdef WIN32
+    if ( nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING )
+    {
+	if ( imconf->event == NULL )
+	{
+	    if ( evcnt == 0 )
+	    {
+		im_exec_add_read_event(module, (int) (APR_USEC_PER_SEC * IM_EXEC_DEFAULT_POLL_INTERVAL));
+	    }
+	    else
+	    {
+		im_exec_add_read_event(module, 0);
+	    }
+	}
+    }
+#endif
 }
 
 
@@ -146,12 +222,17 @@ static void im_exec_config(nx_module_t *module)
 		nx_conf_error(curr, "Invalid InputType '%s'", curr->args);
 	    }
 	}
+	else if ( strcasecmp(curr->directive, "restart") == 0 )
+	{
+	}
 	else
 	{
 	    nx_conf_error(curr, "invalid keyword: %s", curr->directive);
 	}
 	curr = curr->next;
     }
+
+    nx_cfg_get_boolean(module->directives, "restart", &(imconf->restart));
 
     if ( imconf->inputfunc == NULL )
     {
@@ -187,9 +268,15 @@ static void im_exec_start(nx_module_t *module)
 		     "apr_procattr_create() failed");
 	CHECKERR_MSG(apr_procattr_error_check_set(pattr, 1),
 		     "apr_procattr_error_check_set() failed");
+#ifdef WIN32
+	CHECKERR_MSG(apr_procattr_io_set(pattr, APR_NO_PIPE, APR_FULL_NONBLOCK,
+					 APR_NO_PIPE),
+		     "apr_procattr_io_set() failed");
+#else
 	CHECKERR_MSG(apr_procattr_io_set(pattr, APR_NO_PIPE, APR_FULL_BLOCK,
 					 APR_NO_PIPE),
 		     "apr_procattr_io_set() failed");
+#endif
 	CHECKERR_MSG(apr_procattr_cmdtype_set(pattr, APR_PROGRAM_ENV),
 		     "apr_procattr_cmdtype_set() failed");
 	CHECKERR_MSG(apr_proc_create(&(imconf->proc), imconf->cmd, (const char* const*)imconf->argv,
@@ -215,13 +302,19 @@ static void im_exec_start(nx_module_t *module)
 	module->input.desc.f = imconf->proc.out;
 	module->input.module = module;
 	module->input.inputfunc = imconf->inputfunc;
+#ifdef WIN32
+	im_exec_add_read_event(module, 0);
+#else
 	nx_module_pollset_add_file(module, module->input.desc.f, APR_POLLIN | APR_POLLHUP);
+#endif
     }
     else
     {
 	log_debug("%s already executed", imconf->cmd);
     }
+#ifndef WIN32
     nx_module_add_poll_event(module);
+#endif
 }
 
 
@@ -297,17 +390,52 @@ static void im_exec_stop(nx_module_t *module)
 	    log_aprerror(stopped, "im_exec couldn't stop process");
 	}
     }
+    imconf->event = NULL;
+}
+
+
+
+static void im_exec_pause(nx_module_t *module)
+{
+    nx_im_exec_conf_t *imconf;
+
+    ASSERT(module != NULL);
+    ASSERT(module->config != NULL);
+
+    imconf = (nx_im_exec_conf_t *) module->config;
+
+    if ( imconf->event != NULL )
+    {
+	nx_event_remove(imconf->event);
+	nx_event_free(imconf->event);
+	imconf->event = NULL;
+    }
 }
 
 
 
 static void im_exec_resume(nx_module_t *module)
 {
+    nx_im_exec_conf_t *imconf;
+
     ASSERT(module != NULL);
+    ASSERT(module->config != NULL);
+
+    imconf = (nx_im_exec_conf_t *) module->config;
 
     log_debug("im_exec resumed");
 
+    if ( imconf->event != NULL )
+    {
+	nx_event_remove(imconf->event);
+	nx_event_free(imconf->event);
+	imconf->event = NULL;
+    }
+#ifdef WIN32
+    im_exec_add_read_event(module, 0);
+#else
     nx_module_add_poll_event(module);
+#endif
     //we could directly go to poll here
 }
 
@@ -315,7 +443,9 @@ static void im_exec_resume(nx_module_t *module)
 
 static void im_exec_init(nx_module_t *module)
 {
+#ifndef WIN32
     nx_module_pollset_init(module);
+#endif
 }
 
 
@@ -323,6 +453,7 @@ static void im_exec_init(nx_module_t *module)
 static void im_exec_event(nx_module_t *module, nx_event_t *event)
 {
     nx_im_exec_conf_t *imconf;
+    nx_exception_t e;
 
     ASSERT(event != NULL);
 
@@ -334,17 +465,29 @@ static void im_exec_event(nx_module_t *module, nx_event_t *event)
 	    // FIXME: restart if imconf->restart == TRUE
 	    log_warn("im_exec process %s exited", imconf->cmd);
 	    imconf->running = FALSE;
-	    im_exec_stop(module);
+	    im_exec_add_restart_event(module);
 	    break;
 	case NX_EVENT_READ:
-	    im_exec_read(module);
+	    try
+	    {
+		im_exec_read(module);
+	    }
+	    catch(e)
+	    {
+		log_exception(e);
+		im_exec_add_restart_event(module);
+	    }
 	    break;
 	case NX_EVENT_POLL:
+#ifdef WIN32
+	    nx_panic("pollset based im_exec implementation doesn't work on windows");
+#else
 	    if ( nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING )
 	    {
 		nx_module_pollset_poll(module, TRUE);
 	    }
 	    break;
+#endif
 	default:
 	    nx_panic("invalid event type: %d", event->type);
     }
@@ -360,7 +503,7 @@ NX_MODULE_DECLARATION nx_im_exec_module =
     im_exec_config,		// config
     im_exec_start,		// start
     im_exec_stop, 		// stop
-    NULL,			// pause
+    im_exec_pause,		// pause
     im_exec_resume,		// resume
     im_exec_init,		// init
     NULL,			// shutdown

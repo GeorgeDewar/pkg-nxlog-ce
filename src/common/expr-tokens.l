@@ -84,8 +84,9 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 }
 
 <REGEXPQUOTE>{
-    "\\/"		{ log_debug("regexp: append backslash"); nx_expr_parser_append_string(&(yylval->string), yytext); }
-    [^/]+		{ log_debug("regexp: append"); nx_expr_parser_append_string(&(yylval->string), yytext); }
+    "\\/"		{ log_debug("regexp: append backslash"); nx_expr_parser_append_string(&(yylval->string), "/"); }
+    [^\\/]+		{ log_debug("regexp: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->string), yytext); }
+    \\[^/]+		{ log_debug("regexp: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->string), yytext); }
     "/"			{
 			  log_debug("regexpquote end"); 
 			  BEGIN(INITIAL);
@@ -94,8 +95,9 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 }
 
 <REGEXPREPLACEQUOTE>{
-    "\\/"		{ log_debug("regexpreplace: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
-    [^/]+		{ log_debug("regexpreplace: append"); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
+    "\\/"		{ log_debug("regexpreplacequote: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[0]), "\/"); }
+    [^\\/]+		{ log_debug("regexpreplacequote: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
+    \\[^/]+		{ log_debug("regexpreplacequote: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->regexp[0]), yytext); }
     "/"			{
 			  log_debug("regexpreplacequote2 begin"); 
 			  BEGIN(REGEXPREPLACEQUOTE2);
@@ -103,8 +105,9 @@ INTEGER		"-"?[0-9]+[KMG]?|"-"?"0X"[0-9A-Z]+[KMG]?
 }
 
 <REGEXPREPLACEQUOTE2>{
-    "\\/"		{ log_debug("regexpreplace: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
-    [^/]+		{ log_debug("regexpreplace: append"); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
+    "\\/"		{ log_debug("regexpreplacequote2: append backslash"); nx_expr_parser_append_string(&(yylval->regexp[1]), "/"); }
+    [^\\/]+		{ log_debug("regexpreplacequote2: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
+    \\[^/]+		{ log_debug("regexpreplacequote2: append [%s]", yytext); nx_expr_parser_append_string(&(yylval->regexp[1]), yytext); }
     "/"			{
 			  log_debug("regexpreplacequote2 end"); 
 			  if ( yylval->regexp[1] == NULL ) yylval->regexp[1] = strdup("");

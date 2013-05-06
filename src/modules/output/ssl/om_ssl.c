@@ -16,8 +16,7 @@
 
 #define OM_SSL_DEFAULT_PORT 514
 #define OM_SSL_DEFAULT_CONNECT_TIMEOUT (APR_USEC_PER_SEC * 30)
-#define OM_SSL_DEFAULT_RECONNECT_INTERVAL 10
-
+#define OM_SSL_MAX_RECONNECT_INTERVAL 200
 
 static void om_ssl_add_reconnect_event(nx_module_t *module)
 {
@@ -26,13 +25,26 @@ static void om_ssl_add_reconnect_event(nx_module_t *module)
 
     omconf = (nx_om_ssl_conf_t *) module->config;
 
-    log_info("reconnecting in %d seconds", omconf->reconnect_interval);
+    if ( omconf->reconnect == 0 )
+    {
+	omconf->reconnect = 1;
+    }
+    else
+    {
+	omconf->reconnect *= 2;
+    }
+    if ( omconf->reconnect > OM_SSL_MAX_RECONNECT_INTERVAL )
+    {
+	omconf->reconnect = OM_SSL_MAX_RECONNECT_INTERVAL;
+    }
+
+    log_info("reconnecting in %d seconds", omconf->reconnect);
 
     event = nx_event_new();
     event->module = module;
     event->delayed = TRUE;
     event->type = NX_EVENT_RECONNECT;
-    event->time = apr_time_now() + APR_USEC_PER_SEC * omconf->reconnect_interval;
+    event->time = apr_time_now() + APR_USEC_PER_SEC * omconf->reconnect;
     event->priority = module->priority;
     nx_event_add(event);
 }
@@ -107,6 +119,7 @@ static boolean do_handshake(nx_module_t *module)
 	    log_debug("handshake successful");
 	    // we need to read socket events, because POLLIN is also needed
 	    nx_module_pollset_add_socket(module, omconf->sock, APR_POLLIN | APR_POLLOUT | APR_POLLHUP);
+
 	    // if there is data, send it
 	    nx_module_data_available(module);
 	}
@@ -285,7 +298,6 @@ static void om_ssl_config(nx_module_t *module)
     const nx_directive_t *curr;
     nx_om_ssl_conf_t *omconf;
     unsigned int port;
-    unsigned int reconnect_interval;
 
     ASSERT(module->directives != NULL);
     curr = module->directives;
@@ -322,15 +334,8 @@ static void om_ssl_config(nx_module_t *module)
 	}
 	else if ( strcasecmp(curr->directive, "Reconnect") == 0 )
 	{
-	    if ( omconf->reconnect_interval != 0 )
-	    {
-		nx_conf_error(curr, "Reconnect is already defined");
-	    }
-	    if ( sscanf(curr->args, "%u", &reconnect_interval) != 1 )
-	    {
-		nx_conf_error(curr, "invalid Reconnect: %s", curr->args);
-	    }
-	    omconf->reconnect_interval = (apr_port_t) reconnect_interval;
+	    log_warn("The 'Reconnect' directive at %s:%d has been deprecated",
+		     curr->filename, curr->line_num);
 	}
 	else if ( strcasecmp(curr->directive, "certfile") == 0 )
 	{
@@ -436,10 +441,6 @@ static void om_ssl_config(nx_module_t *module)
     {
 	omconf->port = OM_SSL_DEFAULT_PORT;
     }
-    if ( omconf->reconnect_interval == 0 )
-    {
-	omconf->reconnect_interval = OM_SSL_DEFAULT_RECONNECT_INTERVAL;
-    }
 }
 
 
@@ -464,6 +465,8 @@ static void om_ssl_connect(nx_module_t *module)
     nx_om_ssl_conf_t *omconf;
     apr_sockaddr_t *sa;
     apr_pool_t *pool = NULL;
+    int i;
+    apr_status_t rv;
 
     ASSERT(module->config != NULL);
 
@@ -483,8 +486,19 @@ static void om_ssl_connect(nx_module_t *module)
 		 "couldn't set socket timeout on connecting socket");
     log_info("connecting to %s:%d", omconf->host, omconf->port);
     
-    CHECKERR_MSG(apr_socket_connect(omconf->sock, sa),
-		 "couldn't connect to ssl socket on %s:%d", omconf->host, omconf->port);
+    for ( i = 0; i < 100; i++ )
+    {
+	rv = apr_socket_connect(omconf->sock, sa);
+	if ( APR_STATUS_IS_EAGAIN(rv) )
+	{
+	    apr_sleep(100);
+	}
+	else
+	{
+	    break;
+	}
+    }
+    CHECKERR_MSG(rv, "couldn't connect to ssl socket on %s:%d", omconf->host, omconf->port);
 
     log_debug("apr_socket_connect() succeeded");
 
@@ -501,6 +515,7 @@ static void om_ssl_connect(nx_module_t *module)
 
     log_info("successfully connected to %s:%d", omconf->host, omconf->port);
     omconf->connected = TRUE;
+    omconf->reconnect = 0;
 }
 
 
@@ -511,33 +526,18 @@ static void io_err_handler(nx_module_t *module, nx_exception_t *e)
     ASSERT(e != NULL);
     ASSERT(module != NULL);
 
-    if ( APR_STATUS_IS_ECONNREFUSED(e->code) ||
-	 APR_STATUS_IS_ECONNABORTED(e->code) ||
-	 APR_STATUS_IS_ECONNRESET(e->code) ||
-	 APR_STATUS_IS_ETIMEDOUT(e->code) ||
-	 APR_STATUS_IS_TIMEUP(e->code) ||
-	 APR_STATUS_IS_EHOSTUNREACH(e->code) ||
-	 APR_STATUS_IS_ENETUNREACH(e->code) ||
-	 APR_STATUS_IS_EOF(e->code) ||
-	 APR_STATUS_IS_EPIPE(e->code) ||
-	 (e->code == APR_SUCCESS) )
-    {
-	nx_module_stop_self(module);
-	om_ssl_stop(module);
-	om_ssl_add_reconnect_event(module);
-	rethrow(*e);
-    }
-
-    if ( APR_STATUS_IS_EAGAIN(e->code) )
-    {
-	nx_panic("got EAGAIN, bug in non-blocking code");
-    }
-
+    nx_module_stop_self(module);
+    om_ssl_stop(module);
+    om_ssl_add_reconnect_event(module);
+    rethrow(*e);
+    
+    /*
     //default:
     nx_module_stop_self(module);
     om_ssl_stop(module);
     rethrow_msg(*e, "[%s] fatal connection error, reconnection will not be attempted (statuscode: %d)",
 		module->name, e->code);
+    */
 }
 
 

@@ -9,6 +9,7 @@
 
 #include "syslog.h"
 #include "../../../common/date.h"
+#include "../../../common/module.h"
 
 #define NX_LOGMODULE NX_LOGMODULE_CORE
 
@@ -151,19 +152,13 @@ static void set_syslog_hostname(nx_logdata_t *logdata,
 
 	if ( nx_logdata_get_field_value(logdata, "MessageSourceAddress", &recv_from) != TRUE )
 	{
-	    char hoststr[100];
 	    nx_value_t *val;
-
-	    if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) == APR_SUCCESS )
-	    {
-		val = nx_value_new_string(hoststr);
-	    }
-	    else
-	    {
-		val = nx_value_new_string("localhost");
-	    }
+	    const nx_string_t *hoststr;
+	    
+	    hoststr = nx_get_hostname();
+	    val = nx_value_new(NX_VALUE_TYPE_STRING);
+	    val->string = nx_string_clone(hoststr);
 	    ASSERT(val->string != NULL);
-    
 	    nx_logdata_set_field_value(logdata, "Hostname", val);
 	}
 	else
@@ -699,11 +694,11 @@ void nx_logdata_to_syslog_rfc3164(nx_logdata_t *logdata)
     if ( (nx_logdata_get_field_value(logdata, "EventTime", &timestamp) == TRUE) &&
 	 (timestamp.type = NX_VALUE_TYPE_DATETIME) && (timestamp.defined == TRUE) )
     {
-	nx_date_to_rfc3164(tmpstr, timestamp.datetime);
+	nx_date_to_rfc3164(tmpstr, sizeof(tmpstr), timestamp.datetime);
     }
     else
     {
-	nx_date_to_rfc3164(tmpstr, apr_time_now());
+	nx_date_to_rfc3164(tmpstr, sizeof(tmpstr), apr_time_now());
     }
 
     nx_string_sprintf(logdata->raw_event, "<%d>%s ", pri, tmpstr);
@@ -715,16 +710,10 @@ void nx_logdata_to_syslog_rfc3164(nx_logdata_t *logdata)
     }
     else
     {
-	char hoststr[100];
+	const nx_string_t *hoststr;
 
-	if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) != APR_SUCCESS )
-	{
-	    nx_string_append(logdata->raw_event, "localhost", -1);
-	}
-	else
-	{
-	    nx_string_append(logdata->raw_event, hoststr, -1);
-	}
+	hoststr = nx_get_hostname();
+	nx_string_append(logdata->raw_event, hoststr->buf, (int) hoststr->len);
     }
 
     if ( (nx_logdata_get_field_value(logdata, "SourceName", &application) == TRUE) &&
@@ -1191,7 +1180,7 @@ static void nx_syslog_add_structured_data(nx_logdata_t *logdata)
 
 
 
-void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata)
+void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata, boolean gmt)
 {
     int pri = 0;
     nx_value_t hostname;
@@ -1201,7 +1190,7 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata)
     nx_value_t pid;
     nx_value_t message;
     size_t len;
-    char tmpstr[30];
+    char tmpstr[33];
     int i;
 
     ASSERT(logdata != NULL);
@@ -1212,11 +1201,11 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata)
     if ( (nx_logdata_get_field_value(logdata, "EventTime", &timestamp) == TRUE) &&
 	 (timestamp.type = NX_VALUE_TYPE_DATETIME) && (timestamp.defined == TRUE) )
     {
-	nx_date_to_rfc5424(tmpstr, timestamp.datetime);
+	nx_date_to_rfc5424(tmpstr, sizeof(tmpstr), gmt, timestamp.datetime);
     }
     else
     {
-	nx_date_to_rfc5424(tmpstr, apr_time_now());
+	nx_date_to_rfc5424(tmpstr, sizeof(tmpstr), gmt, apr_time_now());
     }
     nx_string_sprintf(logdata->raw_event, "<%d>1 %s ", pri, tmpstr);
 
@@ -1227,16 +1216,10 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata)
     }
     else
     {
-	char hoststr[100];
+	const nx_string_t *hoststr;
 
-	if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) != APR_SUCCESS )
-	{
-	    nx_string_append(logdata->raw_event, "-", 1);
-	}
-	else
-	{
-	    nx_string_append(logdata->raw_event, hoststr, -1);
-	}
+	hoststr = nx_get_hostname();
+	nx_string_append(logdata->raw_event, hoststr->buf, (int) hoststr->len);
     }
     nx_string_append(logdata->raw_event, " ", 1);
 
@@ -1322,7 +1305,7 @@ void nx_logdata_to_syslog_snare(nx_logdata_t *logdata,
     nx_value_t hostname;
     nx_value_t timestamp;
     apr_time_t eventtime;
-    char tmpstr[20];
+    char tmpstr[25];
     int i;
     nx_value_t tmpval;
     char delimiterstr[2] = { delimiter, '\0' };
@@ -1336,12 +1319,12 @@ void nx_logdata_to_syslog_snare(nx_logdata_t *logdata,
 	 (timestamp.type = NX_VALUE_TYPE_DATETIME) && (timestamp.defined == TRUE) )
     {
 	eventtime = timestamp.datetime;
-	nx_date_to_rfc3164(tmpstr, eventtime);
+	nx_date_to_rfc3164(tmpstr, sizeof(tmpstr), eventtime);
     }
     else
     {
 	eventtime = apr_time_now();
-	nx_date_to_rfc3164(tmpstr, eventtime);
+	nx_date_to_rfc3164(tmpstr, sizeof(tmpstr), eventtime);
     }
 
     nx_string_sprintf(logdata->raw_event, "<%d>%s ", pri, tmpstr);
@@ -1354,16 +1337,10 @@ void nx_logdata_to_syslog_snare(nx_logdata_t *logdata,
     }
     else
     {
-	char hoststr[100];
+	const nx_string_t *hoststr;
 
-	if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) != APR_SUCCESS )
-	{
-	    nx_string_append(logdata->raw_event, "localhost", -1);
-	}
-	else
-	{
-	    nx_string_append(logdata->raw_event, hoststr, -1);
-	}
+	hoststr = nx_get_hostname();
+	nx_string_append(logdata->raw_event, hoststr->buf, (int) hoststr->len);
     }
     nx_string_append(logdata->raw_event, " ", 1);
 
@@ -1404,7 +1381,7 @@ void nx_logdata_to_syslog_snare(nx_logdata_t *logdata,
      nx_string_append(logdata->raw_event, delimiterstr, 1);
 
     // 6. DateTime
-    nx_date_to_rfc3164_wday_year(tmpstr, eventtime);
+    nx_date_to_rfc3164_wday_year(tmpstr, sizeof(tmpstr), eventtime);
     nx_string_append(logdata->raw_event, tmpstr, -1);
     nx_string_append(logdata->raw_event, delimiterstr, 1);
 

@@ -59,6 +59,7 @@ typedef struct nx_ctx_t
     nx_loglevel_t	norepeat_loglevel;
     boolean		nofreeonexit; ///< do not free memory on exit: used for debugging with valgrind to allow stack traces with dso modules
     boolean		ignoreerrors; ///< try to ignore configuration errors and start anyway
+    boolean		flowcontrol;  ///< use flow-control in all modules (default: true)
     char		*cachedir;
     char		*rootdir;
     char		*spooldir;

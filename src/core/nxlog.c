@@ -70,6 +70,7 @@ void nxlog_wait_threads(nxlog_t *nxlog)
     unsigned int i;
     boolean running = TRUE;
     int j = 0;
+    apr_status_t thrv;
 
     ASSERT(nxlog->terminating == TRUE);
     
@@ -117,12 +118,20 @@ void nxlog_wait_threads(nxlog_t *nxlog)
 	    apr_sleep(APR_USEC_PER_SEC / 10);
 	}
     }
+    
+    CHECKERR(apr_thread_join(&thrv, nxlog->event_thread));
+    nxlog->event_thread = NULL;
 }
 
 
 
 void nxlog_init(nxlog_t *nxlog)
 {
+    char tmpstr[256];
+    size_t i;
+    apr_status_t rv;
+    apr_sockaddr_t *sa;
+
     memset(nxlog, 0, sizeof(nxlog_t));
     nxlog_set(nxlog);
 
@@ -141,6 +150,56 @@ void nxlog_init(nxlog_t *nxlog)
     nxlog->num_worker_thread = 0;
 
     nxlog->pid = (int) getpid();
+
+    // determine the short and fqdn hostname
+    if ( apr_gethostname(tmpstr, sizeof(tmpstr), NULL) == APR_SUCCESS )
+    {
+	for ( i = 0; i < strlen(tmpstr); i++ )
+	{
+	    if ( tmpstr[i] == '.' )
+	    { // if we find a dot , the hostname is in FQDN form
+		nxlog->hostname.buf = apr_pstrndup(nxlog->pool, tmpstr, i);
+		nxlog->hostname.len = (uint32_t) i;
+
+		nxlog->hostname_fqdn.buf = apr_pstrdup(nxlog->pool, tmpstr);
+		nxlog->hostname_fqdn.len = (uint32_t) strlen(tmpstr);
+		break;
+	    }
+	}
+	if ( nxlog->hostname.buf == NULL )
+	{
+	    nxlog->hostname.buf = apr_pstrdup(nxlog->pool, tmpstr);
+	    nxlog->hostname.len = (uint32_t) strlen(tmpstr);
+	}
+
+	if ( nxlog->hostname_fqdn.buf == NULL )
+	{
+	    if ((rv = apr_sockaddr_info_get(&sa, tmpstr, APR_INET, 0, 0, nxlog->pool)) != APR_SUCCESS )
+	    {
+		log_aprwarn(rv, "failed to determine FQDN hostname");
+	    }
+
+	    if ((rv = apr_getnameinfo(&(nxlog->hostname_fqdn.buf), sa, 0)) != APR_SUCCESS )
+	    {
+		log_aprwarn(rv, "failed to determine FQDN hostname");
+	    }
+	    else
+	    {
+		nxlog->hostname_fqdn.len = (uint32_t) strlen(nxlog->hostname_fqdn.buf);
+	    }
+	}
+    }
+    else
+    {
+	nxlog->hostname.buf = apr_pstrdup(nxlog->pool, "localhost");
+	nxlog->hostname.len = (uint32_t) strlen(nxlog->hostname.buf);
+	nxlog->hostname_fqdn.buf = apr_pstrdup(nxlog->pool, "localhost.localdomain");
+	nxlog->hostname_fqdn.len = (uint32_t) strlen(nxlog->hostname_fqdn.buf);
+    }
+    nxlog->hostname.flags = NX_STRING_FLAG_CONST;
+    nxlog->hostname_fqdn.flags = NX_STRING_FLAG_CONST;
+    ASSERT(nxlog->hostname.buf != NULL);
+    ASSERT(nxlog->hostname_fqdn.buf != NULL);
 }
 
 
@@ -332,8 +391,6 @@ static void* APR_THREAD_FUNC nxlog_event_thread(apr_thread_t *thd, void *data UN
 
     return ( NULL );
 }
-
-
 
 
 static void* APR_THREAD_FUNC nxlog_worker_thread(apr_thread_t *thd, void *data UNUSED)
@@ -547,7 +604,8 @@ boolean nxlog_data_available()
 			break;
 		    }
 		}
-		if ( nx_module_get_status(module) != NX_MODULE_STATUS_STOPPED )
+		if ( (module != NULL) && 
+		     (nx_module_get_status(module) != NX_MODULE_STATUS_STOPPED) )
 		{
 		    nx_unlock();
 		    return ( TRUE );

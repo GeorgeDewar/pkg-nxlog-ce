@@ -27,10 +27,7 @@
 nx_ctx_t *nx_ctx_new()
 {
     nx_ctx_t *ctx;
-    nxlog_t *nxlog;
     apr_pool_t *pool;
-
-    nxlog = nxlog_get();
 
     pool = nx_pool_create_core();
 
@@ -66,6 +63,7 @@ nx_ctx_t *nx_ctx_new()
 
     ctx->loglevel = NX_LOGLEVEL_INFO;
     ctx->formatlog = FALSE;
+    ctx->flowcontrol = TRUE;
 
     ctx->ignoreerrors = TRUE;
     ctx->norepeat = TRUE;
@@ -88,6 +86,7 @@ void nx_ctx_parse_cfg(nx_ctx_t *ctx, const char *cfgpath)
 				      "user", "group", "rootdir", "spooldir",
 				      "nofreeonexit", "panic", "threads", 
 				      "ignoreerrors", "suppressrepeatinglogs",
+				      "flowcontrol",
 				      NULL };
     int i;
     boolean found;
@@ -220,6 +219,7 @@ void nx_ctx_parse_cfg(nx_ctx_t *ctx, const char *cfgpath)
 	ctx->ignoreerrors = FALSE;
     }
     nx_cfg_get_boolean(ctx->cfgtree, "suppressrepeatinglogs", &(ctx->norepeat));
+    nx_cfg_get_boolean(ctx->cfgtree, "flowcontrol", &(ctx->flowcontrol));
 }
 
 

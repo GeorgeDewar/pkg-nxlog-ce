@@ -13,6 +13,7 @@ typedef struct nx_xm_syslog_conf_t
 {
     char snaredelimiter;
     char snarereplacement;
+    boolean ietftimestampingmt;
 } nx_xm_syslog_conf_t;
 
 #endif	/* __NX_XM_SYSLOG_H */

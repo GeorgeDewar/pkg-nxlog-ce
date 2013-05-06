@@ -89,18 +89,23 @@ int main(int argc, const char * const *argv, const char * const *env)
 	fail("filename argument required");
     }
 
-    nx_init(&argc, &argv, &env);
 
-    memset(&nxlog, 0, sizeof(nxlog_t));
-    nxlog_set(&nxlog);
-    nxlog.ctx = nx_ctx_new();
-//    nxlog.ctx->loglevel = NX_LOGLEVEL_DEBUG;
+    nx_init(&argc, &argv, &env);
+    nxlog_init(&nxlog);
     nxlog.ctx->loglevel = NX_LOGLEVEL_INFO;
+    for ( i = 0; env[i] != NULL; i++ )
+    {
+	if (strncmp(env[i], "DEBUG=", 6) == 0)
+	{
+	    nxlog.ctx->loglevel = NX_LOGLEVEL_DEBUG;
+	    break;
+	}
+    }
     nxlog.ctx->norepeat = FALSE;
 
     try
     {
-	nx_ctx_register_builtins(nxlog.ctx);
+	//nx_ctx_register_builtins(nxlog.ctx);
     
 	pool = nx_pool_create_child(NULL);
 

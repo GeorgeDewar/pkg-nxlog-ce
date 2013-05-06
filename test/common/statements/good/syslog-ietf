@@ -91,5 +91,5 @@ if not defined $eventID or $eventID != "1011" $success = FALSE;
 $raw_event = '';
 $SourceName = 'app 1';
 to_syslog_ietf();
-if $raw_event != '<30>1 2011-12-04T19:16:10.0Z host app_1 procid msgid [NXLOG@14506 success="TRUE" iut="9" Testfield="testvalue" Testfield2="\\\"\]" EventID="1011" exampleSDID.eventSource="Application" exampleSDID.eventID="1011" eventSource="Application"] Message part' $success = FALSE;
+if $raw_event != '<30>1 2011-12-04T19:16:10.000000Z host app_1 procid msgid [NXLOG@14506 success="TRUE" iut="9" Testfield="testvalue" Testfield2="\\\"\]" EventID="1011" exampleSDID.eventSource="Application" exampleSDID.eventID="1011" eventSource="Application"] Message part' $success = FALSE;
 #log_info($raw_event);

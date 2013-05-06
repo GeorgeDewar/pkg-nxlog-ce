@@ -9,6 +9,21 @@ CFLAGS=${CFLAGS=}
 
 AC_LANG(C)
 AC_PROG_CC
+
+# APR
+AC_PATH_PROG(apr_config, [apr-1-config])
+if test "x$apr_config" = "x"; then
+    AC_MSG_ERROR([apr library not found])
+fi
+APR_LIBS=`$apr_config --link-ld --libs`
+APR_CFLAGS=`$apr_config --cppflags`
+CFLAGS="$CFLAGS $APR_CFLAGS"
+LIBS="$LIBS $APR_LIBS"
+APR_LDFLAGS=`$apr_config --ldflags`
+LDFLAGS="$LDFLAGS $APR_LDFLAGS"
+APR_INCLUDES=`$apr_config --includes`
+INCLUDES="$INCLUDES $APR_INCLUDES"
+
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL
@@ -37,17 +52,6 @@ fi
 PCRE_LIBS=`$pcre_config --libs`
 PCRE_CFLAGS=`$pcre_config --cflags`
 
-# APR
-AC_PATH_PROG(apr_config, [apr-1-config])
-if test "x$apr_config" = "x"; then
-    AC_MSG_ERROR([apr library not found])
-fi
-APR_LIBS=`$apr_config --link-ld --libs`
-APR_CFLAGS=`$apr_config --cppflags`
-CFLAGS="$CFLAGS $APR_CFLAGS"
-LIBS="$LIBS $APR_LIBS"
-APR_INCLUDES=`$apr_config --includes`
-INCLUDES="$INCLUDES $APR_INCLUDES"
 AC_CHECK_LIB([apr-1], [apr_socket_create], [HAVELIBAPR=1], [AC_MSG_ERROR([libapr-1 not found])])
 AC_CHECK_FUNCS(apr_pollset_wakeup apr_sockaddr_ip_getbuf apr_file_sync apr_file_link apr_pool_create_unmanaged_ex, [], [AC_MSG_WARN([libapr-1 1.4.0 or greater is recommended])])
 
@@ -91,21 +95,23 @@ AC_CHECK_HEADER(zlib.h,
 AM_CONDITIONAL([HAVE_ZLIB], [test x$LIBZLIB != x])
 
 
-# prctl is needed for capabilities
-AC_CHECK_HEADERS(sys/prctl.h)
-AC_CHECK_FUNCS(prctl setpflags)
-
-if test "x$ac_cv_enable_capability" != "xno"; then
-   AC_CHECK_LIB([cap], [cap_from_name], [CAPABILITY=yes; LIBCAP="-lcap"],
+# Linux-specific capability tests
+case $host in
+       *linux*)
+	 # prctl is needed for capabilities
+         AC_CHECK_HEADERS(sys/prctl.h)
+	 AC_CHECK_FUNCS(prctl setpflags)
+	 if test "x$ac_cv_enable_capability" != "xno"; then
+   	    AC_CHECK_LIB([cap], [cap_from_name], [CAPABILITY=yes; LIBCAP="-lcap"],
                 [if test "x$ac_cv_enable_capability" = "xyes"; then
                     AC_MSG_ERROR([no linux capability (libcap2) support found.])
                  else
                     AC_MSG_WARN([no linux capability (libcap2) support found, will be disabled.])
                  fi]
                )
-fi
-if test "x$CAPABILITY" = "xyes"; then
-   AC_CHECK_HEADERS(sys/capability.h, [CAPABILITY=yes],
+	 fi
+	 if test "x$CAPABILITY" = "xyes"; then
+   	    AC_CHECK_HEADERS(sys/capability.h, [CAPABILITY=yes],
                 [if test "x$ac_cv_enable_capability" = "xyes"; then
                     AC_MSG_ERROR([Header files missing for capability support.])
                  else
@@ -113,7 +119,9 @@ if test "x$CAPABILITY" = "xyes"; then
                     CAPABILITY=yes;
                  fi]
                )
-fi
+	 fi
+       ;;
+esac
 
 AC_CHECK_HEADERS(winevt.h)
 
@@ -158,49 +166,57 @@ AC_CHECK_DECLS(AF_UNIX, [HAVE_AF_UNIX=1], [], [#include <sys/types.h>
 ])
 AM_CONDITIONAL([HAVE_AF_UNIX], [test x$HAVE_AF_UNIX != x])
 
-# Perl
-AC_CHECK_PROGS([PERL], [perl], [NOTFOUND], [])
-if test "x$PERL" = "xNOTFOUND"; then
-   AC_MSG_WARN([perl binary not found])
-else
-   PERL_CFLAGS=`perl -MExtUtils::Embed -e ccopts`
-   PERL_LIBS=`perl -MExtUtils::Embed -e ldopts`
-   SAVED_LIBS=$LIBS
-   SAVED_CFLAGS=$CFLAGS
-   LIBS="$LIBS $PERL_LIBS"
-   CFLAGS="$CFLAGS $PERL_CFLAGS"
-   AC_CHECK_FUNCS([perl_parse], [HAVE_PERL=yes], [AC_MSG_WARN([perl cannot be embedded, not building xm_perl])])
-   LIBS=$SAVED_LIBS
-   CFLAGS=$SAVED_CFLAGS
+# Perl and xm_perl
+AC_ENABLE_FEATURE([xm_perl], ENABLE, yes,
+  [build the xm_perl module],
+  [yes|no) ;;])
+
+if test "x$ac_cv_enable_xm_perl" = "xyes"; then
+   AC_CHECK_PROGS([PERL], [perl], [NOTFOUND], [])
+   if test "x$PERL" = "xNOTFOUND"; then
+      AC_MSG_WARN([perl binary not found])
+   else
+      PERL_CFLAGS=`perl -MExtUtils::Embed -e ccopts`
+      PERL_LIBS=`perl -MExtUtils::Embed -e ldopts`
+      SAVED_LIBS=$LIBS
+      SAVED_CFLAGS=$CFLAGS
+      LIBS="$LIBS $PERL_LIBS"
+      CFLAGS="$CFLAGS $PERL_CFLAGS"
+      AC_CHECK_FUNCS([perl_parse], [HAVE_PERL=yes], [AC_MSG_WARN([perl cannot be embedded, not building xm_perl])])
+      LIBS=$SAVED_LIBS
+      CFLAGS=$SAVED_CFLAGS
+   fi
 fi
 AM_CONDITIONAL([HAVE_PERL], [test x$HAVE_PERL != x])
 
 
-wmi_default=no
-
+# OS/ARCH specific hacks
 case $host in
        *linux*)
-	   wmi_default=yes
        ;;
        *mingw*)
 	   BUILD_SHARED_LIBS=1
 	   BUILD_MSEVENTLOG=1
-	   LIBNX='$(top_builddir)/src/common/libnx.la'
 	   WIN32=1
        ;;
        *openbsd*)
 	   BUILD_SHARED_LIBS=1
-	   LIBNX='$(top_builddir)/src/common/libnx.la'
+       ;;
+       *ibm-aix*)
+           LIBS="$LIBS -lm"
+	   BUILD_SHARED_LIBS=1
        ;;
        *)
 	   BUILD_SHARED_LIBS=1
-	   LIBNX='$(top_builddir)/src/common/libnx.la'
        ;;
 esac
 
-
 # Build shared library on systems which don't support libnx* linked into the executable
 AM_CONDITIONAL([BUILD_SHARED_LIBS], [test "x$BUILD_SHARED_LIBS" == "x1"])
+if test "x$BUILD_SHARED_LIBS" == "x1"; then 
+   LIBNX='$(top_builddir)/src/common/libnx.la'
+fi
+
 # Windows event log
 AM_CONDITIONAL([BUILD_MSEVENTLOG], [test x$BUILD_MSEVENTLOG != x])
 AM_CONDITIONAL([WIN32], [test "x$WIN32" == "x1"])
@@ -266,8 +282,16 @@ AC_C_ADD_FLAG(werror_format_security, -Werror=format-security)
 #AC_C_ADD_FLAG(werror_uninitialized, -Werror=uninitialized)
 
 AC_C_ADD_FLAG(rdynamic, -rdynamic)
-AC_SYS_LARGEFILE
 
+
+case $host in
+       *ibm-aix*)
+        # Compilation breaks with largefile support on on AIX
+       ;;
+       *)
+	 AC_SYS_LARGEFILE
+       ;;
+esac
 
 if test "x$lt_cv_prog_gnu_ld" = "xyes"; then
    AC_C_ADD_FLAG(g, -ggdb3 -g3)
@@ -353,6 +377,7 @@ AC_OUTPUT(Makefile
 	        src/modules/processor/buffer/Makefile
 	        src/modules/processor/blocker/Makefile
 	        src/modules/processor/pattern/Makefile
+	        src/modules/processor/evcorr/Makefile
 	      src/modules/output/Makefile
 	        src/modules/output/file/Makefile
 	        src/modules/output/udp/Makefile
@@ -378,6 +403,7 @@ AC_OUTPUT(Makefile
 	        src/modules/extension/perl/Makefile
 	   src/utils/Makefile
 	   packaging/redhat/nxlog.spec
+	   packaging/redhat/nxlog.spec.RHEL5
 	   packaging/windows/nxlog.wxs
 	   packaging/windows/pkgmsi.sh
 	)

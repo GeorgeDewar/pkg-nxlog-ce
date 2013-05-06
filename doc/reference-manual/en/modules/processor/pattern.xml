@@ -47,6 +47,17 @@
   </para>
 
   <para>
+    Patterns can be grouped together under pattern groups. Pattern groups serve an optimization
+    purpose. The group can have an optional <replaceable>matchfield</replaceable> block which
+    can check a condition. If the condtion (such as <replaceable>$SourceName</replaceable> matches 
+    <replaceable>sshd</replaceable>) is satisfied, the pm_pattern module will dive into the group
+    and check each pattern against the log.
+    If the pattern group's condition didn't match (i.e. <replaceable>$SourceName</replaceable> wasn't
+    <replaceable>sshd</replaceable>), the module can thus skip all patterns in the group without
+    having to check each pattern one by one.
+  </para>
+
+  <para>
     When the pm_pattern module finds a matching pattern, the <replaceable>PatternID</replaceable>
     and <replaceable>PatternName</replaceable> fields are set on the log message.
     These can be used later in conditional processing and correlation rules
@@ -108,7 +119,12 @@
 	<title>A simple pattern database</title>
 	<para>
 	  This pattern database contains two patterns to match ssh authentication messages.
-	  Both extract <replaceable>AuthMethod</replaceable>, <replaceable>AccountName</replaceable>
+	  The patterns are under a group named <replaceable>ssh</replaceable> which
+	  checks whether the field <replaceable>SourceName</replaceable> is
+	  <replaceable>sshd</replaceable> and only tries to match the patterns if the logs
+	  are indeed from sshd.
+	  The patterns both extract <replaceable>AuthMethod</replaceable>,
+	  <replaceable>AccountName</replaceable>
 	  and <replaceable>SourceIP4Address</replaceable> from the log message when the pattern
 	  matches the log. Additionally <replaceable>TaxonomyStatus</replaceable> and
 	  <replaceable>TaxonomyAction</replaceable> are set.

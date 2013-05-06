@@ -301,6 +301,10 @@ static void xm_syslog_config(nx_module_t *module UNUSED)
 	    }
 	    modconf->snarereplacement = tmpchar;
 	}
+	else if ( strcasecmp(curr->directive, "IETFTimestampInGMT") == 0 )
+	{
+	    nx_cfg_get_boolean(curr, "IETFTimestampInGMT", &(modconf->ietftimestampingmt));
+	}
 	else
 	{
 	    nx_conf_error(curr, "invalid keyword: %s", curr->directive);

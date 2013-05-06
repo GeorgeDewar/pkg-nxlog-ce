@@ -34,5 +34,4 @@
 <Route 1>
     Path	in => buffer => blocker => out
 </Route>
-
 ]]></programlisting>

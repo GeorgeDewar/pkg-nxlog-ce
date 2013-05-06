@@ -371,7 +371,7 @@ static nx_logdata_t *im_mseventlog_get_logdata(nx_module_t *module,
     hostname = source + strlen(source) + 1;
     stringsptr = (LPSTR) ((LPBYTE) record + record->StringOffset);
 
-    nx_date_to_iso(tmpstr, apr_time_from_sec(record->TimeGenerated));
+    nx_date_to_iso(tmpstr, sizeof(tmpstr), apr_time_from_sec(record->TimeGenerated));
     nx_string_append(logdata->raw_event, tmpstr, -1);
     nx_string_append(logdata->raw_event, " ", 1);
     nx_logdata_set_datetime(logdata, "EventTime", apr_time_from_sec(record->TimeGenerated));

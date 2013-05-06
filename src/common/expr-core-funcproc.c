@@ -139,6 +139,7 @@ nx_value_type_t nx_expr_func__strptime_string_string_argtypes[] = {
     NX_VALUE_TYPE_STRING, NX_VALUE_TYPE_STRING, 
 };
 // hostname
+// hostname_fqdn
 // get_var
 const char *nx_expr_func__get_var_string_argnames[] = {
     "varname", 
@@ -438,6 +439,17 @@ nx_expr_func_t nx_api_declarations_core_funcs[] = {
    "hostname",
    NX_EXPR_FUNCPROC_TYPE_GLOBAL,
    nx_expr_func__hostname,
+   NX_VALUE_TYPE_STRING,
+   0,
+   NULL,
+   NULL,
+ },
+ {
+   { .next = NULL, .prev = NULL },
+   NULL,
+   "hostname_fqdn",
+   NX_EXPR_FUNCPROC_TYPE_GLOBAL,
+   nx_expr_func__hostname_fqdn,
    NX_VALUE_TYPE_STRING,
    0,
    NULL,
@@ -959,7 +971,7 @@ nx_expr_proc_t nx_api_declarations_core_procs[] = {
 };
 
 nx_module_exports_t nx_module_exports_core = {
-	32,
+	33,
 	nx_api_declarations_core_funcs,
 	23,
 	nx_api_declarations_core_procs,

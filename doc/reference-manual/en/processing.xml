@@ -546,7 +546,7 @@ Nov 03 2005 14:50:30
        a sliding window.
      </para>
      <para>
-       A dedicated nxlog module, pm_evcorr is available for 
+       A dedicated nxlog module, <link linkend="pm_evcorr">pm_evcorr</link> is available for 
        advanced correlation requirements. It has similar features as 
        <ulink url="http://simple-evcorr.sourceforge.net/">SEC</ulink>
        and greatly enhances the correlation capabilites of nxlog. 

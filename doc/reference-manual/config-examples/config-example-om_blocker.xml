@@ -19,5 +19,4 @@
 <Route 1>
     Path	uds => buffer => blocker
 </Route>
-
 ]]></programlisting>

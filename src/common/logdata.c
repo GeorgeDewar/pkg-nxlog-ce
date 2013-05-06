@@ -192,9 +192,14 @@ void nx_logdata_set_field_value(nx_logdata_t *logdata,
 		}
 		else
 		{
+		    nx_value_type_t type = value->type;
 		    nx_value_free(value);
-		    throw_msg("raw_event must be defined and STRING type, got %s",
-			      nx_value_type_to_string(value->type));
+		    if ( type != NX_VALUE_TYPE_STRING )
+		    {
+			throw_msg("'raw_event' cannot be set to %s type.",
+				  nx_value_type_to_string(type));
+		    }
+		    throw_msg("'raw_event' cannot be set to an undefined value.");
 		}
 	    }
 	    return;

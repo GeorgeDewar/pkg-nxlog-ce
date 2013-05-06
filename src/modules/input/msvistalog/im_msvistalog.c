@@ -286,7 +286,7 @@ static void im_msvistalog_event_to_logdata(nx_module_t *module,
 	eventtime /= 10;    /* Convert from 100 nano-sec periods to micro-seconds. */
 	eventtime -= APR_TIME_C(11644473600000000);  /* Convert from Windows epoch to Unix epoch */
 	nx_logdata_set_datetime(logdata, "EventTime", eventtime);
-	nx_date_to_iso(tmpstr, eventtime);
+	nx_date_to_iso(tmpstr, sizeof(tmpstr), eventtime);
 	nx_string_append(logdata->raw_event, tmpstr, -1);
 	nx_string_append(logdata->raw_event, " ", 1);
 
@@ -306,15 +306,10 @@ static void im_msvistalog_event_to_logdata(nx_module_t *module,
 	}
 	if ( hostname == NULL )
 	{
-	    char hoststr[100];
-	    if ( apr_gethostname(hoststr, sizeof(hoststr), NULL) != APR_SUCCESS )
-	    {
-		nx_string_append(logdata->raw_event, "localhost", -1);
-	    }
-	    else
-	    {
-		nx_string_append(logdata->raw_event, hoststr, -1);
-	    }
+	    const nx_string_t *hoststr;
+	    
+	    hoststr = nx_get_hostname();
+	    nx_string_append(logdata->raw_event, hoststr->buf, (int) hoststr->len);
 	}
 	nx_string_append(logdata->raw_event, " ", 1);
 

@@ -7,5 +7,4 @@
 	Exec	exec_async("/bin/true");
     </Schedule>
 </Extension>
-
 ]]></programlisting>

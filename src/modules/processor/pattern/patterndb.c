@@ -408,6 +408,7 @@ static boolean nx_patterndb_match_matchfields(nx_logdata_t *logdata,
 {
     nx_pattern_matchfield_t *matchfield;
     nx_logdata_field_t *logfield;
+    nx_exception_t e;
 
     ASSERT(matchfields != NULL);
 
@@ -453,6 +454,8 @@ static boolean nx_patterndb_match_matchfields(nx_logdata_t *logdata,
 	else if ( logfield->value->type == NX_VALUE_TYPE_INTEGER )
 	{ 
 	    char intstr[32];
+	    char *strval;
+	    volatile boolean retval = FALSE;
 
 	    switch ( matchfield->type )
 	    {
@@ -465,8 +468,22 @@ static boolean nx_patterndb_match_matchfields(nx_logdata_t *logdata,
 		    }
 		    break;
 		case NX_PATTERN_MATCH_TYPE_REGEXP:
-		    log_error("invalid use of REGEXP match with INTEGER type %s", logfield->key);
-		    return ( FALSE );
+		    strval = nx_value_to_string(logfield->value);
+		    try
+		    {
+			if ( patterndb_regexp_match(strval, matchfield,
+						    addfields, isgroup, name) == TRUE )
+			{
+			    retval = TRUE;
+			}
+		    }
+		    catch(e)
+		    {
+			free(strval);
+			rethrow(e);
+		    }
+		    free(strval);
+		    return ( retval );
 		default:
 		    nx_panic("invalid match type: %d", matchfield->type);
 	    }
@@ -500,23 +517,31 @@ static boolean nx_patterndb_match_matchfields(nx_logdata_t *logdata,
 	    boolean retval = FALSE;
 
 	    strval = nx_value_to_string(logfield->value);
-	    switch ( matchfield->type )
+	    try
 	    {
-		case NX_PATTERN_MATCH_TYPE_EXACT:
-		    if ( strcmp(matchfield->value, strval) == 0 )
-		    {
-			retval = TRUE;
-		    }
-		    break;
-		case NX_PATTERN_MATCH_TYPE_REGEXP:
-		    if ( patterndb_regexp_match(strval, matchfield,
-						addfields, isgroup, name) == TRUE )
-		    {
-			retval = TRUE;
-		    }
-		    break;
-		default:
-		    nx_panic("invalid match type: %d", matchfield->type);
+		switch ( matchfield->type )
+		{
+		    case NX_PATTERN_MATCH_TYPE_EXACT:
+			if ( strcmp(matchfield->value, strval) == 0 )
+			{
+			    retval = TRUE;
+			}
+			break;
+		    case NX_PATTERN_MATCH_TYPE_REGEXP:
+			if ( patterndb_regexp_match(strval, matchfield,
+						    addfields, isgroup, name) == TRUE )
+			{
+			    retval = TRUE;
+			}
+			break;
+		    default:
+			nx_panic("invalid match type: %d", matchfield->type);
+		}
+	    }
+	    catch(e)
+	    {
+		free(strval);
+		rethrow(e);
 	    }
 	    free(strval);
 

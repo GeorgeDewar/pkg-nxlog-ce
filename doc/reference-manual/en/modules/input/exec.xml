@@ -4,15 +4,9 @@
   <para>
     This module will execute a program or script on startup and will read its standard
     output.
+    It can be used to easily integrate with exotic log sources which can be read only with the
+    help of scripts or programs.
   </para>
-  <note>
-    <para>
-      The executed program or script should not exit because im_exec will not restart it. 
-      Support for restart will be added in a future version. Restarting can lead to a 
-      significant overhead if it occurs frequently, this is the main reason why this feature
-      was left out in order to avoid abusing the module.
-    </para>
-  </note>
 
   <section id="im_exec_config">
     <title>Configuration</title>
@@ -48,6 +42,18 @@
 	    <simpara>
 	      See the description about <link linkend="config_inputtype">InputType</link>
 	      in the global module config section.
+	    </simpara>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="im_exec_config_restart"/>Restart</term>
+	  <listitem>
+	    <simpara>
+	      Restart the process if it exits. There is a 1 second delay before it is restarted
+	      in order not to DOS the system when a process is not behaving nicely.
+	      Looping should be implemented in the script itself, this directive is only to
+	      provide some safety against malfunctioning scripts and programs.
+	      This boolean directive defaults to FALSE.
 	    </simpara>
 	  </listitem>
 	</varlistentry>

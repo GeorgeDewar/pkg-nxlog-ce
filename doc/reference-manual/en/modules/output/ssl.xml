@@ -39,9 +39,8 @@
 	  <term><anchor id="om_ssl_config_reconnect"/>Reconnect</term>
 	  <listitem>
 	    <simpara>
-	      Specifies an optional interval in seconds to wait after the remote end
-	      has disconnected.
-	      The default value is 10 seconds.
+	      This directive has been deprecated as of version 2.4.
+	      The module will try to reconnect automatically at increasing intervals on all errors.
 	    </simpara>
 	  </listitem>
 	</varlistentry>

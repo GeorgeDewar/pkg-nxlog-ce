@@ -13,7 +13,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>HASH(0x11f7110)</simpara>
+          <simpara>Process multiline logs</simpara>
          </listitem>
         </varlistentry>
         <varlistentry>
@@ -37,7 +37,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>HASH(0x11f7a28)</simpara>
+          <simpara>Process multiline logs</simpara>
          </listitem>
         </varlistentry>
         <varlistentry>
@@ -82,7 +82,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>HASH(0x11f4ee8)</simpara>
+          <simpara>Process multiline logs</simpara>
          </listitem>
         </varlistentry>
       </variablelist>
@@ -98,7 +98,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>HASH(0x11f6ac8)</simpara>
+          <simpara>Process multiline logs</simpara>
          </listitem>
         </varlistentry>
         <varlistentry>

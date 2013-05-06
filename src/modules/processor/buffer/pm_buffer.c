@@ -250,7 +250,7 @@ static void pm_buffer_data_available(nx_module_t *module)
 	return;
     }
 
-    while ( (can_send = nx_module_can_send(module, NX_LOGQUEUE_LIMIT)) == TRUE )
+    while ( (can_send = nx_module_can_send(module, 1.0)) == TRUE )
     {
 	if ( modconf->type == NX_PM_BUFFER_TYPE_MEM )
 	{

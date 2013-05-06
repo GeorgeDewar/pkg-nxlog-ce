@@ -200,6 +200,7 @@ struct nx_module_t
     apr_pool_t 		*pool;
     NX_DLIST_ENTRY(nx_module_t) link;
     boolean		has_config_errors;
+    boolean		flowcontrol;	///< TRUE if flow-control is in effect
     nx_module_status_t	status;
     apr_array_header_t	*routes;	///< array of routes the module belongs to
     nx_logqueue_t	*queue; 	///< the queue for the module
@@ -244,7 +245,7 @@ void nx_module_add_logdata_to_route(nx_module_t *module,
 				    nx_logdata_t *logdata);
 void nx_module_progress_logdata(nx_module_t *module, nx_logdata_t *logdata);
 void nx_module_data_available(nx_module_t *module);
-boolean nx_module_can_send(nx_module_t *module, int queuelimit);
+boolean nx_module_can_send(nx_module_t *module, double multiplier);
 nx_logdata_t *nx_module_logqueue_peek(nx_module_t *module);
 void nx_module_logqueue_pop(nx_module_t *module, nx_logdata_t *logdata);
 void nx_module_logqueue_drop(nx_module_t *module, nx_logdata_t *logdata);
@@ -330,5 +331,7 @@ void nx_module_pollset_remove_socket(nx_module_t *module,
 				     apr_socket_t *sock);
 void nx_module_add_poll_event(nx_module_t *module);
 void nx_module_pollset_poll(nx_module_t *module, boolean readd);
+
+const nx_string_t *nx_get_hostname();
 
 #endif	/* __NX_MODULE_H */
