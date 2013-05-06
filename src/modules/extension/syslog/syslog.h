@@ -66,7 +66,7 @@ boolean nx_syslog_parse_rfc5424(nx_logdata_t *logdata,
 				const char *string,
 				size_t stringlen);
 void nx_logdata_to_syslog_rfc3164(nx_logdata_t *logdata);
-void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata);
+void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata, boolean gmt);
 void nx_logdata_to_syslog_snare(nx_logdata_t *logdata,
 				char delimiter,
 				char replacement);

@@ -8,7 +8,7 @@
 
 /* FUNCTIONS */
 
-#define nx_api_declarations_core_func_num 32
+#define nx_api_declarations_core_func_num 33
 void nx_expr_func__lc(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__uc(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__now(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
@@ -30,6 +30,7 @@ void nx_expr_func__parsedate(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, 
 void nx_expr_func__strftime(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__strptime(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__hostname(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
+void nx_expr_func__hostname_fqdn(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__get_var(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__get_stat(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);
 void nx_expr_func__to_ip4addr(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_value_t *retval, int32_t num_arg, nx_value_t *args);

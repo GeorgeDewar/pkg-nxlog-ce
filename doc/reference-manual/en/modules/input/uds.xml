@@ -10,10 +10,21 @@
 
   <note>
     <para>
-      This module supports SOCK_DGRAM type sockets only. SOCK_STREAM type sockets will be supported
+      This module supports SOCK_DGRAM type sockets only. SOCK_STREAM type sockets may be supported
       in the future.
     </para>
   </note>
+
+  <note>
+    <para>
+      It is recommended to disable <link linkend="config_module_flowcontrol">FlowControl</link>
+      when this module is used to collect local syslog from the <filename>/dev/log</filename>
+      unix domain socket. Otherwise the syslog() system call will block in all programs which
+      are trying to write to the system log if the Output queue becomes full and this will result
+      in an unresponsive system.
+    </para>
+  </note>
+
   <para>
     For parsing syslog messages, take a look at the
     <link linkend="pm_transformer">pm_transformer</link> module or the

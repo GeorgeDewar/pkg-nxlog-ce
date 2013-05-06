@@ -249,10 +249,16 @@ void nx_expr_proc__to_syslog_bsd(nx_expr_eval_ctx_t *eval_ctx,
 
 
 void nx_expr_proc__to_syslog_ietf(nx_expr_eval_ctx_t *eval_ctx,
-				  nx_module_t *module UNUSED,
+				  nx_module_t *module,
 				  nx_expr_arg_list_t *args)
 {
     nx_expr_arg_t *arg;
+    nx_xm_syslog_conf_t *modconf;
+
+    ASSERT(module != NULL);
+    
+    modconf = (nx_xm_syslog_conf_t *) module->config;
+    ASSERT(modconf != NULL);
 
     if ( eval_ctx->logdata == NULL )
     {
@@ -263,7 +269,7 @@ void nx_expr_proc__to_syslog_ietf(nx_expr_eval_ctx_t *eval_ctx,
     {
 	throw_msg("unexpected arguments");
     }
-    nx_logdata_to_syslog_rfc5424(eval_ctx->logdata);
+    nx_logdata_to_syslog_rfc5424(eval_ctx->logdata, modconf->ietftimestampingmt);
 }
 
 

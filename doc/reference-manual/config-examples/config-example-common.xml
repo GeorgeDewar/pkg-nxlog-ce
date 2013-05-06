@@ -6,5 +6,4 @@ Cachedir ../../../test/tmp
 LogLevel info
 define CERTDIR ../../../test/cert
 define CONFDIR /tmp
-
 ]]></programlisting>

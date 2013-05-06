@@ -6,6 +6,11 @@
  <group>
    <name>ssh</name>
    <id>42</id>
+   <matchfield>
+    <name>SourceName</name>
+    <type>exact</type>
+    <value>sshd</value>
+   </matchfield>
 
    <pattern>
     <id>1</id>

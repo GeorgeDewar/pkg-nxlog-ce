@@ -125,6 +125,18 @@
   	    </para>
 	  </listitem>
 	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="xm_syslog_ietftimestampingmt"/>IETFTimestampInGMT</term>
+	  <listitem>
+	    <para>
+	      This optional boolean directive can be used to format the timestamps produced
+	      by <link linkend="xm_syslog_proc_to_syslog_ietf">to_syslog_ietf()</link>
+	      in GMT instead of local time.
+	      This defaults to FALSE so that local time is used by default with a timezone
+	      indicator.
+  	    </para>
+	  </listitem>
+	</varlistentry>
       </variablelist>
     </para>
   </section>

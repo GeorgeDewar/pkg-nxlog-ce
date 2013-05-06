@@ -19,6 +19,8 @@ typedef struct nx_im_exec_conf_t
     nx_module_input_func_decl_t *inputfunc;
     apr_proc_t proc;
     boolean running;
+    nx_event_t *event;
+    boolean restart;
 } nx_im_exec_conf_t;
 
 

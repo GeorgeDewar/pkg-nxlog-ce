@@ -16,5 +16,4 @@ Group nxlog
 <Route 1>
     Path        kern => fileout
 </Route>
-
 ]]></programlisting>

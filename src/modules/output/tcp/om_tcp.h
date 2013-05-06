@@ -16,7 +16,7 @@ typedef struct nx_om_tcp_conf_t
     apr_port_t		port;
     apr_socket_t	*sock;
     boolean		connected;
-    int			reconnect_interval;
+    int			reconnect;
 } nx_om_tcp_conf_t;
 
 

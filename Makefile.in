@@ -38,6 +38,7 @@ target_triplet = @target@
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
+	$(top_srcdir)/packaging/redhat/nxlog.spec.RHEL5.in \
 	$(top_srcdir)/packaging/redhat/nxlog.spec.in \
 	$(top_srcdir)/packaging/windows/nxlog.wxs.in \
 	$(top_srcdir)/packaging/windows/pkgmsi.sh.in config.guess \
@@ -52,7 +53,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/common/config.h
 CONFIG_CLEAN_FILES = packaging/redhat/nxlog.spec \
-	packaging/windows/nxlog.wxs packaging/windows/pkgmsi.sh
+	packaging/redhat/nxlog.spec.RHEL5 packaging/windows/nxlog.wxs \
+	packaging/windows/pkgmsi.sh
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -305,6 +307,7 @@ EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_D
 	     packaging/windows/README.txt \
 	     packaging/windows/wininst.sh \
 	     packaging/redhat/nxlog.spec \
+	     packaging/redhat/nxlog.spec.RHEL5 \
 	     packaging/redhat/nxlog.conf \
 	     packaging/redhat/init \
 	     packaging/redhat/make_rpm.sh
@@ -347,6 +350,8 @@ $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 packaging/redhat/nxlog.spec: $(top_builddir)/config.status $(top_srcdir)/packaging/redhat/nxlog.spec.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+packaging/redhat/nxlog.spec.RHEL5: $(top_builddir)/config.status $(top_srcdir)/packaging/redhat/nxlog.spec.RHEL5.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 packaging/windows/nxlog.wxs: $(top_builddir)/config.status $(top_srcdir)/packaging/windows/nxlog.wxs.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@

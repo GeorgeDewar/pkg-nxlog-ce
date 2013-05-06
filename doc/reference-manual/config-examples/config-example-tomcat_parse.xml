@@ -19,5 +19,4 @@
 <Route tomcat>
     Path	log4j => out
 </Route>
-
 ]]></programlisting>

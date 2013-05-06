@@ -27,8 +27,8 @@ static void im_mark_read(nx_module_t *module)
     char buf[250];
     char tmpstr[30];
     apr_time_t now;
-    char hostname[100];
     nx_value_t *val;
+    const nx_string_t *hoststr;
 
     ASSERT(module != NULL);
 
@@ -46,24 +46,16 @@ static void im_mark_read(nx_module_t *module)
     logdata = nx_logdata_new();
 
     now = apr_time_now();
-    nx_date_to_iso(tmpstr, now);
+    nx_date_to_iso(tmpstr, sizeof(tmpstr), now);
     nx_string_append(logdata->raw_event, tmpstr, -1);
     nx_string_append(logdata->raw_event, " ", 1);
     nx_logdata_set_datetime(logdata, "EventTime", now);
 
-    if ( apr_gethostname(hostname, sizeof(hostname), NULL) == APR_SUCCESS )
-    {
-        val = nx_value_new_string(hostname);
-	nx_string_append(logdata->raw_event, hostname, -1);
-	nx_string_append(logdata->raw_event, " ", 1);
-    }
-    else
-    {
-        val = nx_value_new_string("localhost");
-	nx_string_append(logdata->raw_event, val->string->buf, (int) val->string->len);
-	nx_string_append(logdata->raw_event, " ", 1);
-    }
-    ASSERT(val->string != NULL);
+    hoststr = nx_get_hostname();
+    nx_string_append(logdata->raw_event, hoststr->buf, (int) hoststr->len);
+    nx_string_append(logdata->raw_event, " ", 1);
+    val = nx_value_new(NX_VALUE_TYPE_STRING);
+    val->string = nx_string_clone(hoststr);
     nx_logdata_set_field_value(logdata, "Hostname", val);
 
     nx_string_append(logdata->raw_event, "INFO ", 5);

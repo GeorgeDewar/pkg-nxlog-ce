@@ -39,7 +39,7 @@ static void compare_timeval(apr_time_t timeval, const char *timestr)
 {
     char tmpbuf[21];
 
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     if ( strcmp(timestr, tmpbuf) != 0 )
     {
 	nx_abort("%s != %s", timestr, tmpbuf);
@@ -108,15 +108,15 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
 
     // test cisco
     ASSERT(nx_date_parse_cisco(&timeval, "Nov 3 14:50:30.403", NULL) == APR_SUCCESS);
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strcmp("-11-03 14:50:30", tmpbuf + 4) == 0);
 
     ASSERT(nx_date_parse_cisco(&timeval, "Nov  3 14:50:30.403", NULL) == APR_SUCCESS);
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strcmp("-11-03 14:50:30", tmpbuf + 4) == 0);
 
     ASSERT(nx_date_parse_cisco(&timeval, "Nov 13 14:50:30.403", NULL) == APR_SUCCESS);
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strcmp("-11-13 14:50:30", tmpbuf + 4) == 0);
 
     // test win
@@ -125,19 +125,19 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
 
     now = apr_time_now();
     //printf("GMT now: %lu\n", now / APR_USEC_PER_SEC);
-    ASSERT(nx_date_to_iso(tmpbuf, now) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), now) == APR_SUCCESS);
     ASSERT(nx_date_parse_iso(&timeval, tmpbuf, NULL) == APR_SUCCESS);
 
-    ASSERT(nx_date_to_iso(tmpbuf2, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf2, sizeof(tmpbuf2), timeval) == APR_SUCCESS);
     //printf("%s <=> %s\n", tmpbuf, tmpbuf2);
     ASSERT(strcmp(tmpbuf, tmpbuf2) == 0);
    
     timeval = now;
     for ( i = 0; i < 60 * 24 * 370; i += 2 )
     {
-	ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+	ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
 	ASSERT(nx_date_parse_iso(&timeval2, tmpbuf, NULL) == APR_SUCCESS);
-	ASSERT(nx_date_to_iso(tmpbuf2, timeval2) == APR_SUCCESS);
+	ASSERT(nx_date_to_iso(tmpbuf2, sizeof(tmpbuf2), timeval2) == APR_SUCCESS);
 	if ( strcmp(tmpbuf, tmpbuf2) != 0 )
 	{
 	    nx_abort("%s != %s", tmpbuf, tmpbuf2);
@@ -146,13 +146,13 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
     }
 
     ASSERT(nx_date_parse_iso(&timeval, isostr, NULL) == APR_SUCCESS);
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strcmp(isostr, tmpbuf) == 0);
 
     timeval2 = timeval;
     ASSERT(nx_date_fix_year(&timeval2) == APR_SUCCESS);
 
-    ASSERT(nx_date_to_iso(tmpbuf, timeval2) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval2) == APR_SUCCESS);
     //printf("%s\n", isostr);
     //printf("%s\n", tmpbuf);
     ASSERT(strcmp(isostr + 4, tmpbuf + 4) == 0);
@@ -172,22 +172,22 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
     rv = nx_date_parse_rfc3164(&timeval, teststr, NULL);
     ASSERT(rv == APR_SUCCESS);
     ASSERT(timeval != 0);
-    ASSERT(nx_date_to_rfc3164(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_rfc3164(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strncmp(teststr, tmpbuf, 15) == 0);
 
     rv = nx_date_parse_rfc3164(&timeval, teststr2, NULL);
     ASSERT(rv == APR_SUCCESS);
     ASSERT(timeval != 0);
-    ASSERT(nx_date_to_rfc3164(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_rfc3164(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strncmp(teststr, tmpbuf, 15) == 0);
 
     rv = nx_date_parse_rfc3164(&timeval, teststr3, NULL);
     ASSERT(rv == APR_SUCCESS);
     ASSERT(timeval != 0);
-    ASSERT(nx_date_to_rfc3164(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_rfc3164(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strncmp(teststr, tmpbuf, 15) == 0);
 
-    ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+    ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
     ASSERT(strcmp(isostr, tmpbuf) == 0);
 
     for ( i = 0; valid_times[i].t1 != NULL; i++ )
@@ -195,9 +195,9 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
 	rv = nx_date_parse_rfc3164(&timeval, valid_times[i].t1, NULL);
 	ASSERT(rv == APR_SUCCESS);
 	ASSERT(timeval != 0);
-	ASSERT(nx_date_to_iso(tmpbuf, timeval) == APR_SUCCESS);
+	ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
 	ASSERT(strcmp(valid_times[i].iso, tmpbuf) == 0);
-	ASSERT(nx_date_to_rfc3164(tmpbuf, timeval) == APR_SUCCESS);
+	ASSERT(nx_date_to_rfc3164(tmpbuf, sizeof(tmpbuf), timeval) == APR_SUCCESS);
 	ASSERT(strcmp(valid_times[i].result, tmpbuf) == 0);
     }
 

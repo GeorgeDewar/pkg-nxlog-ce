@@ -183,7 +183,7 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
 	nx_schedule_entry_parse_crontab(&sched, scheduled[i]);
 	sched.type = NX_SCHEDULE_ENTRY_TYPE_CRONTAB;
 	next = nx_schedule_entry_next_run(&sched, timeval);
-	ASSERT(nx_date_to_iso(tmpbuf, next) == APR_SUCCESS);
+	ASSERT(nx_date_to_iso(tmpbuf, sizeof(tmpbuf), next) == APR_SUCCESS);
 	if ( strcmp(tmpbuf, scheduled[i + 1]) != 0 )
 	{
 	    nx_abort("test of '%s' failed, expected %s, got %s for next run (diff is %ld min)",

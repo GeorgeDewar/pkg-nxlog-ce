@@ -201,8 +201,8 @@ static void im_ssl_disconnect(nx_module_input_t *input)
 }
 
 
-
-static void im_ssl_fill_buffer(nx_module_t *module, nx_module_input_t *input)
+// return TRUE if there was an error and we need to clean up the input
+static boolean im_ssl_fill_buffer(nx_module_t *module, nx_module_input_t *input)
 {
     volatile int retval;
     SSL *ssl;
@@ -238,9 +238,7 @@ static void im_ssl_fill_buffer(nx_module_t *module, nx_module_input_t *input)
 	catch(e)
 	{
 	    log_exception(e);
-	    //apr_socket_close(input->desc.s);
-	    im_ssl_disconnect(input);
-	    return;
+	    return ( TRUE );
 	}
 	ASSERT(nbytes <= (int) (input->bufsize - (input->buflen + input->bufstart)));
 	input->buflen += nbytes;
@@ -252,25 +250,26 @@ static void im_ssl_fill_buffer(nx_module_t *module, nx_module_input_t *input)
 		break;
 	    case SSL_ERROR_ZERO_RETURN: // disconnected
 		log_debug("remote ssl connection closed");
-		im_ssl_disconnect(input);
-		return;
+		return ( TRUE );
 	    case SSL_ERROR_WANT_WRITE:
 		log_debug("im_ssl WANT_WRITE");
 		nx_module_pollset_add_socket(module, input->desc.s, APR_POLLOUT | APR_POLLHUP);
-		return;
+		break;
 	    case SSL_ERROR_WANT_READ:
 		log_debug("im_ssl WANT_READ");
 		nx_module_pollset_add_socket(module, input->desc.s, APR_POLLIN | APR_POLLHUP);
-		return;
+		break;
 	    default:
-		apr_socket_close(input->desc.s);
-		throw_msg("im_ssl couldn't read, disconnecting");
+		log_error("im_ssl couldn't read, disconnecting (error code: %d)", retval);
+		return ( TRUE );
 	}
     }
     else
     {
 	log_debug("im_ssl_fill_buffer called with full buffer");
     }
+
+    return ( FALSE );
 }
 
 
@@ -283,6 +282,7 @@ static void im_ssl_read(nx_module_t *module, nx_event_t *event)
     nx_module_input_t *input = NULL;
     char *ipstr;
     nx_exception_t e;
+    boolean disconnect;
 
     ASSERT(module != NULL);
     ASSERT(event != NULL);
@@ -311,7 +311,7 @@ static void im_ssl_read(nx_module_t *module, nx_event_t *event)
 		 "couldn't get input data from socket");
     ASSERT(input != NULL); // if this is null there is a race/double free in event handling
 
-    im_ssl_fill_buffer(module, input);
+    disconnect = im_ssl_fill_buffer(module, input);
     try
     {
 	while ( (logdata = input->inputfunc->func(input, input->inputfunc->data)) != NULL )
@@ -326,6 +326,11 @@ static void im_ssl_read(nx_module_t *module, nx_event_t *event)
     {
 	im_ssl_free_input(input);
 	rethrow_msg(e, "Module %s couldn't read the input", input->module->name);
+    }
+    
+    if ( disconnect == TRUE )
+    {
+	im_ssl_disconnect(input);
     }
 }
 

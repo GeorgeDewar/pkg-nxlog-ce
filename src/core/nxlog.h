@@ -60,6 +60,9 @@ typedef struct nxlog_t
     apr_thread_mutex_t	*mutex;
     nx_ctx_t		*ctx;		///< configuration context
     apr_thread_mutex_t	**openssl_locks;
+    
+    nx_string_t		hostname;
+    nx_string_t		hostname_fqdn;
 } nxlog_t;
 
 nxlog_t *nxlog_get();
@@ -73,5 +76,4 @@ boolean nxlog_data_available();
 void nxlog_mainloop(nxlog_t *nxlog, boolean offline);
 void nxlog_set(nxlog_t *nxlog);
 void nxlog_dump_info();
-
 #endif	/* __NXLOG_H */

@@ -11,7 +11,10 @@ do
 	mkdir -p $dirn
 done
 
-SPEC_FILE="$NAME.spec"
+
+if test x$SPEC_FILE = 'x'; then
+    SPEC_FILE="$NAME.spec"
+fi
 RPM_SPEC="$TOPDIR/SPECS/$SPEC_FILE"
 
 cp ../../../nxlog-*.tar.gz $TOPDIR/SOURCES/

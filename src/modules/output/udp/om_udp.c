@@ -61,6 +61,8 @@ static void om_udp_write(nx_module_t *module)
 		}
 		else
 		{
+		    // FIXME: doubling delay for retry
+		    apr_sleep(APR_USEC_PER_SEC);
 		    throw(rv, "om_udp apr_socket_send failed");
 		}
 	    }

@@ -5,8 +5,7 @@ for i in *.conf; do
     echo '<?xml version="1.0" encoding="UTF-8"?>' > $FILENAME
     echo '<programlisting><![CDATA[' >> $FILENAME
     cat $i |grep -v 'include common.conf' >> $FILENAME
-    echo '' >> $FILENAME
-    echo ']]></programlisting>' >> $FILENAME
+    echo -n ']]></programlisting>' >> $FILENAME
 done
 
 for i in *.stmnt; do
@@ -19,6 +18,9 @@ for i in *.stmnt; do
 done
 
 for i in ../../../test/modules/processor/pattern/patterndb.xml          \
+         ../../../test/modules/processor/evcorr/evcorr2.conf            \
+         ../../../test/modules/processor/evcorr/testinput_evcorr2.txt   \
+         ../../../test/modules/processor/evcorr/testoutput_evcorr2.txt  \
          ../../../test/modules/extension/multiline/xm_multiline1.conf   \
          ../../../test/modules/extension/multiline/xm_multiline1.in     \
          ../../../test/modules/extension/multiline/xm_multiline1.out    \

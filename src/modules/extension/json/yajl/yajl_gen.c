@@ -24,6 +24,14 @@
 #include <math.h>
 #include <stdarg.h>
 
+/* Solaris doesn't have isinf? */
+#if defined (__SVR4) && defined (__sun)
+# ifndef isinf
+#  include <ieeefp.h>
+#  define isinf(x) (!finite((x)) && (x)==(x))
+# endif
+#endif
+
 typedef enum {
     yajl_gen_start,
     yajl_gen_map_start,

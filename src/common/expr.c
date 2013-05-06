@@ -396,6 +396,7 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
     int i;
     int ovector[NX_EXPR_MAX_CAPTURED_FIELDS * 3];
     nx_value_t fieldval;
+    int global_match_recursion_cnt = 0;
 
     ASSERT(retval != NULL);
     ASSERT(left != NULL);
@@ -561,11 +562,20 @@ static void _regmatch(nx_expr_eval_ctx_t *eval_ctx,
 	    }
 	    ASSERT(fieldval.string->len >= (uint32_t) (ovector[1] - ovector[0]));
 	    fieldval.string->len += ((uint32_t) (replacement_length - (size_t) (ovector[1] - ovector[0])));
-	    
 	    subject = fieldval.string->buf;
 	    if ( modifiers & NX_EXPR_REGEXP_MODIFIER_MATCH_GLOBAL )
 	    {
-		goto match_global; // not that ugly as it seems
+		global_match_recursion_cnt++;
+		if ( global_match_recursion_cnt > 10000 ) 
+		{ // avoid an infinite loop with s/TEST/TEST/
+		    nx_value_kill(&lval);
+		    nx_value_kill(&rval);
+		    throw_msg("likely infinite loop detected in regexp substitution");
+		}
+		else
+		{
+		    goto match_global; // not that ugly as it seems
+		}
 	    }
 	}
     }
@@ -615,6 +625,7 @@ static void _equal(nx_expr_eval_ctx_t *eval_ctx,
 	    return;
 	}
 	retval->defined = FALSE;
+	nx_value_kill(&rval);
 	return;
     }
 
@@ -700,6 +711,7 @@ static void _notequal(nx_expr_eval_ctx_t *eval_ctx,
 	    return;
 	}
 	retval->defined = FALSE;
+	nx_value_kill(&rval);
 	return;
     }
 
@@ -788,6 +800,7 @@ static void _less(nx_expr_eval_ctx_t *eval_ctx,
     if ( rval.defined == FALSE )
     {
 	retval->defined = FALSE;
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -854,6 +867,7 @@ static void _le(nx_expr_eval_ctx_t *eval_ctx,
     if ( rval.defined == FALSE )
     {
 	retval->defined = FALSE;
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -920,6 +934,7 @@ static void _greater(nx_expr_eval_ctx_t *eval_ctx,
     if ( rval.defined == FALSE )
     {
 	retval->defined = FALSE;
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -986,6 +1001,7 @@ static void _greater_equal(nx_expr_eval_ctx_t *eval_ctx,
     if ( rval.defined == FALSE )
     {
 	retval->defined = FALSE;
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1052,6 +1068,7 @@ static void _and(nx_expr_eval_ctx_t *eval_ctx,
     if ( rval.defined == FALSE )
     {
 	retval->defined = FALSE;
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1170,6 +1187,8 @@ static void _plus(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_exp
 	// undef + !string = undef
 	retval->defined = FALSE;
 	retval->type = NX_VALUE_TYPE_UNKNOWN;
+	nx_value_kill(&rval);
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1273,6 +1292,7 @@ static void _minus(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_ex
 
     if ( rval.defined == FALSE )
     {
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1304,6 +1324,9 @@ static void _minus(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_ex
 	return;
     }
 
+    nx_value_kill(&rval);
+    nx_value_kill(&lval);
+
     throw_msg("invalid operation: %s - %s",
 	      nx_value_type_to_string(lval.type),
 	      nx_value_type_to_string(rval.type));
@@ -1330,6 +1353,7 @@ static void _mul(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 
     if ( rval.defined == FALSE )
     {
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1343,6 +1367,8 @@ static void _mul(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 	}
 	else
 	{
+	    nx_value_kill(&lval);
+	    nx_value_kill(&rval);
 	    throw_msg("invalid operation: %s * %s",
 		      nx_value_type_to_string(lval.type),
 		      nx_value_type_to_string(rval.type));
@@ -1350,6 +1376,8 @@ static void _mul(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
     }
     else
     {
+	nx_value_kill(&lval);
+	nx_value_kill(&rval);
 	throw_msg("invalid operation: %s * %s",
 		  nx_value_type_to_string(lval.type),
 		  nx_value_type_to_string(rval.type));
@@ -1377,6 +1405,7 @@ static void _div(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 
     if ( rval.defined == FALSE )
     {
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1390,6 +1419,8 @@ static void _div(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 	}
 	else
 	{
+	    nx_value_kill(&lval);
+	    nx_value_kill(&rval);
 	    throw_msg("invalid operation: %s / %s",
 		      nx_value_type_to_string(lval.type),
 		      nx_value_type_to_string(rval.type));
@@ -1397,6 +1428,8 @@ static void _div(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
     }
     else
     {
+	nx_value_kill(&lval);
+	nx_value_kill(&rval);
 	throw_msg("invalid operation: %s / %s",
 		  nx_value_type_to_string(lval.type),
 		  nx_value_type_to_string(rval.type));
@@ -1424,6 +1457,7 @@ static void _mod(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 
     if ( rval.defined == FALSE )
     {
+	nx_value_kill(&lval);
 	return;
     }
 
@@ -1437,6 +1471,8 @@ static void _mod(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
 	}
 	else
 	{
+	    nx_value_kill(&lval);
+	    nx_value_kill(&rval);
 	    throw_msg("invalid operation: %s %% %s",
 		      nx_value_type_to_string(lval.type),
 		      nx_value_type_to_string(rval.type));
@@ -1444,6 +1480,8 @@ static void _mod(nx_expr_eval_ctx_t *eval_ctx, nx_value_t *retval, const nx_expr
     }
     else
     {
+	nx_value_kill(&lval);
+	nx_value_kill(&rval);
 	throw_msg("invalid operation: %s %% %s",
 		  nx_value_type_to_string(lval.type),
 		  nx_value_type_to_string(rval.type));

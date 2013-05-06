@@ -208,6 +208,7 @@ static void nx_module_add(const nx_ctx_t *ctx,
     const char *typedir = NULL;
     char dsoname[4096];
     nx_module_t *tmpmodule, *module;
+    boolean gotflowcontrol = FALSE;
 
     ASSERT(modconf != NULL);
 
@@ -278,10 +279,37 @@ static void nx_module_add(const nx_ctx_t *ctx,
 
     nx_module_register_exports(ctx, module);
 
+    if ( (type == NX_MODULE_TYPE_INPUT) || (type == NX_MODULE_TYPE_PROCESSOR) )
+    { // use global FlowControl value which can be overridden below
+	module->flowcontrol = ctx->flowcontrol;
+    }
+
     while ( modconf != NULL )
     {
 	if ( strcasecmp(modconf->directive, "module") == 0 )
 	{
+	}
+	else if ( strcasecmp(modconf->directive, "FlowControl") == 0 )
+	{
+	    if ( gotflowcontrol == TRUE )
+	    {
+		nx_conf_error(modconf, "'FlowControl' flag already defined");
+	    }
+	    nx_cfg_get_boolean(modconf, "FlowControl", &(module->flowcontrol));
+	    gotflowcontrol = TRUE;
+
+	    switch ( type )
+	    {
+		case NX_MODULE_TYPE_INPUT:
+		case NX_MODULE_TYPE_PROCESSOR:
+		    break;
+		case NX_MODULE_TYPE_OUTPUT:
+		case NX_MODULE_TYPE_EXTENSION:
+		    nx_conf_error(modconf, "'FlowControl' is only supported by Input and Processor modules");
+		    break;
+		default:
+		    nx_panic("invalid module type");
+	    }
 	}
 	modconf = modconf->next;
     }
@@ -290,6 +318,11 @@ static void nx_module_add(const nx_ctx_t *ctx,
 	nx_logqueue_init(module->queue);
     }
     NX_DLIST_INSERT_TAIL(ctx->modules, module, link);
+
+    if ( (type == NX_MODULE_TYPE_INPUT) || (type == NX_MODULE_TYPE_PROCESSOR) )
+    {
+	log_debug("FlowControl %s for %s", module->flowcontrol ? "enabled" : "disabled", module->name);
+    }
 }
 
 
@@ -617,7 +650,7 @@ void nx_ctx_shutdown_modules(nx_ctx_t *ctx, nx_module_type_t type)
 	    {
 		if ( nx_atomic_read32(&(tmp->job->busy)) == TRUE )
 		{
-		    nx_module_shutdown(module);
+		    nx_module_shutdown(tmp);
 		    apr_sleep(APR_USEC_PER_SEC / 10);
 		}
 		else

@@ -1,6 +1,27 @@
-* 2013-02-07 v2.2.1017
+* 2013-04-30 2.4.1054
+  Fixed packaging for Centos/Redhat 6.
+  Regexp and regexp replace operators now support the '\' escape character to be able to specify '/' as '\/'.
+  Corrected a use-after-free when trying to set $raw_event to an undefined value or non-string type.
+  Fixed a race condition in im_ssl which could result in a segmentation fault under rare circumstances.
+  Connection error handling should be more robust now in om_tcp and om_ssl.
+  The Reconnect directive has been obsoleted, this is handled automatically now.
+  Fixed some build issues with Solaris.
+  The xm_perl module can be explicitly disabled even if perl is found.
+  Tweaked the build process so that it compiles and works on IBM AIX.
+  Fixed default sample configs (#17).
+  Added a hostname_fqdn() function to return the hostname with the domain part.
+  The include directive now supports wildcards in file names to be able to include multiple files in a directory.
+  im_exec has been fixed on Windows and now comes with a Restart directive.
+  Added a FlowControl directive (global, input and processor module level).
+* 2013-03-11 2.3.1027
+  The pm_evcorr module has been added with advanced event correlation capabilities.
+  A memory leak has been fixed in the expression evaluator when comparing an undef value against a string.
+  pm_pattern's REGEXP match now works with integer fields.
+  IETFTimestampInGMT config directive added to xm_syslog. Timestamps are now emitted in local time in IETF syslog.
+  Fixed microsecond formatting in IETF syslog (credits go to Eric Wetzel).
+* 2013-02-07 2.2.1017
   Regexp substitution is now supported with s/// and s///g.
-  Enhanced error reporting in pm_pattern in when 'pcre match_limit reached' is logged.
+  Enhanced error reporting in pm_pattern when 'pcre match_limit reached' is logged.
   The json parser leaked memory when input contained raw_event.
   Fixed possible race conditions with memory pool handling.
   Shutdown sequence reverted to non-async mode.

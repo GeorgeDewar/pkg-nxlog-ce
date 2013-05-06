@@ -250,8 +250,8 @@ static apr_int32_t get_lt_gmtoff()
  */
 
 apr_status_t nx_date_parse_rfc3164(apr_time_t  *t, 
-				    const char *date,
-				    const char **dateend)
+				   const char *date,
+				   const char **dateend)
 {
     //apr_time_exp_t ds;
     struct tm ds;
@@ -1574,7 +1574,9 @@ apr_status_t nx_date_parse(apr_time_t *t, const char *date, const char **dateend
  * datestr must be able to hold at least 16 chars including NUL
  */
 
-apr_status_t nx_date_to_rfc3164(char *datestr, apr_time_t timeval)
+apr_status_t nx_date_to_rfc3164(char *datestr,
+				apr_size_t dstsize,
+				apr_time_t timeval)
 {
     apr_status_t rv;
     apr_time_exp_t ds;
@@ -1586,6 +1588,7 @@ apr_status_t nx_date_to_rfc3164(char *datestr, apr_time_t timeval)
     };
 
     ASSERT(datestr != NULL);
+    ASSERT(dstsize >= 16);
 
     if ( (rv = apr_time_exp_lt(&ds, timeval)) != APR_SUCCESS )
     {
@@ -1637,11 +1640,13 @@ apr_status_t nx_date_to_rfc3164(char *datestr, apr_time_t timeval)
 
 /*
  * Similar to nx_date_to_rfc3164
- * Creates this format:  Sun 6 Nov 08:49:37 2011
- * datestr must be at least 23 bytes
+ * Creates this format:  Sun Nov  6 08:49:37 2011
+ * datestr must be at least 25 bytes
  */
 
-apr_status_t nx_date_to_rfc3164_wday_year(char *datestr, apr_time_t timeval)
+apr_status_t nx_date_to_rfc3164_wday_year(char *datestr,
+					  apr_size_t dstsize,
+					  apr_time_t timeval)
 {
     apr_status_t rv;
     apr_time_exp_t ds;
@@ -1654,6 +1659,7 @@ apr_status_t nx_date_to_rfc3164_wday_year(char *datestr, apr_time_t timeval)
     static const char *wdays[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
     ASSERT(datestr != NULL);
+    ASSERT(dstsize >= 25);
 
     if ( (rv = apr_time_exp_lt(&ds, timeval)) != APR_SUCCESS )
     {
@@ -1723,13 +1729,18 @@ apr_status_t nx_date_to_rfc3164_wday_year(char *datestr, apr_time_t timeval)
 
 
 
-/* dst requires at least 20 bytes */
-apr_status_t nx_date_to_iso(char *dst, apr_time_t t)
+/* dst requires at least 20 bytes
+ * Format is: 2000-01-01 00:00:00
+ */
+apr_status_t nx_date_to_iso(char *dst,
+			    apr_size_t dstsize,
+			    apr_time_t t)
 {
     apr_status_t rv;
     apr_time_exp_t exp;
 
     ASSERT(dst != NULL);
+    ASSERT(dstsize >= 20);
 
     if ( (rv = apr_time_exp_lt(&exp, t)) != APR_SUCCESS )
     {
@@ -1747,25 +1758,53 @@ apr_status_t nx_date_to_iso(char *dst, apr_time_t t)
 
 
 
-/* dst requires at least 30 bytes */
-apr_status_t nx_date_to_rfc5424(char *dst, apr_time_t t)
+/* dst requires at least 33 bytes
+ * Format for GMT: 2000-01-01T00:00:00.000000Z
+ * Format for localtime: 2000-01-01T00:00:00.000000+01:00
+ */
+apr_status_t nx_date_to_rfc5424(char *dst,
+				apr_size_t dstsize,
+				boolean gmt,
+				apr_time_t t)
 {
     apr_status_t rv;
     apr_time_exp_t exp;
 
     ASSERT(dst != NULL);
+    ASSERT(dstsize >= 33);
 
-    if ( (rv = apr_time_exp_gmt(&exp, t)) != APR_SUCCESS )
+    if ( gmt == TRUE )
     {
-	return ( rv );
+	if ( (rv = apr_time_exp_gmt(&exp, t)) != APR_SUCCESS )
+	{
+	    return ( rv );
+	}
+	if ( exp.tm_year < 1900 )
+	{
+	    exp.tm_year += 1900;
+	}
+    
+	apr_snprintf(dst, 30, "%d-%02d-%02dT%02d:%02d:%02d.%06dZ", exp.tm_year, exp.tm_mon + 1,
+		     exp.tm_mday, exp.tm_hour, exp.tm_min, exp.tm_sec, exp.tm_usec);
     }
-    if ( exp.tm_year < 1900 )
-    {
-	exp.tm_year += 1900;
+    else
+    { // localtime
+	if ( (rv = apr_time_exp_lt(&exp, t)) != APR_SUCCESS )
+	{
+	    return ( rv );
+	}
+	if ( exp.tm_year < 1900 )
+	{
+	    exp.tm_year += 1900;
+	}
+	apr_snprintf(dst, 33, "%d-%02d-%02dT%02d:%02d:%02d.%06d%+03d:%02d",
+		     exp.tm_year, exp.tm_mon + 1,
+		     exp.tm_mday, exp.tm_hour, exp.tm_min, exp.tm_sec,
+		     exp.tm_usec, exp.tm_gmtoff / 3600,
+		     (((exp.tm_gmtoff > 0) ? exp.tm_gmtoff : -exp.tm_gmtoff) /
+		      60) % 60);
     }
-    apr_snprintf(dst, 30, "%d-%02d-%02dT%02d:%02d:%02d.%dZ", exp.tm_year, exp.tm_mon + 1,
-		 exp.tm_mday, exp.tm_hour, exp.tm_min, exp.tm_sec, exp.tm_usec);
-
+    
     return ( APR_SUCCESS );
 }
 
@@ -1788,7 +1827,7 @@ apr_status_t nx_date_fix_year(apr_time_t *t)
 
     if ( exp.tm_year <= 70 )
     {
-	nx_date_to_iso(tmpstr, *t);
+	nx_date_to_iso(tmpstr, sizeof(tmpstr), *t);
 	if ( (rv = apr_time_exp_gmt(&exp2, apr_time_now())) != APR_SUCCESS )
 	{
 	    return ( rv );

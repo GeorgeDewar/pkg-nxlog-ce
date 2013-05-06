@@ -26,5 +26,4 @@
 <Route apache>
     Path	access_log => out
 </Route>
-
 ]]></programlisting>

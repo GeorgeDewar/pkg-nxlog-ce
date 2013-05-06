@@ -73,7 +73,7 @@ static nx_logdata_t *pm_transformer_process(nx_module_t *module, nx_logdata_t *l
 	    break;
 	case NX_PM_TRANSFORMER_FORMAT_SYSLOG_IETF:
 	case NX_PM_TRANSFORMER_FORMAT_SYSLOG_RFC5424:
-	    nx_logdata_to_syslog_rfc5424(logdata);
+	    nx_logdata_to_syslog_rfc5424(logdata, FALSE);
 	    break;
 	case NX_PM_TRANSFORMER_FORMAT_SYSLOG_SNARE:
 	    nx_logdata_to_syslog_snare(logdata, '\t', ' ');

@@ -39,3 +39,11 @@ else $success = FALSE;
 
 $subject = "--aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaxaaaaaaaxaaaaaaaaaaaaaaaaa--";
 if $subject =~ s/a/bbbbbbbbbbbbbbbbbbb/g {}
+
+$subject = "TEST/";
+if $subject =~ s/TEST\//TEST/g
+{
+   if $subject != "TEST" $success = FALSE;
+}
+else $success = FALSE;
+log_info($subject);

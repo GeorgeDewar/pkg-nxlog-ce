@@ -16,7 +16,7 @@ typedef struct nx_om_ssl_conf_t
     apr_port_t		port;
     apr_socket_t	*sock;
     boolean		connected;
-    int			reconnect_interval;
+    int			reconnect;
     nx_ssl_ctx_t	ssl_ctx;
     SSL			*ssl;
 } nx_om_ssl_conf_t;

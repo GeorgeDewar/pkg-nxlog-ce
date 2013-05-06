@@ -33,16 +33,23 @@
        Using the 'include' directive it is possible to specify a file which will be
        included in the current config file. Special care must be taken when specifing 
        files with relative filenames. The <link linkend="config_global_spooldir">SpoolDir</link>
-       directive will only take effect after the configuration was parsed, so files specified
-       with the 'include' directive are relative to the working directory where nxlog was
+       directive will only take effect after the configuration was parsed, so relative paths
+       specified with the 'include' directive are relative to the working directory where nxlog was
        started from.
+     </para>
+     <para>
+       The include directive also supports wildcarded file names (e.g. <filename>*.conf</filename>)
+       so that it is possible to include a set of files within a directory without the need
+       to explicitly list all.
      </para>
      <para>
        <example>
 	 <title>File inclusion example</title>
-	 <programlisting>
-include modules/module1.conf
-</programlisting>
+	 <programlisting>include modules/module1.conf</programlisting>
+       </example>
+       <example>
+	 <title>Config file inclusion with wildcards</title>
+	 <programlisting>include /etc/nxlog.d/*.conf</programlisting>
        </example>
      </para>
    </section>
@@ -273,6 +280,20 @@ define ACTION log_warning("dropping message"); drop();
 	 </varlistentry>
 
 	 <varlistentry>
+	   <term><anchor id="config_global_flowcontrol"/>FlowControl</term>
+	   <listitem>
+	     <simpara>
+	       This optional boolean directive specifies whether all input and processor modules
+	       should use flow-control.
+	       This defaults to TRUE.
+	       See the description of the module level
+	       <link linkend="config_module_flowcontrol">FlowControl</link> directive
+	       for more information.
+	     </simpara>
+	   </listitem>
+	 </varlistentry>
+
+	 <varlistentry>
 	   <term><anchor id="config_global_nofreeonexit"/>NoFreeOnExit</term>
 	   <listitem>
 	     <simpara>
@@ -367,6 +388,49 @@ define ACTION log_warning("dropping message"); drop();
 	   the binary is only loaded once but instantiated multiple times.
 	   Different module instances may have different configuration.
 	 </para>
+       </section>
+
+       <section id="config_module_flowcontrol">
+	 <title>FlowControl</title>
+	 <para>
+	   This optional boolean directive specifies whether the module should be using flow-control.
+	   This can be used only in <replaceable>Input</replaceable> and
+	   <replaceable>Processor</replaceable> modules.
+	   Flow-control is enabled by default if this directive is not sepcified.
+	   This module-level directive can be used to override the global
+	   <link linkend="config_global_flowcontrol">FlowControl</link> directive.
+	 </para>
+	 <para>
+	   When flow-control is in effect, a module (input or processor) which tries to forward
+	   log data to the next module in the route will be suspended if the next module cannot
+	   accept more data.
+	   For example if a network module (e.g. om_tcp) cannot forward logs because of a network
+	   error, the proceeding module in the route will be paused.
+	   When flow-control is disabled, the module will drop the log record if the queue
+	   of the next module in the route is full.
+	 </para>
+	 <para>
+	   Disabling flow-control can be also useful when more output modules are configured to store
+	   or forward log data. When flow-control is enabled, the output modules will only store/forward
+	   log data if all outputs are functional.
+	   Consider the case when log data is stored in a file using om_file and also forwarded
+	   over the network using om_tcp.
+	   When flow-control is enabled, a network disconnection will make the data flow stall
+	   and log data will not be written into the local file either. With flow-control disabled,
+	   nxlog will write log data to the file and will drop messages that the om_tcp network
+	   module cannot forward.
+	 </para>
+
+	 <note>
+	   <para>
+	     It is recommended to disable FlowControl when the <link linkend="im_uds">im_uds</link>
+	     module is used to collect local syslog from the <filename>/dev/log</filename> unix
+	     domain socket. Otherwise the syslog() system call will block in all programs which
+	     are trying to write to the system log if the Output queue becomes full and this will
+	     result in an unresponsive system.
+	   </para>
+	 </note>
+
        </section>
 
        <section id="config_module_schedule">

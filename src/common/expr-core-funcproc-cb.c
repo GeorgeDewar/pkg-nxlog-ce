@@ -10,7 +10,7 @@
 #include "expr-core-funcproc.h"
 #include "date.h"
 #include "statvar.h"
-#include "../core/ctx.h"
+#include "../core/nxlog.h"
 #include "../core/ctx.h"
 
 #define NX_LOGMODULE NX_LOGMODULE_CORE
@@ -594,7 +594,7 @@ void nx_expr_func__strftime(nx_expr_eval_ctx_t *eval_ctx UNUSED,
     if ( args[1].defined == FALSE )
     {
 	ASSERT(retval->string->bufsize > 20);
-	nx_date_to_iso(retval->string->buf, args[0].datetime);
+	nx_date_to_iso(retval->string->buf, retval->string->len, args[0].datetime);
 	retval->string->len = 20;
 	return;
     }
@@ -670,17 +670,41 @@ void nx_expr_func__hostname(nx_expr_eval_ctx_t *eval_ctx UNUSED,
 			    int32_t num_arg,
 			    nx_value_t *args UNUSED)
 {
+    nxlog_t *nxlog;
+
     ASSERT(retval != NULL);
     ASSERT(num_arg == 0);
 
     retval->type = NX_VALUE_TYPE_STRING;
-    retval->string = nx_string_new_size(150);
+    retval->string = nx_string_new_size(255);
     retval->defined = TRUE;
 
-    if ( apr_gethostname(retval->string->buf, (int) retval->string->bufsize, NULL) != APR_SUCCESS )
-    {
-	apr_cpystrn(retval->string->buf, "localhost", retval->string->bufsize);
-    }
+    nxlog = nxlog_get();
+    apr_cpystrn(retval->string->buf, nxlog->hostname.buf, retval->string->bufsize);
+
+    retval->string->len = (uint32_t) strlen(retval->string->buf);
+}
+
+
+
+void nx_expr_func__hostname_fqdn(nx_expr_eval_ctx_t *eval_ctx UNUSED,
+				 nx_module_t *module UNUSED,
+				 nx_value_t *retval,
+				 int32_t num_arg,
+				 nx_value_t *args UNUSED)
+{
+    nxlog_t *nxlog;
+
+    ASSERT(retval != NULL);
+    ASSERT(num_arg == 0);
+
+    retval->type = NX_VALUE_TYPE_STRING;
+    retval->string = nx_string_new_size(255);
+    retval->defined = TRUE;
+
+    nxlog = nxlog_get();
+    apr_cpystrn(retval->string->buf, nxlog->hostname_fqdn.buf, retval->string->bufsize);
+
     retval->string->len = (uint32_t) strlen(retval->string->buf);
 }
 

@@ -5,6 +5,9 @@
 
 #include <apr_lib.h>
 #include <apr_file_io.h>
+#include <apr_file_info.h>
+#include <apr_fnmatch.h>
+
 
 #include "../common/types.h"
 #include "../common/cfgfile.h"
@@ -167,7 +170,7 @@ static nx_directive_t *nx_cfg_parse_line(const char *l, nx_cfg_parser_ctx_t *ctx
     nx_directive_t *newdir = NULL;
     nx_cfgfile_t incfile;
     nx_cfg_parser_ctx_t cfg_ctx;
-    nx_directive_t *retval;
+    nx_directive_t *retval = NULL;
     nx_exception_t e;
 
     ASSERT(ctx != NULL);
@@ -184,6 +187,10 @@ static nx_directive_t *nx_cfg_parse_line(const char *l, nx_cfg_parser_ctx_t *ctx
 
     if ( strcasecmp(cmd_name, "include") == 0 )
     {
+        const char *idx = NULL;
+	const char * volatile fname = NULL;
+	const char * volatile dirname = NULL;
+
 	memset(&cfg_ctx, 0, sizeof(nx_cfg_parser_ctx_t));
 	cfg_ctx.pool = ctx->pool;
 	cfg_ctx.root = ctx->root;
@@ -192,20 +199,84 @@ static nx_directive_t *nx_cfg_parse_line(const char *l, nx_cfg_parser_ctx_t *ctx
 	cfg_ctx.cfg = &incfile;
 	cfg_ctx.defines = ctx->defines;
 
-	incfile.name = args;
-	try
-	{
-	    nx_cfg_open_file(&incfile, ctx->pool);
+	if ( apr_fnmatch_test(args) != 0 )
+	{ // wildcarded include
+	    apr_dir_t *dir;
+
+	    log_debug("Value specified for 'include' directive contains wildcards: '%s'", args);
+	    idx = strrchr(args, NX_DIR_SEPARATOR[0]);
+	    if ( idx == NULL )
+	    { // relative path with filename only
+		fname = args;
+		dirname = "./";
+		log_debug("A relative path was specified in 'include', checking directory entries under cwd");
+	    }
+	    else
+	    {
+		dirname = apr_pstrndup(ctx->pool, args, (apr_size_t) (idx - args));
+		fname = idx + 1;
+	    }
+
+	    try
+	    {
+	        apr_finfo_t finfo;
+
+		CHECKERR_MSG(apr_dir_open(&dir, dirname, ctx->pool),
+			     "couldn't open directory '%s' specified in the 'include' directive", dirname);
+		while ( apr_dir_read(&finfo, APR_FINFO_NAME | APR_FINFO_TYPE, dir) == APR_SUCCESS )
+		{
+		    log_debug("checking '%s' against wildcard '%s':", finfo.name, fname);
+		    if ( finfo.filetype == APR_REG )
+		    {
+#ifdef WIN32
+		        if ( apr_fnmatch(fname, finfo.name, APR_FNM_CASE_BLIND) == APR_SUCCESS )
+#else
+			if ( apr_fnmatch(fname, finfo.name, 0) == APR_SUCCESS )
+#endif
+			{
+			    log_debug("'%s' matches include wildcard '%s'", finfo.name, fname);
+			    incfile.name = apr_psprintf(ctx->pool, "%s"NX_DIR_SEPARATOR"%s", dirname, finfo.name);
+			    
+			    nx_cfg_open_file(&incfile, ctx->pool);
+		    
+			    if ( retval == NULL )
+			    { // first element in the first include file
+			        retval = nx_cfg_parse(&cfg_ctx);
+			    }
+			    else
+			    {
+			        nx_cfg_parse(&cfg_ctx);
+			    }
+			    ctx->current = cfg_ctx.current;
+			    ctx->next_is_child = cfg_ctx.next_is_child;
+			    ctx->defines = cfg_ctx.defines;
+			}
+		    }
+		}
+	    }
+	    catch(e)
+	    {
+	        rethrow_msg(e, "Couldn't process 'include' directive at %s:%d",
+			    ctx->cfg->name, ctx->cfg->line_num);
+	    }
 	}
-	catch(e)
+	else
 	{
-	    rethrow_msg(e, "Invalid 'include' directive at %s:%d",
-			ctx->cfg->name, ctx->cfg->line_num);
+	    incfile.name = args;
+	    try
+	    {
+	        nx_cfg_open_file(&incfile, ctx->pool);
+	    }
+	    catch(e)
+	    {
+	        rethrow_msg(e, "Invalid 'include' directive at %s:%d",
+			    ctx->cfg->name, ctx->cfg->line_num);
+	    }
+	    retval = nx_cfg_parse(&cfg_ctx);
+	    ctx->current = cfg_ctx.current;
+	    ctx->next_is_child = cfg_ctx.next_is_child;
+	    ctx->defines = cfg_ctx.defines;
 	}
-	retval = nx_cfg_parse(&cfg_ctx);
-	ctx->current = cfg_ctx.current;
-	ctx->next_is_child = cfg_ctx.next_is_child;
-	ctx->defines = cfg_ctx.defines;
 	return ( retval );
     }
 

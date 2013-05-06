@@ -99,6 +99,7 @@
                <Component Id='ProcessorModules' Guid='88D16508-59FC-11E0-B4E3-20CF305ACE5E'>
 		 <File Id='pmBlocker' Name='pm_blocker.dll' DiskId='1' Source='modules\processor\pm_blocker.dll'/>
 		 <File Id='pmBuffer' Name='pm_buffer.dll' DiskId='1' Source='modules\processor\pm_buffer.dll'/>
+		 <File Id='pmEvcorr' Name='pm_evcorr.dll' DiskId='1' Source='modules\processor\pm_evcorr.dll'/>
 		 <File Id='pmFilter' Name='pm_filter.dll' DiskId='1' Source='modules\processor\pm_filter.dll'/>
 		 <File Id='pmNorepeat' Name='pm_norepeat.dll' DiskId='1' Source='modules\processor\pm_norepeat.dll'/>
 		 <File Id='pmNull' Name='pm_null.dll' DiskId='1' Source='modules\processor\pm_null.dll'/>

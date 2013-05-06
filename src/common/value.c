@@ -476,7 +476,7 @@ char *nx_value_to_string(nx_value_t *value)
 		break;
 	    case NX_VALUE_TYPE_DATETIME:
 		retval = malloc(20);
-		CHECKERR_MSG(nx_date_to_iso(retval, value->datetime),
+		CHECKERR_MSG(nx_date_to_iso(retval, 20, value->datetime),
 			     "failed to convert time value to string");
 		break;
 	    case NX_VALUE_TYPE_BINARY:

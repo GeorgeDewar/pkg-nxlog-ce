@@ -2,14 +2,14 @@
 
 Summary:	nxlog is a modular, multi-threaded, high-performance log management solution
 Name:		nxlog-ce
-Version:	2.2.1017
+Version:	2.4.1054
 Release:	1
 License:	GPL/LGPL
 Group:		System Environment/Daemons
 Source:		nxlog-ce-%{version}.tar.gz
 Vendor:         nxsec.com
 URL:		http://nxlog.org
-BuildRequires:	apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel openssl-devel gcc libtool glibc-devel libgcc perl
+BuildRequires:	apr-devel pcre-devel openssl-devel libdbi-devel libcap-devel expat-devel openssl-devel gcc libtool glibc-devel libgcc perl perl-ExtUtils-Embed
 Prereq(post,preun):	/sbin/install-info
 Requires(pre):	shadow-utils, dialog, apr >= 1.2, libdbi >= 0.8.1, openssl, pcre, expat, zlib
 #BuildArchitectures:	x86_64
@@ -64,7 +64,7 @@ install -m 664 packaging/redhat/nxlog.conf $RPM_BUILD_ROOT/etc/nxlog.conf
 /usr/libexec/nxlog/modules/*
 /usr/share/doc/nxlog-ce/*
 /usr/share/nxlog-ce/*
-/usr/lib/perl5/*
+/usr/share/perl5/vendor_perl/Log/Nxlog.pm
 %config /etc/init.d/nxlog
 %config /etc/nxlog.conf
 

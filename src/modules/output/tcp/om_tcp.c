@@ -16,7 +16,7 @@
 
 #define OM_TCP_DEFAULT_PORT 514
 #define OM_TCP_DEFAULT_CONNECT_TIMEOUT (APR_USEC_PER_SEC * 30)
-#define OM_TCP_DEFAULT_RECONNECT_INTERVAL 10
+#define OM_TCP_MAX_RECONNECT_INTERVAL 200
 
 
 static void om_tcp_add_reconnect_event(nx_module_t *module)
@@ -26,13 +26,26 @@ static void om_tcp_add_reconnect_event(nx_module_t *module)
 
     omconf = (nx_om_tcp_conf_t *) module->config;
 
-    log_info("reconnecting in %d seconds", omconf->reconnect_interval);
+    if ( omconf->reconnect == 0 )
+    {
+	omconf->reconnect = 1;
+    }
+    else
+    {
+	omconf->reconnect *= 2;
+    }
+    if ( omconf->reconnect > OM_TCP_MAX_RECONNECT_INTERVAL )
+    { // limit
+	omconf->reconnect = OM_TCP_MAX_RECONNECT_INTERVAL;
+    }
+
+    log_info("reconnecting in %d seconds", omconf->reconnect);
     
     event = nx_event_new();
     event->module = module;
     event->delayed = TRUE;
     event->type = NX_EVENT_RECONNECT;
-    event->time = apr_time_now() + APR_USEC_PER_SEC * omconf->reconnect_interval;
+    event->time = apr_time_now() + APR_USEC_PER_SEC * omconf->reconnect;
     event->priority = module->priority;
     nx_event_add(event);
 }
@@ -201,7 +214,6 @@ static void om_tcp_config(nx_module_t *module)
     const nx_directive_t *curr;
     nx_om_tcp_conf_t *omconf;
     unsigned int port;
-    unsigned int reconnect_interval;
 
     ASSERT(module->directives != NULL);
     curr = module->directives;
@@ -236,15 +248,8 @@ static void om_tcp_config(nx_module_t *module)
 	}
 	else if ( strcasecmp(curr->directive, "Reconnect") == 0 )
 	{
-	    if ( omconf->reconnect_interval != 0 )
-	    {
-		nx_conf_error(curr, "Reconnect is already defined");
-	    }
-	    if ( sscanf(curr->args, "%u", &reconnect_interval) != 1 )
-	    {
-		nx_conf_error(curr, "invalid Reconnect: %s", curr->args);
-	    }
-	    omconf->reconnect_interval = (apr_port_t) reconnect_interval;
+	    log_warn("The 'Reconnect' directive at %s:%d has been deprecated",
+		     curr->filename, curr->line_num);
 	}
 	else if ( strcasecmp(curr->directive, "OutputType") == 0 )
 	{
@@ -284,10 +289,6 @@ static void om_tcp_config(nx_module_t *module)
 	omconf->port = OM_TCP_DEFAULT_PORT;
     }
 
-    if ( omconf->reconnect_interval == 0 )
-    {
-	omconf->reconnect_interval = OM_TCP_DEFAULT_RECONNECT_INTERVAL;
-    }
     omconf->connected = FALSE;
 }
 
@@ -298,6 +299,8 @@ static void om_tcp_connect(nx_module_t *module)
     nx_om_tcp_conf_t *omconf;
     apr_sockaddr_t *sa;
     apr_pool_t *pool = NULL;
+    int i;
+    apr_status_t rv;
 
     ASSERT(module->config != NULL);
 
@@ -319,9 +322,21 @@ static void om_tcp_connect(nx_module_t *module)
     
     log_info("connecting to %s:%d", omconf->host, omconf->port);
     
-    CHECKERR_MSG(apr_socket_connect(omconf->sock, sa),
-		 "couldn't connect to tcp socket on %s:%d", omconf->host, omconf->port);
+    for ( i = 0; i < 100; i++ )
+    {
+	rv = apr_socket_connect(omconf->sock, sa);
+	if ( APR_STATUS_IS_EAGAIN(rv) )
+	{
+	    apr_sleep(100);
+	}
+	else
+	{
+	    break;
+	}
+    }
+    CHECKERR_MSG(rv, "couldn't connect to tcp socket on %s:%d", omconf->host, omconf->port);
     omconf->connected = TRUE;
+    omconf->reconnect = 0;
     
     CHECKERR_MSG(apr_socket_opt_set(omconf->sock, APR_SO_NONBLOCK, 1),
 		 "couldn't set SO_NONBLOCK on tcp socket");
@@ -337,31 +352,18 @@ static void io_err_handler(nx_module_t *module, nx_exception_t *e)
     ASSERT(e != NULL);
     ASSERT(module != NULL);
 
-    if ( APR_STATUS_IS_ECONNREFUSED(e->code) ||
-	 APR_STATUS_IS_ECONNABORTED(e->code) ||
-	 APR_STATUS_IS_ECONNRESET(e->code) ||
-	 APR_STATUS_IS_ETIMEDOUT(e->code) ||
-	 APR_STATUS_IS_TIMEUP(e->code) ||
-	 APR_STATUS_IS_EHOSTUNREACH(e->code) ||
-	 APR_STATUS_IS_ENETUNREACH(e->code) ||
-	 APR_STATUS_IS_EOF(e->code) ||
-	 APR_STATUS_IS_EPIPE(e->code) ||
-	 (e->code == APR_SUCCESS) )
-    {
-	nx_module_stop_self(module);
-	om_tcp_stop(module);
-	om_tcp_add_reconnect_event(module);
-	rethrow(*e);
-    }
-    if ( APR_STATUS_IS_EAGAIN(e->code) )
-    {
-	nx_panic("got EAGAIN, bug in non-blocking code");
-    }
+    nx_module_stop_self(module);
+    om_tcp_stop(module);
+    om_tcp_add_reconnect_event(module);
+    rethrow(*e);
+
+/*
     //default:
     nx_module_stop_self(module);
     om_tcp_stop(module);
     rethrow_msg(*e, "fatal connection error, reconnection will not be attempted (statuscode: %d)",
 		e->code);
+*/
 }
 
 

@@ -22,6 +22,7 @@ fi
 ./tester.pl modules/processor/transformer/pm_transformer.txt || FAILED="$FAILED pm_transformer"
 ./tester.pl modules/processor/norepeat/pm_norepeat.txt || FAILED="$FAILED pm_norepeat"
 ./tester.pl modules/processor/pattern/pattern.txt || FAILED="$FAILED pm_pattern"
+./tester.pl modules/processor/evcorr/pm_evcorr.txt || FAILED="$FAILED pm_evcorr"
 ./tester.pl modules/extension/multiline/xm_multiline.txt || FAILED="$FAILED xm_multiline"
 ./tester.pl modules/extension/perl/xm_perl.txt || FAILED="$FAILED xm_perl"
 if test "x$FAILED" != "x"; then

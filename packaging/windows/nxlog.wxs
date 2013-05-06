@@ -3,7 +3,7 @@
 
 
   <Product Name='NXLOG-CE' Id='*' UpgradeCode='9E888A9C-5962-11E0-B4E3-20CF305ACE5E'
-    Language='1033' Codepage='1252' Version='2.2.1017' Manufacturer='nxsec.com'>
+    Language='1033' Codepage='1252' Version='2.4.1054' Manufacturer='nxsec.com'>
 
     <Package Id='*' Keywords='Installer' Description="NXLOG Installer" Manufacturer='nxsec.com'
 	     InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
@@ -12,8 +12,8 @@
     <Property Id='DiskPrompt' Value="NXLOG Installation [1]" />
 
     <Upgrade Id="9E888A9C-5962-11E0-B4E3-20CF305ACE5E">
-      <UpgradeVersion OnlyDetect="yes" Minimum="2.2.1017" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
-      <UpgradeVersion OnlyDetect="no" Maximum="2.2.1017" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="2.4.1054" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
+      <UpgradeVersion OnlyDetect="no" Maximum="2.4.1054" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
     </Upgrade>
 
     <InstallExecuteSequence>
@@ -99,6 +99,7 @@
                <Component Id='ProcessorModules' Guid='88D16508-59FC-11E0-B4E3-20CF305ACE5E'>
 		 <File Id='pmBlocker' Name='pm_blocker.dll' DiskId='1' Source='modules\processor\pm_blocker.dll'/>
 		 <File Id='pmBuffer' Name='pm_buffer.dll' DiskId='1' Source='modules\processor\pm_buffer.dll'/>
+		 <File Id='pmEvcorr' Name='pm_evcorr.dll' DiskId='1' Source='modules\processor\pm_evcorr.dll'/>
 		 <File Id='pmFilter' Name='pm_filter.dll' DiskId='1' Source='modules\processor\pm_filter.dll'/>
 		 <File Id='pmNorepeat' Name='pm_norepeat.dll' DiskId='1' Source='modules\processor\pm_norepeat.dll'/>
 		 <File Id='pmNull' Name='pm_null.dll' DiskId='1' Source='modules\processor\pm_null.dll'/>
