@@ -1,9 +1,9 @@
-nxlog-ce (2.4.1054-1) UNRELEASED; urgency=low
+nxlog-ce (2.4.1054-1) unstable; urgency=low
 
   * New upstream release.
   * Update debian/copyright to reflect missing Apache license references.
 
- -- Chris Lamb <lamby@debian.org>  Mon, 06 May 2013 20:44:37 +0100
+ -- Chris Lamb <lamby@debian.org>  Mon, 06 May 2013 20:47:30 +0100
 
 nxlog-ce (2.1.957-1) unstable; urgency=low
 
