@@ -94,7 +94,7 @@
 		  </listitem>
 		</varlistentry>
 	      </variablelist>
-	      <note>
+	      <note id="im_file_config_file_note">
 		<para>
 		  The backslash character '\' is used to escape the wildcard
 		  characters, unfortunately this is the same as the directory separator on Windows.

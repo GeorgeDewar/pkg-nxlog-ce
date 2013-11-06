@@ -1000,6 +1000,12 @@ apr_status_t nx_date_parse_iso(apr_time_t  *t,
 	    offs += get_tz_offset(date + offs, &gmtoff);
 	    have_tz = TRUE;
 	}
+	else if ( date[offs] == 'Z'  )
+	{
+	    offs++;
+	    gmtoff = 0;
+	    have_tz = TRUE;
+	}
     }
     // Loser format with single digit in month/day/hour/min/sec
     // 2011-5-29 0:3:21
@@ -1126,6 +1132,12 @@ apr_status_t nx_date_parse_iso(apr_time_t  *t,
 	if ( (date[offs] == '+') || (date[offs] == '-') )
 	{
 	    offs += get_tz_offset(date + offs, &gmtoff);
+	    have_tz = TRUE;
+	}
+	else if ( date[offs] == 'Z'  )
+	{
+	    offs++;
+	    gmtoff = 0;
 	    have_tz = TRUE;
 	}
     }

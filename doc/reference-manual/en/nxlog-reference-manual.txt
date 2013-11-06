@@ -1,10 +1,10 @@
-NXLOG Community Edition Reference Manual for v2.4.1054
+NXLOG Community Edition Reference Manual for v2.5.1089
 
 Botond Botyanszki
 
    <boti@nxlog.org>
 
-   Copyright © 2009-2012 nxsec.com
+   Copyright © 2009-2013 nxsec.com
 
    2009-12-15
      __________________________________________________________
@@ -95,6 +95,7 @@ Botond Botyanszki
               CSV (xm_csv)
               JSON (xm_json)
               XML (xm_xml)
+              Key-value pairs (xm_kvp)
               GELF (xm_gelf)
               Character set conversion (xm_charconv)
               File operations (xm_fileop)
@@ -313,62 +314,66 @@ Botond Botyanszki
    6.3. Converting Windows EventLog to Syslog encapsulated JSON
    6.4. Syslog to XML format conversion
    6.5. Converting Windows EventLog to Syslog encapsulated XML
-   6.6. Sending Windows EventLog to Graylog2 in GELF
-   6.7. Parsing a CSV file and sending it to Graylog2 in GELF
-   6.8. Character set autodetection of various input encodings
-   6.9. Rotation of the internal LogFile
-   6.10. Parsing DICOM logs
-   6.11. Multi-line messages with a fixed string header
-   6.12. Multi-line messages with fixed line count
-   6.13. Multi-line messages with a syslog header
-   6.14. Collecting BSD style syslog messages over UDP
-   6.15. Collecting IETF style syslog messages over UDP
-   6.16. Collecting both IETF and BSD style syslog messages over
+   6.6. Simple KVP parsing
+   6.7. Parsing KVPs in Cisco ACS syslog
+   6.8. Parsing KVPs in Sidewinder logs
+   6.9. Parsing URL request parameters in Apache access logs
+   6.10. Sending Windows EventLog to Graylog2 in GELF
+   6.11. Parsing a CSV file and sending it to Graylog2 in GELF
+   6.12. Character set autodetection of various input encodings
+   6.13. Rotation of the internal LogFile
+   6.14. Parsing DICOM logs
+   6.15. Multi-line messages with a fixed string header
+   6.16. Multi-line messages with fixed line count
+   6.17. Multi-line messages with a syslog header
+   6.18. Collecting BSD style syslog messages over UDP
+   6.19. Collecting IETF style syslog messages over UDP
+   6.20. Collecting both IETF and BSD style syslog messages over
           the same UDP port
 
-   6.17. Collecting IETF style syslog messages over TLS/SSL
-   6.18. Forwarding IETF syslog over TCP
-   6.19. Conditional rewrite of the syslog facility - version 1
-   6.20. Conditional rewrite of the syslog facility - version 2
-   6.21. nxlog acting as a cron daemon
-   6.22. Sending email alerts
-   6.23. Using the built-in perl interpreter
-   6.24. Reading from a MySQL database
-   6.25. Emulating im_file
-   6.26. Forwarding logs from a file to a remote host
-   6.27. Forwaring internal messages over syslog udp
-   6.28. Storing raw kernel logs into a file
-   6.29. Using the im_mark module
-   6.30. Forwarding EventLogs from a windows machine to a remote
+   6.21. Collecting IETF style syslog messages over TLS/SSL
+   6.22. Forwarding IETF syslog over TCP
+   6.23. Conditional rewrite of the syslog facility - version 1
+   6.24. Conditional rewrite of the syslog facility - version 2
+   6.25. nxlog acting as a cron daemon
+   6.26. Sending email alerts
+   6.27. Using the built-in perl interpreter
+   6.28. Reading from a MySQL database
+   6.29. Emulating im_file
+   6.30. Forwarding logs from a file to a remote host
+   6.31. Forwaring internal messages over syslog udp
+   6.32. Storing raw kernel logs into a file
+   6.33. Using the im_mark module
+   6.34. Forwarding EventLogs from a windows machine to a remote
           host
 
-   6.31. Forwarding EventLogs from a windows machine to a remote
+   6.35. Forwarding EventLogs from a windows machine to a remote
           host
 
-   6.32. Reading binary data forwarded from another nxlog agent
-   6.33. Using the im_tcp module
-   6.34. Using the im_udp module
-   6.35. Using the im_uds module
-   6.36. Using the pm_blocker module
-   6.37. Using a memory buffer to protect against udp message loss
-   6.38. Correlation rules
-   6.39. Dropping messages conditionally
-   6.40. Filtering messages
-   6.41. Filtering out duplicated messages
-   6.42. A simple pattern database
-   6.43. Using the pm_pattern module
-   6.44. Using the pm_transformer module
-   6.45. Testing buffering with the om_blocker module
-   6.46. Storing syslog in a PostgreSQL database
-   6.47. Storing logs in a MySQL database
-   6.48. Piping logs to an external program
-   6.49. Storing raw syslog messages into a file
-   6.50. File rotation based on size
-   6.51. Sending logs over HTTPS
-   6.52. Writing nxlog binary data to another nxlog agent
-   6.53. Transferring raw logs over TCP
-   6.54. Sending raw syslog over udp
-   6.55. Using the om_uds module
+   6.36. Reading binary data forwarded from another nxlog agent
+   6.37. Using the im_tcp module
+   6.38. Using the im_udp module
+   6.39. Using the im_uds module
+   6.40. Using the pm_blocker module
+   6.41. Using a memory buffer to protect against udp message loss
+   6.42. Correlation rules
+   6.43. Dropping messages conditionally
+   6.44. Filtering messages
+   6.45. Filtering out duplicated messages
+   6.46. A simple pattern database
+   6.47. Using the pm_pattern module
+   6.48. Using the pm_transformer module
+   6.49. Testing buffering with the om_blocker module
+   6.50. Storing syslog in a PostgreSQL database
+   6.51. Storing logs in a MySQL database
+   6.52. Piping logs to an external program
+   6.53. Storing raw syslog messages into a file
+   6.54. File rotation based on size
+   6.55. Sending logs over HTTPS
+   6.56. Writing nxlog binary data to another nxlog agent
+   6.57. Transferring raw logs over TCP
+   6.58. Sending raw syslog over udp
+   6.59. Using the om_uds module
    8.1. Parsing tomcat logs into fields
    8.2. Cisco Secure Access Control Server
    8.3. Cisco PIX and Cisco ASA
@@ -1887,6 +1892,20 @@ $Limit = 42M;
                 hexadecimal number. For example the line-feed
                 character can also be expressed as \x0A.
 
+Note
+
+          String literals in single quotes do not process the
+          escape sequences. "\n" is a single character (LF) while
+          '\n' is two characters. The following comparison is
+          FALSE for this reason:
+
+"\n" == '\n'
+
+          Extra care should be taken with the backslash when using
+          double quoted string literals to specify file paths on
+          windows. See this note for the file directive of im_file
+          about the possible complications.
+
           Example 5.4. Setting a string value
 
 $Message = "Test message";
@@ -3362,6 +3381,7 @@ Chapter 6. Modules
         CSV (xm_csv)
         JSON (xm_json)
         XML (xm_xml)
+        Key-value pairs (xm_kvp)
         GELF (xm_gelf)
         Character set conversion (xm_charconv)
         File operations (xm_fileop)
@@ -3549,6 +3569,7 @@ Specifying characters for quote, escape and delimiter
 
 Delimiter ;
 
+   Control characters
           The following non-printable characters can be specified
           with escape sequences:
 
@@ -3954,6 +3975,501 @@ egoryNumber><RecordNumber>6791</RecordNumber>\
 <Message>The nxlog service entered the running state. </Message><EventRe
 ceivedTime>2012-03-08 15:12:14</EventReceivedTime></Event>
 
+Key-value pairs (xm_kvp)
+
+   This module provides functions and procedures to process data
+   formatted as key-value pairs (KVPs), also commonly called as
+   name-value pairs. The module can both parse and generate data
+   formatted as key-value pairs.
+
+   It is quite common to have a different set of keys in each log
+   line in the form of key-value formatted messages. Extracting
+   values from such logs using regular expressions can be quite
+   cumbersome. The xm_kvp extension module solves this problem by
+   automating this process.
+
+   Log messages containing key-value pairs typically look like the
+   following:
+key1: value1, key2: value2, key42: value42
+key1="value 1"; key2="value 2"
+Application=smtp, Event='Protocol Conversation', status='Client Request'
+, ClientRequest='HELO 1.2.3.4'
+
+   I.e. keys are usually separated from the value using an equal
+   sign (=) or the colon (:) and the key-value pairs are delimited
+   with a comma (,), semicolon (;) or space. In addition, values
+   and keys may be quoted and can contain escaping. The module
+   will try to guess the format or this can be explicitly
+   specified using the configuration directives listed below.
+
+Note
+
+   It is possible to use more than one xm_kvp module instance with
+   different options in order to support different KVP formats at
+   the same time. For this reason, functions and procedures
+   exported by the module are public and must be referenced by the
+   module instance name.
+
+Configuration
+
+   In addition to the common module directives, the following can
+   be used to configure the xm_kvp module instance.
+
+   KeyQuoteChar
+          This optional directive takes a single character (see
+          below) as argument to specify the quote character used
+          to enclose key names. If this directive is not
+          specified, the module will accept keys quoted in single
+          and double quotes in addition to unquoted keys.
+
+   ValueQuoteChar
+          This optional directive takes a single character (see
+          below) as argument to specify the quote character used
+          to enclose values. If this directive is not specified,
+          the module will accept keys quoted in single and double
+          quotes in addition to unquoted values. Normally, but not
+          neccessarily, quotation is used when the value contains
+          space and or the KVDelimiter character.
+
+   EscapeChar
+          This optional directive takes a single character (see
+          below) as argument to specify the escape character used
+          to escape special characters. The escape character is
+          used to prefix the following characters: the EscapeChar
+          itself and the KeyQuoteChar or the ValueQuoteChar. If
+          EscapeControl is TRUE, the \n, \r, \t, \b (newline,
+          carriage-return, tab, backspace) control characters are
+          also escaped. If this directive is not specified, the
+          default escape character is the backslash character (\).
+
+   KVDelimiter
+          This optional directive takes a single character (see
+          below) as argument to specify the delimiter character
+          used to separate the key from the value. If this
+          directive is not specified, the module will try to guess
+          the delimiter used which can be either a colon (:) or
+          the equal-sign (=).
+
+   KVPDelimiter
+          This optional directive takes a single character (see
+          below) as argument to specify the delimiter character
+          used to separate the key-value pairs. If this directive
+          is not specified, the module will try to guess the
+          delimiter used which can be either a comma (,) semicolon
+          (;) or the space.
+
+   EscapeControl
+          If this optional boolean directive is set to TRUE,
+          control characters are also escaped. See the EscapeChar
+          directive for details. If this directive is not
+          specified, control characters are escaped by default.
+          Note that this is necessary in order to allow single
+          line KVP field lists which contain line-breaks.
+
+Specifying characters for quote, escape and delimiter
+
+   The ValueQuoteChar, KeyQuoteChar, EscapeChar, KVDelimiter and
+   KVPDelimiter can be specified in different ways, mainly due to
+   the nature of the config file format. As of this writing, the
+   module does not support multi character strings for these
+   parameters.
+
+   Unquoted single character
+          Printable characters can be specified as an unquoted
+          character, except for the backslash '\'. Example:
+
+Delimiter ;
+
+   Control characters
+          The following non-printable characters can be specified
+          with escape sequences:
+
+        \a
+                audible alert (bell)
+
+        \b
+                backspace
+
+        \t
+                horizontal tab
+
+        \n
+                newline
+
+        \v
+                vertical tab
+
+        \f
+                formfeed
+
+        \r
+                carriage return
+
+          To use TAB delimiting:
+
+KVPDelimiter \t
+
+   A character in single quotes
+          The config parser strips whitespace, so it is not
+          possible to define space as the delimiter unless it is
+          enclosed within quotes:
+
+KVPDelimiter ' '
+
+          Printable characters can also be enclosed:
+
+KVPDelimiter ';'
+
+          The backslash can be specified when enclosed within
+          quotes:
+
+EscapeChar '\'
+
+   A character in double quotes
+          Double quotes can be used similarly to single quotes:
+
+KVPDelimiter " "
+
+          The backslash can be specified when enclosed within
+          double quotes:
+
+EscapeChar "\"
+
+Functions and procedures exported by xm_kvp
+
+Functions exported by xm_kvp
+
+   string to_kvp();
+
+        description
+                Convert the internal fields to a single KVP
+                formatted string.
+
+        return type
+                string
+
+Procedures exported by xm_kvp
+
+   parse_kvp();
+
+        description
+                Parse the raw_event field as key-value pairs and
+                populate the internal fields using the key names.
+
+   parse_kvp(string source);
+
+        description
+                Parse the given string key-value pairs and
+                populate the internal fields using the key names.
+
+        arguments
+
+              source
+                      type: string
+
+   to_kvp();
+
+        description
+                Format the internal fields as KVP and put this
+                into the 'raw_event' field.
+
+   reset_kvp();
+
+        description
+                Reset the kvp parser so that the autodetected
+                KeyQuoteChar, ValueQouteChar, KVDelimiter and
+                KVPDelimiter characters can be detected again.
+
+Configuration examples
+
+   The following examples show various use-cases for parsing KVPs
+   either embedded in another encapsulating format (e.g. syslog)
+   or simply on their own. To do something with the logs we
+   convert these to JSON , though obviously there are dozens of
+   other options. These examples use files for input and output,
+   this can be also changed to use UDP syslog or some other
+   protocol.
+
+   Example 6.6. Simple KVP parsing
+
+   The following two lines of input illustrate a simple KVP format
+   where each line consists of various keys and values assigned to
+   them.
+Name=John, Age=42, Weight=84, Height=142
+Name=Mike, Weight=64, Age=24, Pet=dog, Height=172
+
+
+   To process this input we use the following configuration that
+   will ignore lines starting with a hash (#) and parses others as
+   key value pairs. The parsed fields can be used in nxlog
+   expressions. In this example we insert a new field named
+   $Overweight and set its value to TRUE if the conditions are
+   met. Finally a few automatically added fields are removed and
+   the log is then converted to JSON.
+<Extension kvp>
+    Module       xm_kvp
+    KVPDelimiter ,
+    KVDelimiter  =
+    EscapeChar   \\
+</Extension>
+
+<Extension json>
+    Module       xm_json
+</Extension>
+
+<Input in>
+    Module       im_file
+    File         "modules/extension/kvp/xm_kvp5.in"
+    SavePos      FALSE
+    ReadFromLast FALSE
+    Exec         if $raw_event =~ /^#/ drop(); \
+                 else \
+                 { \
+                   kvp->parse_kvp(); \
+                   delete($EventReceivedTime); \
+                   delete($SourceModuleName); \
+                   delete($SourceModuleType); \
+                   if ( integer($Weight) > integer($Height) - 100 ) $Ove
+rweight = TRUE; \
+                   to_json();\
+                 }
+</Input>
+
+<Output out>
+    Module       om_file
+    File         'tmp/output'
+</Output>
+
+<Route 1>
+    Path         in => out
+</Route>
+
+
+   The output produced by the above configuration is as follows:
+{"Name":"John","Age":"42","Weight":"84","Height":"142","Overweight":true
+}
+{"Name":"Mike","Weight":"64","Age":"24","Pet":"dog","Height":"172"}
+
+
+   Example 6.7. Parsing KVPs in Cisco ACS syslog
+
+   The following line is from a Cisco ACS source:
+<38>Oct 16 21:01:29 10.0.1.1 CisACS_02_FailedAuth 1k1fg93nk 1 0 Message-
+Type=Authen failed,User-Name=John,NAS-IP-Address=10.0.1.2,AAA Server=acs
+01
+<38>Oct 16 21:01:31 10.0.1.1 CisACS_02_FailedAuth 2k1fg63nk 1 0 Message-
+Type=Authen failed,User-Name=Foo,NAS-IP-Address=10.0.1.2,AAA Server=acs0
+1
+
+
+   The format is syslog which contains a set of values present in
+   each record such as the category name and an additional set of
+   KVPs. The following configuration can be used to process this
+   and convert it to JSON:
+include common.conf
+<Extension json>
+    Module      xm_json
+</Extension>
+
+<Extension syslog>
+    Module      xm_syslog
+</Extension>
+
+<Extension kvp>
+    Module      xm_kvp
+    KVDelimiter =
+    KVPDelimiter ,
+</Extension>
+
+<Input in>
+    Module      im_file
+    SavePos     FALSE
+    ReadFromLast FALSE
+    File        "modules/extension/kvp/cisco_acs.in"
+    Exec        parse_syslog_bsd();
+    Exec        if ( $Message =~ /^CisACS_(\d\d)_(\S+) (\S+) (\d+) (\d+)
+ (.*)$/ ) \
+                { \
+                   $ACSCategoryNumber = $1; \
+                   $ACSCategoryName = $2; \
+                   $ACSMessageId = $3; \
+                   $ACSTotalSegments = $4; \
+                   $ACSSegmentNumber = $5; \
+                   $Message = $6; \
+                   kvp->parse_kvp($Message); \
+                } \
+                else log_warning("does not match: " + to_json());
+</Input>
+
+<Output out>
+    Module      om_file
+    File        "tmp/output"
+    Exec        delete($EventReceivedTime);
+    Exec        to_json();
+</Output>
+
+<Route 1>
+    Path        in => out
+</Route>
+
+
+   The converted JSON result is shown below:
+{"SourceModuleName":"in","SourceModuleType":"im_file","SyslogFacilityVal
+ue":4,"SyslogFacility":"AUTH","SyslogSeverityValue":6,"SyslogSeverity":"
+INFO","SeverityValue":2,"Severity":"INFO","Hostname":"10.0.1.1","EventTi
+me":"2013-10-16 21:01:29","Message":"Message-Type=Authen failed,User-Nam
+e=John,NAS-IP-Address=10.0.1.2,AAA Server=acs01","ACSCategoryNumber":"02
+","ACSCategoryName":"FailedAuth","ACSMessageId":"1k1fg93nk","ACSTotalSeg
+ments":"1","ACSSegmentNumber":"0","Message-Type":"Authen failed","User-N
+ame":"John","NAS-IP-Address":"10.0.1.2","AAA Server":"acs01"}
+{"SourceModuleName":"in","SourceModuleType":"im_file","SyslogFacilityVal
+ue":4,"SyslogFacility":"AUTH","SyslogSeverityValue":6,"SyslogSeverity":"
+INFO","SeverityValue":2,"Severity":"INFO","Hostname":"10.0.1.1","EventTi
+me":"2013-10-16 21:01:31","Message":"Message-Type=Authen failed,User-Nam
+e=Foo,NAS-IP-Address=10.0.1.2,AAA Server=acs01","ACSCategoryNumber":"02"
+,"ACSCategoryName":"FailedAuth","ACSMessageId":"2k1fg63nk","ACSTotalSegm
+ents":"1","ACSSegmentNumber":"0","Message-Type":"Authen failed","User-Na
+me":"Foo","NAS-IP-Address":"10.0.1.2","AAA Server":"acs01"}
+
+
+   Example 6.8. Parsing KVPs in Sidewinder logs
+
+   The following line is from a Sidewinder log source:
+date="May 5 14:34:40 2009 MDT",fac=f_mail_filter,area=a_kmvfilter,type=t
+_mimevirus_reject,pri=p_major,pid=10174,ruid=0,euid=0,pgid=10174,logid=0
+,cmd=kmvfilter,domain=MMF1,edomain=MMF1,message_id=(null),srcip=66.74.18
+4.9,mail_sender=<habuzeid6@…>,virus_name=W32/Netsky.c@MM!zip,reason="Mes
+sage scan detected a Virus in msg Unknown, message being Discarded, and
+not quarantined"
+
+
+   This can be parsed and converted to JSON with the following
+   configuration:
+<Extension kvp>
+    Module      xm_kvp
+    KVPDelimiter ,
+    KVDelimiter =
+    EscapeChar \\
+    ValueQouteChar "
+</Extension>
+
+<Extension json>
+    Module      xm_json
+</Extension>
+
+<Input in>
+    Module      im_file
+    File        "modules/extension/kvp/sidewinder.in"
+    SavePos     FALSE
+    ReadFromLast FALSE
+    Exec        kvp->parse_kvp(); delete($EventReceivedTime); to_json();
+</Input>
+
+<Output out>
+    Module      om_file
+    File        'tmp/output'
+</Output>
+
+<Route 1>
+    Path        in => out
+</Route>
+
+
+   The converted JSON result is shown below:
+{"SourceModuleName":"in","SourceModuleType":"im_file","date":"May 5 14:3
+4:40 2009 MDT","fac":"f_mail_filter","area":"a_kmvfilter","type":"t_mime
+virus_reject","pri":"p_major","pid":"10174","ruid":"0","euid":"0","pgid"
+:"10174","logid":"0","cmd":"kmvfilter","domain":"MMF1","edomain":"MMF1",
+"message_id":"(null)","srcip":"66.74.184.9","mail_sender":"<habuzeid6@
+…>","virus_name":"W32/Netsky.c@MM!zip","reason":"Message scan detected a
+ Virus in msg Unknown, message being Discarded, and not quarantined"}
+
+
+   Example 6.9. Parsing URL request parameters in Apache access
+   logs
+
+   URLs in HTTP requests frequently contain URL parameters which
+   are a special kind of key-value pairs delimited by the
+   ampersand (&). Here is an example of two HTTP requests logged
+   by the Apache web server in the Combined Log Format:
+192.168.1.1 - foo [11/Jun/2013:15:44:34 +0200] "GET /do?action=view&obj_
+id=2 HTTP/1.1" 200 1514 "https://localhost" "Mozilla/5.0 (X11; Linux x86
+_64; rv:17.0) Gecko/17.0 Firefox/17.0"
+192.168.1.1 - - [11/Jun/2013:15:44:44 +0200] "GET /do?action=delete&obj_
+id=42 HTTP/1.1" 401 788 "https://localhost" "Mozilla/5.0 (X11; Linux x86
+_64; rv:17.0) Gecko/17.0 Firefox/17.0"
+
+
+   The following configuration file parses the access log and
+   extracts all the fields. In this case the request parameters
+   are extracted into the HTTPParams field using a regular
+   expression. This field is then further parsed using the KVP
+   parser. At the end of the processing all fields are converted
+   to the KVP format using the to_kvp() procedure of the kvp2
+   instance.
+<Extension kvp>
+    Module      xm_kvp
+    KVPDelimiter &
+    KVDelimiter =
+</Extension>
+
+<Extension kvp2>
+    Module      xm_kvp
+    KVPDelimiter ;
+    KVDelimiter =
+</Extension>
+
+<Input in>
+    Module      im_file
+    File        "modules/extension/kvp/apache_url.in"
+    SavePos     FALSE
+    ReadFromLast FALSE
+    Exec    if $raw_event =~ /^(\S+) (\S+) (\S+) \[([^\]]+)\] \"(\S+) (.
++) HTTP.\d\.\d\" (\d+) (\d+) \"([^\"]+)\" \"([^\"]+)\"/\
+                { \
+                  $Hostname = $1; \
+                  if $3 != '-' $AccountName = $3; \
+                  $EventTime = parsedate($4); \
+                  $HTTPMethod = $5; \
+                  $HTTPURL = $6; \
+                  $HTTPResponseStatus = $7; \
+                  $FileSize = $8; \
+                  $HTTPReferer = $9; \
+                  $HTTPUserAgent = $10; \
+                  if $HTTPURL =~ /\?(.+)/ { $HTTPParams = $1; } \
+                  kvp->parse_kvp($HTTPParams); \
+                  delete($EventReceivedTime); \
+                  kvp2->to_kvp(); \
+                }
+</Input>
+
+<Output out>
+    Module      om_file
+    File        'tmp/output'
+</Output>
+
+<Route 1>
+    Path        in => out
+</Route>
+
+
+   The two request parameters action and obj_id then appear at the
+   end of the KVP formated lines.
+SourceModuleName=in;SourceModuleType=im_file;Hostname=192.168.1.1;Accoun
+tName=foo;EventTime=2013-06-11 15:44:34;HTTPMethod=GET;HTTPURL=/do?actio
+n=view&obj_id=2;HTTPResponseStatus=200;FileSize=1514;HTTPReferer=https:/
+/localhost;HTTPUserAgent='Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko
+/17.0 Firefox/17.0';HTTPParams=action=view&obj_id=2;action=view;obj_id=2
+;
+SourceModuleName=in;SourceModuleType=im_file;Hostname=192.168.1.1;EventT
+ime=2013-06-11 15:44:44;HTTPMethod=GET;HTTPURL=/do?action=delete&obj_id=
+42;HTTPResponseStatus=401;FileSize=788;HTTPReferer=https://localhost;HTT
+PUserAgent='Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/17.0 Firefox/
+17.0';HTTPParams=action=delete&obj_id=42;action=delete;obj_id=42;
+
+
+   Note that url escaping is not handled.
+
 GELF (xm_gelf)
 
    This module provides an output writer function which can be
@@ -3990,7 +4506,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.6. Sending Windows EventLog to Graylog2 in GELF
+   Example 6.10. Sending Windows EventLog to Graylog2 in GELF
 
    The following configuration reads the Windows EventLog and
    sends it to the Graylog2 server in GELF format.
@@ -4015,7 +4531,7 @@ Configuration examples
 </Route>
 
 
-   Example 6.7. Parsing a CSV file and sending it to Graylog2 in
+   Example 6.11. Parsing a CSV file and sending it to Graylog2 in
    GELF
 
    Using the following config file nxlog will read a CSV file
@@ -4121,7 +4637,7 @@ Configuration examples
    lines and using autodetection the module normalizes output to
    utf-8.
 
-   Example 6.8. Character set autodetection of various input
+   Example 6.12. Character set autodetection of various input
    encodings
 
 <Extension charconv>
@@ -4571,11 +5087,12 @@ Procedures exported by xm_fileop
 
 Configuration examples
 
-   Example 6.9. Rotation of the internal LogFile
+   Example 6.13. Rotation of the internal LogFile
 
    This example shows how to rotate the internal logfile based on
    time and size.
-define LOGFILE "/var/log/nxlog/nxlog.log"
+#define LOGFILE C:\Program Files\nxlog\data\nxlog.log
+define LOGFILE /var/log/nxlog/nxlog.log
 
 <Extension fileop>
     Module      xm_fileop
@@ -4584,14 +5101,14 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
 er than 1Mb
     <Schedule>
         Every   1 hour
-        Exec    if (file_size(%LOGFILE%) >= 1M) file_cycle(%LOGFILE%, 2)
-;
+        Exec    if (file_size('%LOGFILE%') >= 1M) file_cycle('%LOGFILE%'
+, 2);
     </Schedule>
 
     # Rotate our log file every week on sunday at midnight
     <Schedule>
         When    @weekly
-        Exec    file_cycle(%LOGFILE%, 2);
+        Exec    file_cycle('%LOGFILE%', 2);
     </Schedule>
 </Extension>
 
@@ -4604,11 +5121,17 @@ Multi-line message parser (xm_multiline)
    spanning multiple lines confuse simple linebased parsers which
    treat every line as a separate event.
 
-   Usually each multi-line message has a header (e.g. timestamp +
-   severity) or they can be fixed in line count. This information
-   allows the message to be reconstructed, i.e. lines concatenated
-   which belong to a single event. The xm_multiline module works
-   exactly this way.
+   Multi-line events have one or more of the following properties:
+     * The first line has a header (e.g. timestamp + severity).
+     * The first line has a header and there is closing character
+       sequence marking the end.
+     * The line cont in the message can be variable (one or more)
+       or the message can have a fixed line count.
+
+   This information allows the message to be reconstructed, i.e.
+   lines to be concatenated which belong to a single event. This
+   is how the xm_multiline module can join together multiple lines
+   into a single message.
 
    The name of the xm_multiline module instance can be used by
    input modules as the input reader specified with the InputType
@@ -4657,8 +5180,15 @@ Note
           unfortunately these solutions are not perfect either
           (though these may be implemented in a later version). If
           this behaviour is unacceptable, consider using some kind
-          of an encapsulation method (JSON, XML, RFC5425, etc) if
-          possible.
+          of an encapsulation method (JSON, XML, RFC5425, etc) or
+          use and end marker with EndLine if possible.
+
+   EndLine
+          This is similar to the HeaderLine directive. This
+          optional directive also takes a string or a regular
+          expression literal to be matched against each line. When
+          the match is successful the message is considered
+          complete and is emitted.
 
    FixedLineCount
           This directive takes a positive integer number defining
@@ -4684,7 +5214,7 @@ Note
 
 Configuration examples
 
-   Example 6.10. Parsing DICOM logs
+   Example 6.14. Parsing DICOM logs
 
    Each log message has a header (TIMESTAMP INTEGER SEVERITY)
    which is used as the message boundary. A regular expression is
@@ -4762,7 +5292,7 @@ Accepted Extended Negotiation: none
   20  20  20  20  20  20  20  20  20  20  00  00  00  00  00  00
 
 
-   Example 6.11. Multi-line messages with a fixed string header
+   Example 6.15. Multi-line messages with a fixed string header
 
    The following configuration will process messages having a
    fixed string header containing dashes. Each event is then
@@ -4820,7 +5350,7 @@ ccccccccccccccccccccccccccccccccccccc
 dddd
 
 
-   Example 6.12. Multi-line messages with fixed line count
+   Example 6.16. Multi-line messages with fixed line count
 
    The following configuration will process messages having a
    fixed line count of 4. Lines containing only whitespace are
@@ -4884,7 +5414,7 @@ dddd
 4werwerwrwe
 
 
-   Example 6.13. Multi-line messages with a syslog header
+   Example 6.17. Multi-line messages with a syslog header
 
    Multi-line messages are frequently logged over syslog and they
    end up in log files. Unfortunately from the result it looks
@@ -5330,7 +5860,7 @@ Fields generated by xm_syslog
 
 Configuration examples
 
-   Example 6.14. Collecting BSD style syslog messages over UDP
+   Example 6.18. Collecting BSD style syslog messages over UDP
 
    To collect BSD style syslog messages over UDP, use the
    parse_syslog_bsd() procedure coupled with the im_udp module as
@@ -5355,7 +5885,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-   Example 6.15. Collecting IETF style syslog messages over UDP
+   Example 6.19. Collecting IETF style syslog messages over UDP
 
    To collect IETF style syslog messages over UDP as defined by
    RFC 5424 and RFC 5426, use the parse_syslog_ietf() procedure
@@ -5382,7 +5912,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-   Example 6.16. Collecting both IETF and BSD style syslog
+   Example 6.20. Collecting both IETF and BSD style syslog
    messages over the same UDP port
 
    To collect IETF and BSD style syslog messages over UDP, use the
@@ -5413,7 +5943,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-   Example 6.17. Collecting IETF style syslog messages over
+   Example 6.21. Collecting IETF style syslog messages over
    TLS/SSL
 
    To collect IETF style syslog messages over TLS/SSL as defined
@@ -5447,7 +5977,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-   Example 6.18. Forwarding IETF syslog over TCP
+   Example 6.22. Forwarding IETF syslog over TCP
 
    The following configuration uses the to_syslog_ietf() procedure
    to convert input to IETF syslog and forward it over TCP:
@@ -5482,7 +6012,7 @@ ime="2012-01-01 17:15:52" TestField="test value"] test message
    filled by the syslog parser - are added to the structured data
    part.
 
-   Example 6.19. Conditional rewrite of the syslog facility -
+   Example 6.23. Conditional rewrite of the syslog facility -
    version 1
 <Extension syslog>
     Module      xm_syslog
@@ -5507,7 +6037,7 @@ value("error");
     Path        in => fileout
 </Route>
 
-   Example 6.20. Conditional rewrite of the syslog facility -
+   Example 6.24. Conditional rewrite of the syslog facility -
    version 2
 
    The following example does almost the same thing as the
@@ -5607,7 +6137,7 @@ Procedures exported by xm_exec
 
 Configuration examples
 
-   Example 6.21. nxlog acting as a cron daemon
+   Example 6.25. nxlog acting as a cron daemon
 <Extension exec>
     Module      xm_exec
     <Schedule>
@@ -5616,7 +6146,7 @@ Configuration examples
     </Schedule>
 </Extension>
 
-   Example 6.22. Sending email alerts
+   Example 6.26. Sending email alerts
 <Extension exec>
     Module      xm_exec
 </Extension>
@@ -5770,7 +6300,7 @@ Configuration examples
    passed to a perl method which does a GeoIP lookup on the source
    address of the incoming message.
 
-   Example 6.23. Using the built-in perl interpreter
+   Example 6.27. Using the built-in perl interpreter
 
 <Extension syslog>
     Module      xm_syslog
@@ -5917,7 +6447,7 @@ DBI (im_dbi)
 
 Configuration examples
 
-   Example 6.24. Reading from a MySQL database
+   Example 6.28. Reading from a MySQL database
 <Input dbiin>
     Module      im_dbi
     SavePos     TRUE
@@ -5976,7 +6506,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.25. Emulating im_file
+   Example 6.29. Emulating im_file
 <Input input>
     Module      im_exec
     Command     /usr/bin/tail
@@ -6146,7 +6676,7 @@ Functions exported by im_file
 
 Configuration examples
 
-   Example 6.26. Forwarding logs from a file to a remote host
+   Example 6.30. Forwarding logs from a file to a remote host
 <Input in>
     Module      im_file
     File        "/var/log/messages"
@@ -6266,7 +6796,7 @@ Fields generated by im_internal
 
 Configuration examples
 
-   Example 6.27. Forwaring internal messages over syslog udp
+   Example 6.31. Forwaring internal messages over syslog udp
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -6321,7 +6851,7 @@ Note
 
 Configuration examples
 
-   Example 6.28. Storing raw kernel logs into a file
+   Example 6.32. Storing raw kernel logs into a file
 # drop privileges after being started as root
 User nxlog
 Group nxlog
@@ -6431,7 +6961,7 @@ Fields generated by im_mark
 
 Configuration examples
 
-   Example 6.29. Using the im_mark module
+   Example 6.33. Using the im_mark module
 <Input mark>
     Module      im_mark
     MarkInterval 1
@@ -6646,7 +7176,7 @@ Fields generated by im_mseventlog
 
 Configuration examples
 
-   Example 6.30. Forwarding EventLogs from a windows machine to a
+   Example 6.34. Forwarding EventLogs from a windows machine to a
    remote host
 <Input in>
     Module      im_mseventlog
@@ -6967,7 +7497,7 @@ Fields generated by im_msvistalog
 
 Configuration examples
 
-   Example 6.31. Forwarding EventLogs from a windows machine to a
+   Example 6.35. Forwarding EventLogs from a windows machine to a
    remote host
 <Input in>
     Module       im_msvistalog
@@ -7094,7 +7624,7 @@ Fields generated by im_ssl
 
 Configuration examples
 
-   Example 6.32. Reading binary data forwarded from another nxlog
+   Example 6.36. Reading binary data forwarded from another nxlog
    agent
 <Input ssl>
     Module      im_ssl
@@ -7177,7 +7707,7 @@ Fields generated by im_tcp
 
 Configuration examples
 
-   Example 6.33. Using the im_tcp module
+   Example 6.37. Using the im_tcp module
 <Input in>
     Module      im_tcp
     Host        0.0.0.0
@@ -7269,7 +7799,7 @@ Fields generated by im_udp
 
 Configuration examples
 
-   Example 6.34. Using the im_udp module
+   Example 6.38. Using the im_udp module
 <Input in>
     Module      im_udp
     Host        192.168.1.1
@@ -7328,7 +7858,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.35. Using the im_uds module
+   Example 6.39. Using the im_uds module
 <Input unix>
     Module      im_uds
     uds         /dev/log
@@ -7388,7 +7918,7 @@ Procedures exported by pm_blocker
 
 Configuration examples
 
-   Example 6.36. Using the pm_blocker module
+   Example 6.40. Using the pm_blocker module
 
    In this example we collect messages received over UDP and
    forward it to another host via TCP. The log data is forwarded
@@ -7510,7 +8040,7 @@ Functions exported by pm_buffer
 
 Configuration examples
 
-   Example 6.37. Using a memory buffer to protect against udp
+   Example 6.41. Using a memory buffer to protect against udp
    message loss
 <Input udp>
     Module      im_udp
@@ -7784,7 +8314,7 @@ Note
 
 Configuration examples
 
-   Example 6.38. Correlation rules
+   Example 6.42. Correlation rules
 
    This following configuration sample contains a rule for each
    type.
@@ -7944,7 +8474,7 @@ Note
    filtering is now possible in any module using the drop()
    procedure conditionally in the Exec directive.
 
-   Example 6.39. Dropping messages conditionally
+   Example 6.43. Dropping messages conditionally
 if $raw_event =~ /^Debug/ drop();
 
 Configuration
@@ -7960,7 +8490,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.40. Filtering messages
+   Example 6.44. Filtering messages
 <Input unix>
     Module      im_uds
     uds         /dev/log
@@ -8055,7 +8585,7 @@ Fields generated by pm_norepeat
 
 Configuration examples
 
-   Example 6.41. Filtering out duplicated messages
+   Example 6.45. Filtering out duplicated messages
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -8179,7 +8709,7 @@ Configuration
 
 Pattern database file
 
-   Example 6.42. A simple pattern database
+   Example 6.46. A simple pattern database
 
    This pattern database contains two patterns to match ssh
    authentication messages. The patterns are under a group named
@@ -8331,7 +8861,7 @@ Fields generated by pm_pattern
 
 Configuration examples
 
-   Example 6.43. Using the pm_pattern module
+   Example 6.47. Using the pm_pattern module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8475,7 +9005,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.44. Using the pm_transformer module
+   Example 6.48. Using the pm_transformer module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8516,7 +9046,7 @@ Blocker (om_blocker)
 
 Configuration examples
 
-   Example 6.45. Testing buffering with the om_blocker module
+   Example 6.49. Testing buffering with the om_blocker module
 <Input in>
     Module      im_udp
     Host        0.0.0.0
@@ -8612,7 +9142,7 @@ Configuration examples
    generate different fields which you may want to store in an SQL
    database similarly to these examples.
 
-   Example 6.46. Storing syslog in a PostgreSQL database
+   Example 6.50. Storing syslog in a PostgreSQL database
 
    Below is a table schema which can be used to store syslog data.
 CREATE TABLE log (
@@ -8656,7 +9186,7 @@ ventTime', $SourceName, $Message)
     Path        in => dbi
 </Route>
 
-   Example 6.47. Storing logs in a MySQL database
+   Example 6.51. Storing logs in a MySQL database
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -8723,7 +9253,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.48. Piping logs to an external program
+   Example 6.52. Piping logs to an external program
 <Input in>
     Module      im_uds
     uds         /dev/log
@@ -8847,7 +9377,7 @@ Procedures exported by om_file
 
 Configuration examples
 
-   Example 6.49. Storing raw syslog messages into a file
+   Example 6.53. Storing raw syslog messages into a file
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -8862,7 +9392,7 @@ Configuration examples
     Path        in => out
 </Route>
 
-   Example 6.50. File rotation based on size
+   Example 6.54. File rotation based on size
 <Extension exec>
     Module      xm_exec
 </Extension>
@@ -8983,7 +9513,7 @@ Procedures exported by om_http
 
 Configuration examples
 
-   Example 6.51. Sending logs over HTTPS
+   Example 6.55. Sending logs over HTTPS
 <Input in>
     Module              im_file
     File                'input.log'
@@ -9093,7 +9623,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.52. Writing nxlog binary data to another nxlog agent
+   Example 6.56. Writing nxlog binary data to another nxlog agent
 <Input in>
     Module      im_uds
     UDS         tmp/socket
@@ -9149,7 +9679,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.53. Transferring raw logs over TCP
+   Example 6.57. Transferring raw logs over TCP
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -9200,7 +9730,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.54. Sending raw syslog over udp
+   Example 6.58. Sending raw syslog over udp
 <Input in>
     Module      im_uds
     UDS         /dev/log
@@ -9246,7 +9776,7 @@ Configuration
 
 Configuration examples
 
-   Example 6.55. Using the om_uds module
+   Example 6.59. Using the om_uds module
 <Extension syslog>
     Module      xm_syslog
 </Extension>
@@ -9596,7 +10126,7 @@ Type=Authen failed,User-Name=John,NAS-IP-Address=10.0.1.2,AAA Server=acs
     Module      xm_json
 </Extension>
 
-<Extension syslgo>
+<Extension syslog>
     Module      xm_syslog
 </Extension>
 
@@ -10378,7 +10908,8 @@ Log rotation and retention
 
    This example shows how to rotate the internal logfile based on
    time and size.
-define LOGFILE "/var/log/nxlog/nxlog.log"
+#define LOGFILE C:\Program Files\nxlog\data\nxlog.log
+define LOGFILE /var/log/nxlog/nxlog.log
 
 <Extension fileop>
     Module      xm_fileop
@@ -10387,14 +10918,14 @@ define LOGFILE "/var/log/nxlog/nxlog.log"
 er than 1Mb
     <Schedule>
         Every   1 hour
-        Exec    if (file_size(%LOGFILE%) >= 1M) file_cycle(%LOGFILE%, 2)
-;
+        Exec    if (file_size('%LOGFILE%') >= 1M) file_cycle('%LOGFILE%'
+, 2);
     </Schedule>
 
     # Rotate our log file every week on sunday at midnight
     <Schedule>
         When    @weekly
-        Exec    file_cycle(%LOGFILE%, 2);
+        Exec    file_cycle('%LOGFILE%', 2);
     </Schedule>
 </Extension>
 

@@ -17,6 +17,8 @@ typedef struct nx_xm_multiline_conf_t
 {
     nx_value_t *headerline;
     nx_expr_t *headerline_expr;
+    nx_value_t *endline;
+    nx_expr_t *endline_expr;
     int fixedlinecount;
 } nx_xm_multiline_conf_t;
 

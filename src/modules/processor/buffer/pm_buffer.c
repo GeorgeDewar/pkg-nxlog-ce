@@ -21,9 +21,6 @@
 static void pm_buffer_add_event(nx_module_t *module)
 {
     nx_event_t *event;
-    nx_pm_buffer_conf_t *modconf;
-
-    modconf = (nx_pm_buffer_conf_t *) module->config;
 
     event = nx_event_new();
     event->module = module;
@@ -497,8 +494,18 @@ static void pm_buffer_start(nx_module_t *module)
 	
 	    namelen = (size_t) apr_snprintf(fname, sizeof(fname), "%s.", module->name);
 
-	    while ( (rv = apr_dir_read(&finfo, APR_FINFO_NAME, dir)) != APR_ENOENT )
+	    for ( ; ; )
 	    {
+		rv = apr_dir_read(&finfo, APR_FINFO_NAME, dir);
+		if ( APR_STATUS_IS_ENOENT(rv) )
+		{
+		    break;
+		}
+		if ( rv != APR_SUCCESS )
+		{
+		    throw(rv, "readdir failed on %s", modconf->basedir);
+		}
+
 		len = strlen(finfo.name);
 		
 		if ( len <= namelen + 2 )

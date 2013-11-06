@@ -393,6 +393,7 @@ AC_OUTPUT(Makefile
 	        src/modules/extension/syslog/Makefile
 	        src/modules/extension/exec/Makefile
 	        src/modules/extension/csv/Makefile
+	        src/modules/extension/kvp/Makefile
 	        src/modules/extension/charconv/Makefile
 	        src/modules/extension/json/Makefile
 	            src/modules/extension/json/yajl/Makefile

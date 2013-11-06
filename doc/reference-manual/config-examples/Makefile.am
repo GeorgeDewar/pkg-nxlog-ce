@@ -18,7 +18,19 @@ stamp-examples: $(wildcard *.conf) $(wildcard *.stmnt) example-xml.sh         \
                 ../../../test/modules/extension/multiline/xm_multiline4.in    \
                 ../../../test/modules/extension/multiline/xm_multiline4.out   \
                 ../../../test/modules/extension/perl/xm_perl.conf             \
-                ../../../test/modules/extension/perl/processlogs.pl
+                ../../../test/modules/extension/perl/processlogs.pl           \
+                ../../../test/modules/extension/kvp/xm_kvp5.conf              \
+                ../../../test/modules/extension/kvp/xm_kvp5.in                \
+                ../../../test/modules/extension/kvp/xm_kvp5.out               \
+                ../../../test/modules/extension/kvp/apache_url.conf           \
+                ../../../test/modules/extension/kvp/apache_url.in             \
+                ../../../test/modules/extension/kvp/apache_url.out            \
+                ../../../test/modules/extension/kvp/cisco_acs.conf            \
+                ../../../test/modules/extension/kvp/cisco_acs.in              \
+                ../../../test/modules/extension/kvp/cisco_acs.out             \
+                ../../../test/modules/extension/kvp/sidewinder.conf           \
+                ../../../test/modules/extension/kvp/sidewinder.in             \
+                ../../../test/modules/extension/kvp/sidewinder.out
 
 	-./example-xml.sh && touch stamp-examples
 

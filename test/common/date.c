@@ -67,12 +67,17 @@ int main(int argc UNUSED, const char * const *argv, const char * const *env UNUS
     compare_timeval(timeval, "1970-05-07 17:39:13");
     ASSERT(timeval == 10946353420000LL);
 
+    // localtime
     ASSERT(nx_date_parse_iso(&timeval, "1970-05-07 17:39:13.42", NULL) == APR_SUCCESS);
     ASSERT(timeval == 10946353420000LL);
     ASSERT(nx_date_parse_iso(&timeval, "1970-05-07T17:39:13.42", NULL) == APR_SUCCESS);
     ASSERT(timeval == 10946353420000LL);
+
+    // UTC
     ASSERT(nx_date_parse_iso(&timeval, "1970-05-07T17:39:13.42Z", NULL) == APR_SUCCESS);
-    ASSERT(timeval == 10946353420000LL);
+    ASSERT(nx_date_parse_iso(&timeval2, "1970-05-07 17:39:13.42+GMT", NULL) == APR_SUCCESS);
+    ASSERT(timeval == timeval2);
+
     ASSERT(nx_date_parse_iso(&timeval, "1970-05-07T17:39:13.42+02:00", NULL) == APR_SUCCESS);
     ASSERT(timeval == 10942753420000LL);
     ASSERT(nx_date_parse_iso(&timeval, "2003-08-24T05:14:15.000003-01:00", NULL) == APR_SUCCESS);

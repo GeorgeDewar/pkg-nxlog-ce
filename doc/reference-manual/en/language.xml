@@ -299,7 +299,18 @@
 		 </varlistentry>
 
 	       </variablelist>
-	 
+	       <note>
+		 <para>
+		   String literals in single quotes do not process the escape sequences. 
+		   <replaceable>"\n"</replaceable> is a single character (LF) while 
+		   <replaceable>'\n'</replaceable> is two characters.
+		   The following comparison is FALSE for this reason:
+		   <programlisting><![CDATA["\n" == '\n']]></programlisting>
+		   Extra care should be taken with the backslash when using double
+		   quoted string literals to specify file paths on windows.
+		   See <link linkend="im_file_config_file_note">this note</link> for the file directive of im_file about the possible complications.
+		 </para>
+	       </note>
 	       <example>
 		 <title>Setting a string value</title>
 		 <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-lang_literal_string.xml" />

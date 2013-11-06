@@ -92,11 +92,11 @@ static void im_exec_fill_buffer(nx_module_input_t *input)
 
     if ( rv != APR_SUCCESS )
     {
-	if ( rv == APR_EOF )
+	if ( APR_STATUS_IS_EOF(rv) )
 	{
 	    throw_msg("Module %s got EOF, process exited? ", input->module->name);
 	}
-	else if ( rv == APR_EAGAIN )
+	else if ( APR_STATUS_IS_EAGAIN(rv) )
 	{ 
 #ifdef WIN32
 	    // on windows EAGAIN is normal because we are using NON-BLOCKING reads

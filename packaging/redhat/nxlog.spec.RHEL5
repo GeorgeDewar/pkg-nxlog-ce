@@ -2,7 +2,7 @@
 
 Summary:	nxlog is a modular, multi-threaded, high-performance log management solution
 Name:		nxlog-ce
-Version:	2.4.1054
+Version:	2.5.1089
 Release:	1
 License:	GPL/LGPL
 Group:		System Environment/Daemons

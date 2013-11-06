@@ -404,8 +404,10 @@ static void set_syslog_message(nx_logdata_t *logdata,
 }
 
 
-#define IS_HOSTCHAR(c) ( ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '.') || (c == '_') || (c == '-') )
-#define IS_TAGCHAR(c) ( ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || (c == '-') || (c == '/') )
+#define IS_HOSTCHAR(c) ( ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || \
+  ((c >= 'A') && (c <= 'Z')) || (c == '.') || (c == '_') || (c == '-') || (c == '/') )
+#define IS_TAGCHAR(c) ( ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'z')) || \
+  ((c >= 'A') && (c <= 'Z')) || (c == '_') || (c == '-') || (c == '/') )
 
 boolean nx_syslog_parse_rfc3164(nx_logdata_t *logdata,
 				const char *string,

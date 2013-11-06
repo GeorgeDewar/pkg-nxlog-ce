@@ -46,6 +46,8 @@ if dir_exists("../tmp/testdir") == TRUE $success = FALSE;
 if file_basename("../tmp/testfile2.txt") != "testfile2.txt" $success = FALSE;
 if file_basename("testfile2.txt") != "testfile2.txt" $success = FALSE;
 if file_basename("../tmp/") != "" $success = FALSE;
+#The following works on windows only
+#if file_basename('C:\Program Files\nxlog\nxlog.log') != "nxlog.log" $success = FALSE;
 
 if file_dirname("../tmp/testfile2.txt") != "../tmp" $success = FALSE;
 if file_dirname("testfile2.txt") != "" $success = FALSE;

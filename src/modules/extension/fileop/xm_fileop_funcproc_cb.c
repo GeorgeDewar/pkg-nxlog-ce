@@ -447,12 +447,15 @@ void nx_expr_proc__xm_fileop_file_remove(nx_expr_eval_ctx_t *eval_ctx,
 			    log_debug("'%s' matches wildcard '%s' and is 'older', removing",
 				      fname->buf, file.string->buf);
 			    log_info("removing file %s", fname->buf);
-			    switch ( rv = apr_file_remove(fname->buf, NULL) )
+			    rv = apr_file_remove(fname->buf, NULL);
+			    if ( APR_STATUS_IS_ENOENT(rv) )
 			    {
-				case APR_ENOENT:
-				case APR_SUCCESS:
-				    break;
-				default:
+			    }
+			    else if ( rv == APR_SUCCESS )
+			    {
+			    }
+			    else
+			    {
 				log_aprerror(rv, "failed to remove file '%s'", fname->buf);
 			    }
 			    _reopen_logfile(fname->buf);
@@ -982,14 +985,17 @@ void nx_expr_proc__xm_fileop_file_touch(nx_expr_eval_ctx_t *eval_ctx,
     if ( rv == APR_SUCCESS )
     {
 	apr_file_close(fd);
-	switch ( rv = apr_file_mtime_set(file.string->buf, apr_time_now(), pool) )
+	rv = apr_file_mtime_set(file.string->buf, apr_time_now(), pool);
+	if ( rv == APR_SUCCESS )
 	{
-	    case APR_SUCCESS:
-	    case APR_ENOTIMPL:
-		break;
-	    default:
-		log_aprerror(rv, "failed to set mtime on file '%s' when trying to touch",
-			     file.string->buf);
+	}
+	else if ( APR_STATUS_IS_ENOTIMPL(rv) )
+	{
+	}
+	else
+	{
+	    log_aprerror(rv, "failed to set mtime on file '%s' when trying to touch",
+			 file.string->buf);
 	}
     }
 
@@ -1069,12 +1075,15 @@ void nx_expr_proc__xm_fileop_dir_remove(nx_expr_eval_ctx_t *eval_ctx,
     // TODO: remove contents before
 
     pool = nx_pool_create_core();
-    switch ( rv = apr_dir_remove(path.string->buf, pool) )
+    rv = apr_dir_remove(path.string->buf, pool);
+    if ( APR_STATUS_IS_ENOENT(rv) )
     {
-	case APR_ENOENT:
-	case APR_SUCCESS:
-	    break;
-	default:
+    }
+    else if ( rv == APR_SUCCESS )
+    {
+    }
+    else
+    {
 	    log_aprerror(rv, "failed to remove directory '%s'", path.string->buf);
     }
     apr_pool_destroy(pool);
@@ -1173,18 +1182,20 @@ void nx_expr_func__xm_fileop_file_exists(nx_expr_eval_ctx_t *eval_ctx UNUSED,
     retval->boolean = FALSE;
 
     pool = nx_pool_create_core();
-    switch ( rv = apr_stat(&finfo, args[0].string->buf, APR_FINFO_TYPE, pool) )
+    rv = apr_stat(&finfo, args[0].string->buf, APR_FINFO_TYPE, pool);
+    if ( rv == APR_SUCCESS )
     {
-	case APR_SUCCESS:
-	    if ( finfo.filetype == APR_REG )
-	    {
-		retval->boolean = TRUE;
-	    }
-	    break;
-	case APR_ENOENT:
-	    break;
-	default:
-	    log_aprerror(rv, "failed to check whether file '%s' exists", args[0].string->buf);
+	if ( finfo.filetype == APR_REG )
+	{
+	    retval->boolean = TRUE;
+	}
+    }
+    else if ( APR_STATUS_IS_ENOENT(rv) )
+    {
+    }
+    else
+    {
+	log_aprerror(rv, "failed to check whether file '%s' exists", args[0].string->buf);
     }
     apr_pool_destroy(pool);
 }
@@ -1218,7 +1229,7 @@ void nx_expr_func__xm_fileop_file_basename(nx_expr_eval_ctx_t *eval_ctx UNUSED,
 
     filename = args[0].string->buf;
     idx = strrchr(filename, '/');
-#ifndef WIN32
+#ifdef WIN32
     if ( idx == NULL ) 
     {
         idx = strrchr(filename, '\\');
@@ -1589,18 +1600,20 @@ void nx_expr_func__xm_fileop_dir_exists(nx_expr_eval_ctx_t *eval_ctx UNUSED,
     retval->boolean = FALSE;
 
     pool = nx_pool_create_core();
-    switch ( rv = apr_stat(&finfo, args[0].string->buf, APR_FINFO_TYPE, pool) )
+    rv = apr_stat(&finfo, args[0].string->buf, APR_FINFO_TYPE, pool);
+    if ( rv == APR_SUCCESS )
     {
-	case APR_SUCCESS:
-	    if ( finfo.filetype == APR_DIR )
-	    {
-		retval->boolean = TRUE;
-	    }
-	    break;
-	case APR_ENOENT:
-	    break;
-	default:
-	    log_aprerror(rv, "failed to check whether directory '%s' exists", args[0].string->buf);
+	if ( finfo.filetype == APR_DIR )
+	{
+	    retval->boolean = TRUE;
+	}
+    }
+    else if ( APR_STATUS_IS_ENOENT(rv) )
+    {
+    }
+    else
+    {
+	log_aprerror(rv, "failed to check whether directory '%s' exists", args[0].string->buf);
     }
     apr_pool_destroy(pool);
 }

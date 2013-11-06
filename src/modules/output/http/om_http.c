@@ -613,11 +613,11 @@ static void om_http_read_response(nx_module_t *module)
 	log_debug("Module %s read %u bytes", module->name, (unsigned int) len);
 	if ( rv != APR_SUCCESS )
 	{
-	    if ( rv == APR_EOF )
+	    if ( APR_STATUS_IS_EOF(rv) )
 	    {
 		got_eof = TRUE;
 	    }
-	    else if ( rv == APR_EAGAIN )
+	    else if ( APR_STATUS_IS_EAGAIN(rv) )
 	    {
 		log_debug("got EAGAIN for nonblocking read in module %s", module->name);
 	    }
@@ -991,17 +991,6 @@ static void om_http_config(nx_module_t *module)
 
 
 
-static void om_http_start(nx_module_t *module)
-{
-    nx_om_http_conf_t *modconf;
-
-    ASSERT(module->config != NULL);
-
-    modconf = (nx_om_http_conf_t *) module->config;
-}
-
-
-
 static void om_http_init(nx_module_t *module)
 {
     nx_om_http_conf_t *modconf;
@@ -1074,7 +1063,7 @@ NX_MODULE_DECLARATION nx_om_http_module =
     NX_MODULE_TYPE_OUTPUT,
     NULL,			// capabilities
     om_http_config,		// config
-    om_http_start,		// start
+    NULL,			// start
     om_http_stop, 		// stop
     NULL,			// pause
     NULL,			// resume

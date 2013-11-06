@@ -327,9 +327,8 @@ static void nxlog_check_pidfile(nxlog_t *nxlog)
 
 	if ( (sscanf(buf, "%d\n", &pid) != 1) || (pid == 0) )
 	{
-	    log_error("removing invalid pidfile %s", nxlog->pidfile);
+	    log_warn("removing invalid pidfile %s", nxlog->pidfile);
 	    nxlog_remove_pidfile(nxlog);
-	    return;
 	}
     }
 

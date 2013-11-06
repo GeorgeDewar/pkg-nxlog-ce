@@ -25,6 +25,7 @@ fi
 ./tester.pl modules/processor/evcorr/pm_evcorr.txt || FAILED="$FAILED pm_evcorr"
 ./tester.pl modules/extension/multiline/xm_multiline.txt || FAILED="$FAILED xm_multiline"
 ./tester.pl modules/extension/perl/xm_perl.txt || FAILED="$FAILED xm_perl"
+./tester.pl modules/extension/kvp/xm_kvp.txt || FAILED="$FAILED xm_kvp"
 if test "x$FAILED" != "x"; then
     echo "Failed tests: $FAILED";
     exit 1;

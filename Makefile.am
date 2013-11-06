@@ -8,10 +8,15 @@ changelog_DATA = ChangeLog.txt
 changelogdir = $(docdir)
 
 EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE $(wildcard parsers/*.conf) \
-	     $(wildcard packaging/debian/*.pem) \
-	     packaging/debian/changelog \
+             $(wildcard packaging/debian/*.pem) \
+             packaging/aix/nxlog.spec \
+             packaging/aix/init \
+             packaging/debian/changelog.skel \
 	     packaging/debian/compat \
-	     packaging/debian/control \
+             packaging/debian/control.default \
+             packaging/debian/control.default \
+             packaging/debian/control.Debian-wheezy \
+	     packaging/debian/control.Debian-squeeze \
 	     packaging/debian/copyright \
 	     packaging/debian/nxlog.init \
 	     packaging/debian/make_debs.sh \
@@ -35,4 +40,9 @@ EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_D
 	     packaging/redhat/nxlog.spec.RHEL5 \
 	     packaging/redhat/nxlog.conf \
 	     packaging/redhat/init \
-	     packaging/redhat/make_rpm.sh
+	     packaging/redhat/make_rpm.sh \
+	     packaging/solaris/pkginfo \
+	     packaging/solaris/prototype \
+	     packaging/suse/nxlog.spec.SLES11 \
+	     packaging/suse/README \
+	     packaging/suse/init
