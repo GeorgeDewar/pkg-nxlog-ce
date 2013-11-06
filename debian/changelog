@@ -1,8 +1,8 @@
-nxlog-ce (2.5.1089-1) UNRELEASED; urgency=low
+nxlog-ce (2.5.1089-1) unstable; urgency=low
 
   * New upstream release.
 
- -- Chris Lamb <lamby@debian.org>  Wed, 06 Nov 2013 18:51:25 +0000
+ -- Chris Lamb <lamby@debian.org>  Wed, 06 Nov 2013 19:09:51 +0000
 
 nxlog-ce (2.4.1054-1) unstable; urgency=low
 
