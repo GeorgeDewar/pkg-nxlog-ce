@@ -53,6 +53,10 @@ apr_size_t nx_value_serialized_size(const nx_value_t *value)
 	    case NX_VALUE_TYPE_IP6ADDR:
 		size += 16;
 		break;
+	    case NX_VALUE_TYPE_BINARY:
+		size += 4;
+		size += value->binary.len;
+		break;
 	    case NX_VALUE_TYPE_UNKNOWN:
 		nx_panic("cannot serialize UNKNOWN type");
 	    default:
@@ -156,6 +160,18 @@ apr_size_t nx_value_to_membuf(const nx_value_t *value, char *buf, apr_size_t buf
 		}
 		memcpy(ptr, value->ip6addr, 16);
 		ptr += 16;
+		break;
+	    case NX_VALUE_TYPE_BINARY:
+		len = value->binary.len;
+		len32 = (apr_uint32_t) len;
+		if ( bufsize < NX_VALUE_HEADER_LEN + len + 4 )
+		{
+		    return ( 0 ); // not enough space
+		}
+		nx_int32_to_le(ptr, &len32);
+		ptr += 4;
+		memcpy(ptr, value->binary.value, len);
+		ptr += len;
 		break;
 	    case NX_VALUE_TYPE_UNKNOWN:
 		nx_panic("cannot serialize UNKNOWN type");
@@ -278,6 +294,29 @@ nx_value_t *nx_value_from_membuf(const char *buf,
 		    else
 		    {
 			throw_msg("not enough data to decode serialized ip6addr value");
+		    }
+		    break;
+		case NX_VALUE_TYPE_BINARY:
+		    if ( offs + 4 <= bufsize )
+		    {
+			len = nx_int32_from_le(buf + offs);
+		    }
+		    else
+		    {
+			throw_msg("not enough data to decode serialized binary length");
+		    }
+		    offs += 4;
+		    if ( offs + len <= bufsize )
+		    {
+			retval->binary.value = malloc(len);
+			ASSERT(retval->binary.value != NULL);
+			memcpy(retval->binary.value, buf + offs, len);
+			offs += len;
+		    }
+		    else
+		    {
+			throw_msg("not enough data to decode serialized binary buffer"
+				  " (required: %d, available: %d)", len, bufsize - offs);
 		    }
 		    break;
 		case NX_VALUE_TYPE_UNKNOWN:

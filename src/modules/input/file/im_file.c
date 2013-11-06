@@ -107,16 +107,21 @@ static void im_file_fill_buffer(nx_module_t *module, nx_im_file_input_t *file, b
 
     if ( rv != APR_SUCCESS )
     {
-	if ( rv == APR_EOF )
+	if ( APR_STATUS_IS_EOF(rv) )
 	{
 	    log_debug("Module %s got EOF from %s", input->module->name, file->name);
 	    *got_eof = TRUE;
 	    file->blacklist_until = 0;
 	    file->blacklist_interval = 0;
 	}
-	else if ( rv == APR_EAGAIN )
+	else if ( APR_STATUS_IS_EAGAIN(rv) )
 	{
 	    nx_panic("im_file got EAGAIN for read in module %s", input->module->name);
+	}
+	else if ( APR_STATUS_IS_EBADF(rv) )
+	{
+	    im_file_input_close(module, file);
+	    throw(rv, "Module %s couldn't read from file (bug?)", input->module->name);
 	}
 	else
 	{
@@ -246,18 +251,48 @@ static boolean im_file_input_open(nx_module_t *module,
 
 	    if ( finfo == NULL )
 	    {
-		CHECKERR_MSG(apr_file_info_get(&file_info, APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE,
-					       (*file)->input->desc.f), 
-			     "failed to query file information for %s", (*file)->name);
-		(*file)->inode = file_info.inode;
-		(*file)->mtime = file_info.mtime;
-		(*file)->size = file_info.size;
+		apr_status_t rv;
+
+		rv = apr_file_info_get(&file_info, APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE,
+				       (*file)->input->desc.f);
+
+		if ( rv == APR_SUCCESS )
+		{
+		}
+		else if ( rv == APR_INCOMPLETE )
+		{ // partial results returned in file_info, we check the valid bitmask
+		}
+		else
+		{
+		    throw(rv, "failed to query file information for %s", (*file)->name);
+		}
+		if ( file_info.valid & APR_FINFO_INODE )
+		{
+		    (*file)->inode = file_info.inode;
+		}
+		if ( file_info.valid & APR_FINFO_MTIME )
+		{
+		    (*file)->mtime = file_info.mtime;
+		}
+		if ( file_info.valid & APR_FINFO_SIZE )
+		{
+		    (*file)->size = file_info.size;
+		}
 	    }
 	    else
 	    {
-		(*file)->inode = finfo->inode;
-		(*file)->mtime = finfo->mtime;
-		(*file)->size = finfo->size;
+		if ( finfo->valid & APR_FINFO_INODE )
+		{
+		    (*file)->inode = finfo->inode;
+		}
+		if ( finfo->valid & APR_FINFO_MTIME )
+		{
+		    (*file)->mtime = finfo->mtime;
+		}
+		if ( finfo->valid & APR_FINFO_SIZE )
+		{
+		    (*file)->size = finfo->size;
+		}
 	    }
 
 	    if ( (*file)->filepos > 0 )
@@ -280,7 +315,8 @@ static boolean im_file_input_open(nx_module_t *module,
 	}
 	
 	if ( ((*file)->filepos > 0) && (((*file)->filepos > (*file)->size) ||
-				     ((finfo != NULL) && ((*file)->filepos > finfo->size))) )
+					((finfo != NULL) && (finfo->valid & APR_FINFO_SIZE) &&
+					 ((*file)->filepos > finfo->size))) )
 	{ // truncated, seek back to start
 	    log_info("input file %s was truncated, restarting from beginning", (*file)->name);
 	    (*file)->filepos = 0;
@@ -451,9 +487,20 @@ static boolean im_file_check_files(nx_module_t *module)
 	{
 	    apr_finfo_t finfo;
 	    boolean needopen = FALSE;
+	    apr_status_t rv;
 
-	    CHECKERR(apr_stat(&finfo, fname,
-			      APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE, pool));
+	    rv = apr_stat(&finfo, fname,
+			  APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE, pool);
+	    if ( rv == APR_SUCCESS )
+	    {
+	    }
+	    else if ( rv == APR_INCOMPLETE )
+	    { // partial results returned. we check the valid bitmask
+	    }
+	    else
+	    {
+		throw(rv, "apr_stat failed on file %s", fname);
+	    }
 
 	    if ( file->inode == 0 )
 	    { // no stat info stored yet (initial open failed)
@@ -461,7 +508,7 @@ static boolean im_file_check_files(nx_module_t *module)
 	    }
 	    else
 	    {
-		if ( file->inode != finfo.inode )
+		if ( (finfo.valid & APR_FINFO_INODE) && (file->inode != finfo.inode) )
 		{
 		    log_warn("inode changed for '%s': reopening possibly rotated file", fname);
 		    im_file_input_close(module, file);
@@ -471,7 +518,7 @@ static boolean im_file_check_files(nx_module_t *module)
 		}
 		
 		ASSERT(file->mtime != 0);
-		if ( file->mtime != finfo.mtime )
+		if ( (finfo.valid & APR_FINFO_MTIME) && (file->mtime != finfo.mtime) )
 		{
 		    log_debug("mtime of file '%s' changed", fname);
 		    file->new_mtime = finfo.mtime;
@@ -479,29 +526,32 @@ static boolean im_file_check_files(nx_module_t *module)
 		    needopen = TRUE;
 		}
 		
-		if ( file->size < finfo.size )
+		if ( finfo.valid & APR_FINFO_SIZE )
 		{
-		    log_debug("file size of '%s' increased since last read", fname);
-		    file->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
-		}
+		    if ( file->size < finfo.size )
+		    {
+			log_debug("file size of '%s' increased since last read", fname);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
 	    
-		if ( (file->filepos > 0) && (finfo.size < file->filepos) )
-		{
-		    log_debug("file '%s' was truncated", fname);
-		    file->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
-		}
+		    if ( (file->filepos > 0) && (finfo.size < file->filepos) )
+		    {
+			log_debug("file '%s' was truncated", fname);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
 
-		if ( finfo.size > file->filepos )
-		{
-		    log_debug("file '%s' has unread data (%u > %u)", fname,
-			      (unsigned int) finfo.size, (unsigned int) file->filepos);
-		    file->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
+		    if ( finfo.size > file->filepos )
+		    {
+			log_debug("file '%s' has unread data (%u > %u)", fname,
+				  (unsigned int) finfo.size, (unsigned int) file->filepos);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
 		}
 	    }
 	    
@@ -630,10 +680,20 @@ static boolean im_file_glob_dir(nx_module_t *module,
 
 	imconf = (nx_im_file_conf_t *) module->config;
 
-	while ( apr_dir_read(&finfo, APR_FINFO_NAME | APR_FINFO_TYPE, dir) == APR_SUCCESS )
+	for ( ; ; )
 	{
+	    rv = apr_dir_read(&finfo, APR_FINFO_NAME | APR_FINFO_TYPE, dir);
+	    if ( APR_STATUS_IS_ENOENT(rv) )
+	    {
+		break;
+	    }
+	    if ( !((rv == APR_SUCCESS) || (rv == APR_INCOMPLETE)) )
+	    {
+		throw(rv, "readdir failed for %s", dirname);
+	    }
+	
 	    log_debug("checking '%s' against wildcard '%s':", finfo.name, fname);
-	    if ( finfo.filetype == APR_REG )
+	    if ( (finfo.valid & APR_FINFO_TYPE) && (finfo.filetype == APR_REG) )
 	    {
 #ifdef WIN32
 		if ( apr_fnmatch(fname, finfo.name, APR_FNM_CASE_BLIND) == APR_SUCCESS )
@@ -653,7 +713,7 @@ static boolean im_file_glob_dir(nx_module_t *module,
 		    log_debug("'%s' does not match wildcard '%s'", finfo.name, fname);
 		}
 	    }
-	    else if ( finfo.filetype == APR_DIR )
+	    else if ( (finfo.valid & APR_FINFO_TYPE) && (finfo.filetype == APR_DIR) )
 	    { 
 		apr_snprintf(tmp, sizeof(tmp), "%s"NX_DIR_SEPARATOR"%s", dirname, finfo.name);
 		if ( imconf->recursive == TRUE )
@@ -678,7 +738,7 @@ static boolean im_file_glob_dir(nx_module_t *module,
 	    }
 	    else
 	    {
-		log_debug("skipping unsupported type %s", finfo.name);
+		log_debug("skipping unsupported/unknown file type %s", finfo.name);
 	    }
 	}
     }

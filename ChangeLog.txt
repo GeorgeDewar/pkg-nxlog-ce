@@ -1,4 +1,22 @@
-* 2013-04-30 2.4.1054
+* 2013-07-04 2.5.1089
+  An SSL cert verification failure caused successive verifications to fail in im_ssl and related modules.
+  Potentially fixed im_file giving "Partial results are valid but processing is incomplete" errors.
+  Fixed status value tests which resulted in an endless loop on windows with pm_buffer's disk mode
+   and possibly some functions in xm_fileop.
+  im_msvistalog now retrieves the message from events with invalid substitution strings (%xx) 
+   instead of inserting the message "The description for EventID EVTID from source SRC cannot be found".
+  create_stat(name, COUNT) did not work properly.
+  The xm_multiline module now supports an EndLine directive.
+  Add / to the list of valid syslog hostname characters to support chained hostnames.
+  Starting with a thread count higher than 15 resulted in a segmentation fault on windows.
+  A new extension module xm_kvp has been added to parse and generate key-value pairs.
+  The file_basename() function provided by xm_fileop did not work porperly on windows.
+  Added packaging files for solaris, suse, rhel5.
+  An empty pidfile was causing an assertion failure on startup on unix/linux.
+  Serialization of Binary types was not handled properly and resulted in a PANIC in value-serialize.c.
+  Fixed a segfault when nxlog gave a 'failed to determine FQDN hostname' error message on start.
+  Properly parse RFC5424 timestamp format in UTC with a trailing 'Z'.
+* 2013-04-30 2.4.1055
   Fixed packaging for Centos/Redhat 6.
   Regexp and regexp replace operators now support the '\' escape character to be able to specify '/' as '\/'.
   Corrected a use-after-free when trying to set $raw_event to an undefined value or non-string type.

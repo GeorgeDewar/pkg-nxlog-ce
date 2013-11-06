@@ -46,8 +46,18 @@ static nx_module_t *load_modules(nx_ctx_t *ctx, const char *currmodule)
 	dir = NULL;
 	CHECKERR_MSG(apr_dir_open(&dir, pathname, ctx->pool),
 		     "failed to open directory %s", pathname);
-	while ( (rv = apr_dir_read(&finfo, APR_FINFO_NAME, dir)) != APR_ENOENT )
+	for ( ; ; )
 	{
+	    rv = apr_dir_read(&finfo, APR_FINFO_NAME, dir);
+	    if ( APR_STATUS_IS_ENOENT(rv) )
+	    {
+		break;
+	    }
+	    if ( rv != APR_SUCCESS )
+	    {
+		throw(rv, "readdir failed on %s", pathname);
+	    }
+
 	    len = strlen(finfo.name);
 
 	    if ( len <= strlen(NX_MODULE_DSO_EXTENSION) + 3 )

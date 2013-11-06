@@ -177,16 +177,14 @@ void nxlog_init(nxlog_t *nxlog)
 	    if ((rv = apr_sockaddr_info_get(&sa, tmpstr, APR_INET, 0, 0, nxlog->pool)) != APR_SUCCESS )
 	    {
 		log_aprwarn(rv, "failed to determine FQDN hostname");
+		nxlog->hostname_fqdn.buf = apr_pstrdup(nxlog->pool, "localhost.localdomain");
 	    }
-
-	    if ((rv = apr_getnameinfo(&(nxlog->hostname_fqdn.buf), sa, 0)) != APR_SUCCESS )
+	    else if ((rv = apr_getnameinfo(&(nxlog->hostname_fqdn.buf), sa, 0)) != APR_SUCCESS )
 	    {
 		log_aprwarn(rv, "failed to determine FQDN hostname");
 	    }
-	    else
-	    {
-		nxlog->hostname_fqdn.len = (uint32_t) strlen(nxlog->hostname_fqdn.buf);
-	    }
+
+	    nxlog->hostname_fqdn.len = (uint32_t) strlen(nxlog->hostname_fqdn.buf);
 	}
     }
     else
@@ -553,7 +551,7 @@ void nxlog_create_threads(nxlog_t *nxlog)
     nx_lock();
 
     nxlog->worker_threads = apr_palloc(nxlog->pool, sizeof(apr_thread_t *) * nxlog->num_worker_thread);
-    nxlog->worker_threads_running = apr_pcalloc(nxlog->pool, sizeof(boolean) * nxlog->num_worker_thread);
+    nxlog->worker_threads_running = apr_pcalloc(nxlog->pool, sizeof(uint32_t) * nxlog->num_worker_thread);
 
     log_debug("spawning %d worker threads", nxlog->num_worker_thread);
     for ( i = 0; i < nxlog->num_worker_thread; i++)

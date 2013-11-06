@@ -1181,7 +1181,7 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 			       nx_expr_arg_list_t *args)
 {
     nx_expr_arg_t *arg;
-    nx_value_t argval1, argval2;
+    nx_value_t argval1, argval2, argval3;
     apr_time_t expiry = 0;
     int64_t interval = 0;
     nx_module_stat_type_t type;
@@ -1197,7 +1197,7 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
     if ( (argval1.defined != TRUE) || (argval1.type != NX_VALUE_TYPE_STRING) )
     {
 	nx_value_kill(&argval1);
-	throw_msg("string required for first argument of create_stat()");
+	throw_msg("string required for the first argument of create_stat()");
     }
     if ( argval1.string->len == 0 )
     {
@@ -1215,18 +1215,19 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 	throw_msg("string required for second argument of create_stat()");
     }
     type = nx_module_stat_type_from_string(argval2.string->buf);
-    nx_value_kill(&argval2);
     if ( type == 0 )
     {
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
 	throw_msg("invalid stat type given for second argument of create_stat()");
     }
 
     arg = NX_DLIST_NEXT(arg, link);
     if ( arg == NULL )
     {	// no interval parameter
-	if ( strcasecmp(argval1.string->buf, "count") != 0 )
+	if ( strcasecmp(argval2.string->buf, "count") != 0 )
 	{
+	    nx_value_kill(&argval2);
 	    nx_value_kill(&argval1);
 	    throw_msg("create_stat(name, type) can only be used with \"COUNT\", "
 		      "for other types the interval parameter is required");
@@ -1236,18 +1237,23 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 			      interval, timeval, expiry);
 	nx_module_unlock(module);
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
 	return;
     }
-    nx_expr_evaluate(eval_ctx, &argval2, arg->expr);
-    if ( (argval2.defined != TRUE) || (argval2.type != NX_VALUE_TYPE_INTEGER) )
+
+    nx_expr_evaluate(eval_ctx, &argval3, arg->expr);
+    if ( (argval3.defined != TRUE) || (argval3.type != NX_VALUE_TYPE_INTEGER) )
     {
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
+	nx_value_kill(&argval3);
 	throw_msg("integer type required for third argument of create_stat()");
     }
-    interval = argval2.integer;
+    interval = argval3.integer;
     if ( interval <= 0 )
     {
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
 	throw_msg("interval passed to create_stat() must be greater than zero");
     }
 
@@ -1259,18 +1265,21 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 			      interval, timeval, expiry);
 	nx_module_unlock(module);
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
 	return;
     }
-    nx_expr_evaluate(eval_ctx, &argval2, arg->expr);
-    if ( argval2.defined != TRUE )
+    nx_expr_evaluate(eval_ctx, &argval3, arg->expr);
+    if ( argval3.defined != TRUE )
     { // treat undef as 0
     }
-    else if ( argval2.type != NX_VALUE_TYPE_DATETIME )
+    else if ( argval3.type != NX_VALUE_TYPE_DATETIME )
     {
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
+	nx_value_kill(&argval3);
 	throw_msg("datetime type required for time argument of create_stat()");
     }
-    timeval = argval2.datetime;
+    timeval = argval3.datetime;
     
     arg = NX_DLIST_NEXT(arg, link);
     if ( arg == NULL )
@@ -1280,31 +1289,34 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 			      interval, timeval, expiry);
 	nx_module_unlock(module);
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
 	return;
     }
 
-    nx_expr_evaluate(eval_ctx, &argval2, arg->expr);
-    if ( (argval2.defined != TRUE) ||
-	 !((argval2.type == NX_VALUE_TYPE_INTEGER) ||
-	   (argval2.type == NX_VALUE_TYPE_DATETIME)) )
+    nx_expr_evaluate(eval_ctx, &argval3, arg->expr);
+    if ( (argval3.defined != TRUE) ||
+	 !((argval3.type == NX_VALUE_TYPE_INTEGER) ||
+	   (argval3.type == NX_VALUE_TYPE_DATETIME)) )
     {
 	nx_value_kill(&argval1);
+	nx_value_kill(&argval2);
+	nx_value_kill(&argval3);
 	throw_msg("integer or datetime required for lifetime/expiry argument of create_stat()");
     }
-    if ( argval2.type == NX_VALUE_TYPE_INTEGER )
+    if ( argval3.type == NX_VALUE_TYPE_INTEGER )
     {
-	expiry = apr_time_now() + argval2.integer * APR_USEC_PER_SEC;
+	expiry = apr_time_now() + argval3.integer * APR_USEC_PER_SEC;
     }
-    else if ( argval2.type == NX_VALUE_TYPE_DATETIME )
+    else if ( argval3.type == NX_VALUE_TYPE_DATETIME )
     {
-	if ( argval2.datetime < apr_time_now() )
+	if ( argval3.datetime < apr_time_now() )
 	{
 	    log_warn("expiry given for create_stat('%s') is in the past, created stat will never expire",
 		     argval1.string->buf);
 	}
 	else
 	{
-	    expiry = argval2.datetime;
+	    expiry = argval3.datetime;
 	}
     }
 
@@ -1313,6 +1325,8 @@ void nx_expr_proc__create_stat(nx_expr_eval_ctx_t *eval_ctx,
 			  argval1.string->len, interval, timeval, expiry);
     nx_module_unlock(module);
     nx_value_kill(&argval1);
+    nx_value_kill(&argval2);
+    nx_value_kill(&argval3);
 }
 
 
@@ -1441,7 +1455,6 @@ void nx_expr_func__get_stat(nx_expr_eval_ctx_t *eval_ctx,
 	    stat = apr_hash_get(eval_ctx->module->stats, args[0].string->buf, args[0].string->len);
 	    if ( stat == NULL )
 	    {
-		//log_debug("stat %s doesn't exist", args[0].string->buf);
 		retval->defined = FALSE;
 		retval->type = NX_VALUE_TYPE_UNKNOWN;
 	    }
@@ -1491,7 +1504,7 @@ void nx_expr_proc__sleep(nx_expr_eval_ctx_t *eval_ctx,
 
 
 void nx_expr_proc__rename_field(nx_expr_eval_ctx_t *eval_ctx,
-				nx_module_t *module,
+				nx_module_t *module UNUSED,
 				nx_expr_arg_list_t *args)
 {
     nx_expr_arg_t *arg;
@@ -1504,8 +1517,6 @@ void nx_expr_proc__rename_field(nx_expr_eval_ctx_t *eval_ctx,
     }
 
     ASSERT(args != NULL);
-    ASSERT(eval_ctx->module != NULL);
-    module = eval_ctx->module;
 
     arg = NX_DLIST_FIRST(args);
     ASSERT(arg != NULL);

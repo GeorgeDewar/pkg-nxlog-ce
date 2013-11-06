@@ -44,6 +44,7 @@ nx_module_var_t *nx_module_var_create(nx_module_t *module,
     var->expiry = expiry;
     memcpy(var->name, name, namelen);
     var->name[namelen] = '\0';
+
     apr_hash_set(vars, var->name, (apr_ssize_t) var->namelen, var);
 
     if ( expiry > 0 )

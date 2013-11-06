@@ -13,6 +13,9 @@
 
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
+static int nx_ssl_ssl_ctx_idx = -1;
+static int nx_ssl_verify_result_idx = -1;
+
 static void nx_ssl_locking_callback(int mode, int id, char *file UNUSED, int line UNUSED)
 {
     nxlog_t *nxlog;
@@ -153,17 +156,16 @@ void nx_ssl_error(boolean printerror,
 int nx_ssl_check_io_error(SSL *ssl, int retval)
 {
     int errcode;
-    nx_ssl_ctx_t *ssl_ctx;
+    void *verify_result;
 
     errcode = SSL_get_error(ssl, retval);
+    verify_result = SSL_get_ex_data(ssl, nx_ssl_verify_result_idx);
 
-    ssl_ctx = SSL_get_ex_data(ssl, 0);
-    ASSERT(ssl_ctx != NULL);
-    if ( ssl_ctx->verify_result != 0 )
+    if ( verify_result != NULL )
     { // cert verification failed;
 	throw_msg("SSL certificate verification failed: %s (err: %d)",
-		  X509_verify_cert_error_string(ssl_ctx->verify_result),
-		  ssl_ctx->verify_result);
+		  X509_verify_cert_error_string((int) verify_result),
+		  (int) verify_result);
     }
 
     switch ( errcode  )
@@ -231,7 +233,7 @@ void nx_ssl_ctx_init(nx_ssl_ctx_t *ctx, apr_pool_t *pool)
     BIO *cert_bio = NULL;
     BIO *key_bio = NULL;
     nxlog_t *nxlog;
-
+    
     //log_debug("SSL init");
 
     nxlog = nxlog_get();
@@ -242,6 +244,16 @@ void nx_ssl_ctx_init(nx_ssl_ctx_t *ctx, apr_pool_t *pool)
      SSL_load_error_strings();
      ERR_load_crypto_strings();
      OpenSSL_add_all_algorithms();
+
+     if ( nx_ssl_ssl_ctx_idx == -1 )
+     {
+	 nx_ssl_ssl_ctx_idx = SSL_get_ex_new_index(0, (void *) "ssl_ctx_idx", 0, 0, 0);
+     }
+     if ( nx_ssl_verify_result_idx == -1 )
+     {
+	 nx_ssl_verify_result_idx = SSL_get_ex_new_index(0, (void *) "verify_result_idx", 0, 0, 0);
+     }
+
     nx_unlock();
 
     ctx->pool = pool;
@@ -288,14 +300,16 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
     int err;
     int	retval = preverify_ok;
     SSL *ssl;
+    int verify_result;
     nx_ssl_ctx_t *ssl_ctx;
 
     ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     ASSERT(ssl != NULL);
-    ssl_ctx = SSL_get_ex_data(ssl, 0);
+
+    ssl_ctx = SSL_get_ex_data(ssl, nx_ssl_ssl_ctx_idx);
     ASSERT(ssl_ctx != NULL);
 
-    ssl_ctx->verify_result = 0;
+    verify_result = 0;
     log_debug("verify callback (ok: %d)", preverify_ok);
     if ( !preverify_ok )
     {
@@ -313,7 +327,7 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		else
 		{
 		    retval = 0;
-		    ssl_ctx->verify_result = err;
+		    verify_result = err;
 		}
 		break;
 	    case X509_V_ERR_UNABLE_TO_GET_CRL:
@@ -322,9 +336,11 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 		break;
 	    default:
 		retval = 0;
-		ssl_ctx->verify_result = err;
+		verify_result = err;
 	}
     }
+
+    SSL_set_ex_data(ssl, nx_ssl_verify_result_idx, (void *) verify_result);
 
     return ( retval );
 }
@@ -338,7 +354,7 @@ static int verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
 SSL *nx_ssl_from_socket(nx_ssl_ctx_t *ctx, apr_socket_t *sock)
 {
     SSL_CTX *ssl_ctx;
-    SSL_METHOD *meth;
+    const SSL_METHOD *meth;
     SSL *ssl;
     BIO *bio;
     apr_os_sock_t fd;
@@ -425,7 +441,8 @@ SSL *nx_ssl_from_socket(nx_ssl_ctx_t *ctx, apr_socket_t *sock)
 	nx_ssl_error(FALSE, "failed to initialize ssl context");
     }
     SSL_set_bio(ssl, bio, bio);
-    SSL_set_ex_data(ssl, 0, ctx);
+    SSL_set_ex_data(ssl, nx_ssl_ssl_ctx_idx, ctx);
+    SSL_set_ex_data(ssl, nx_ssl_verify_result_idx, NULL); // clear verify_result
 
     return ( ssl );
 }

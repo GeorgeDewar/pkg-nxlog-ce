@@ -147,6 +147,54 @@ static void im_msvistalog_parse_event_xml(nx_module_t *module,
 }
 
 
+/*
+ * Get the unformatted message from the event in case EvtFormatMessage fails
+ */
+
+static LPCWSTR im_msvistalog_get_userdata(nx_module_t *module,
+					  EVT_HANDLE event)
+{
+    nx_im_msvistalog_conf_t *imconf;
+    DWORD bufferused = 0;
+    DWORD propertycount = 0;
+    int i;
+
+    imconf = (nx_im_msvistalog_conf_t *) module->config;
+
+    if ( EvtRender(imconf->renderer_user, event, EvtRenderEventValues,
+		   imconf->renderbufsize_user,
+		   imconf->renderbuf_user, &bufferused, &propertycount) != TRUE )
+    {
+	if ( ERROR_INSUFFICIENT_BUFFER == GetLastError() )
+	{
+	    ASSERT(bufferused > 0);
+	    if ( bufferused >= 1024*1024*10 )
+	    {
+		throw_msg("excess size requirement (over 10Mb) by eventlog, skipping");
+	    }
+	    imconf->renderbuf_user = (PEVT_VARIANT) apr_palloc(module->pool, bufferused);
+	    ASSERT(imconf->renderbuf_user != NULL);
+	    imconf->renderbufsize_user = bufferused;
+	    
+	    if ( EvtRender(imconf->renderer_user, event, EvtRenderEventXml,
+			   imconf->renderbufsize_user,
+			   imconf->renderbuf_user, &bufferused, &propertycount) != TRUE )
+	    {
+		msvistalog_throw("Failed to retrieve eventlog user data");
+	    }
+	}
+    }
+
+    if ( (propertycount == 1) && 
+	 (imconf->renderbuf_user[i].Type == EvtVarTypeString) )
+    {
+	return ( imconf->renderbuf_user[i].StringVal );
+    }
+    
+    return ( NULL );
+}
+
+
 
 static nx_msvistalog_publisher_t *im_msvistalog_get_message(nx_module_t *module,
 							    EVT_HANDLE event,
@@ -160,6 +208,7 @@ static nx_msvistalog_publisher_t *im_msvistalog_get_message(nx_module_t *module,
     const nx_string_t *message = NULL;
     const char *errorstr = NULL;
     nx_msvistalog_publisher_t *publisher = NULL;
+    DWORD errcode = 0;
 
     imconf = (nx_im_msvistalog_conf_t *) module->config;
 
@@ -182,6 +231,22 @@ static nx_msvistalog_publisher_t *im_msvistalog_get_message(nx_module_t *module,
     if ( EvtFormatMessage(publisher->handle, event, 0, 0, NULL, EvtFormatMessageEvent,
 			  imconf->renderbufsize, (LPWSTR) imconf->renderbuf, &bufferused) != TRUE )
     {
+	LPCWSTR userdata;
+	errcode = GetLastError();
+
+	switch ( errcode )
+	{
+	    case 15029: //ERROR_EVT_UNRESOLVED_VALUE_INSERT
+	    case 15030: //ERROR_EVT_UNRESOLVED_PARAMETER_INSERT
+		userdata = im_msvistalog_get_userdata(module, event);
+		if ( userdata != NULL )
+		{
+		    message = nx_logdata_set_string_from_wide(logdata, "Message", userdata);
+		}
+		break;
+	    default:
+		break;
+	}
 	//msvistalog_error("Couldn't format message for EventID %d", eventid);
     }
     else
@@ -198,6 +263,13 @@ static nx_msvistalog_publisher_t *im_msvistalog_get_message(nx_module_t *module,
     {
 	char msg[256];
 	int len;
+	char errmsg[512];
+
+	if ( errcode != 0 )
+	{
+	    apr_strerror((int) APR_FROM_OS_ERROR(errcode), errmsg, sizeof(errmsg));
+	    errorstr = errmsg;
+	}
 
 	if ( errorstr != NULL )
 	{
@@ -779,6 +851,9 @@ static void im_msvistalog_config(nx_module_t *module)
 
     imconf->renderbuf = (PEVT_VARIANT) apr_palloc(module->pool, IM_MSVISTALOG_RENDER_BUFFER_SIZE); 
     imconf->renderbufsize = IM_MSVISTALOG_RENDER_BUFFER_SIZE;
+
+    imconf->renderbuf_user = (PEVT_VARIANT) apr_palloc(module->pool, IM_MSVISTALOG_RENDER_BUFFER_SIZE); 
+    imconf->renderbufsize_user = IM_MSVISTALOG_RENDER_BUFFER_SIZE;
 }
 
 
@@ -1124,7 +1199,8 @@ static void im_msvistalog_start(nx_module_t *module)
 	}
 
 	imconf->renderer_system = EvtCreateRenderContext(0, NULL, EvtRenderContextSystem);
-	if ( imconf->renderer_system == NULL )
+	imconf->renderer_user = EvtCreateRenderContext(0, NULL, EvtRenderContextUser);
+	if ( (imconf->renderer_system == NULL) || (imconf->renderer_user == NULL) )
 	{
 	    msvistalog_throw("EvtCreateRenderContext failed");
 	}
@@ -1140,6 +1216,10 @@ static void im_msvistalog_start(nx_module_t *module)
 	if ( imconf->renderer_system != NULL )
 	{
 	    EvtClose(imconf->renderer_system);
+	}
+	if ( imconf->renderer_user != NULL )
+	{
+	    EvtClose(imconf->renderer_user);
 	}
 	apr_pool_destroy(pool);
 	rethrow(e);
@@ -1227,6 +1307,11 @@ static void im_msvistalog_stop(nx_module_t *module)
     if ( imconf->renderer_system != NULL )
     {
 	EvtClose(imconf->renderer_system);
+    }
+
+    if ( imconf->renderer_user != NULL )
+    {
+	EvtClose(imconf->renderer_user);
     }
     
     if ( imconf->last_event != NULL )

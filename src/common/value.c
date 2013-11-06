@@ -366,9 +366,6 @@ const char *nx_value_type_to_string(nx_value_type_t type)
 nx_value_type_t nx_value_type_from_string(const char *str)
 {
     int i;
-    nx_ctx_t *ctx;
-
-    ctx = nx_ctx_get();
 
     for ( i = 0; value_types[i].value != NULL; i++ )
     {
@@ -479,10 +476,6 @@ char *nx_value_to_string(nx_value_t *value)
 		CHECKERR_MSG(nx_date_to_iso(retval, 20, value->datetime),
 			     "failed to convert time value to string");
 		break;
-	    case NX_VALUE_TYPE_BINARY:
-		retval = malloc((size_t) value->binary.len * 2 + 1);
-		nx_bin2ascii(value->binary.value, value->binary.len, retval);
-		break;
 	    case NX_VALUE_TYPE_REGEXP:
 		retval = strdup(value->regexp.str);
 		break;
@@ -524,6 +517,10 @@ char *nx_value_to_string(nx_value_t *value)
 #endif
 		break;    
 	    }
+	    case NX_VALUE_TYPE_BINARY:
+		retval = malloc((size_t) value->binary.len * 2 + 1);
+		nx_bin2ascii(value->binary.value, value->binary.len, retval);
+		break;
 	    default:
 		nx_panic("invalid value type: %d", value->type);
 	}
@@ -854,7 +851,13 @@ boolean nx_value_eq(const nx_value_t *v1, const nx_value_t *v2)
 	    }
 	    break;
 	case NX_VALUE_TYPE_REGEXP:
-	    nx_panic("FIXME");
+	    ASSERT(v1->regexp.str != NULL);
+	    ASSERT(v2->regexp.str != NULL);
+	    if ( strcmp(v1->regexp.str, v2->regexp.str) != 0 )
+	    {
+		return ( FALSE );
+	    }
+	    break;
 	case NX_VALUE_TYPE_BOOLEAN:
 	    if ( v1->boolean != v2->boolean )
 	    {

@@ -686,7 +686,7 @@ int main(int argc, const char * const *argv, const char * const *env)
     }
     catch(e)
     {
-	apr_file_t *f;
+	apr_file_t *f = NULL;
 	apr_pool_t *pool;
 	HKEY regkey;
 	uint32_t regtype = 0;
@@ -696,7 +696,7 @@ int main(int argc, const char * const *argv, const char * const *env)
 
 	pool = nx_pool_create_core();
 
-	// TODO: log to eventlog?
+	// TODO: log to eventlog in addition?
 
 	if ( RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\nxlog", &regkey) == ERROR_SUCCESS )
 	{
@@ -712,6 +712,7 @@ int main(int argc, const char * const *argv, const char * const *env)
 	}
 	apr_file_open(&f, logfile, APR_READ | APR_WRITE | APR_CREATE | APR_APPEND,
 		      APR_OS_DEFAULT, pool);
+	// FXIME: check status code 
 	if ( f != NULL )
 	{
 	    nx_string_t *tmpstr;

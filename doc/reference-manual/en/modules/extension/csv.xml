@@ -197,6 +197,13 @@
 		Printable characters can be specified as an unquoted character,
 		except for the backslash '\'. Example:
 		<programlisting><![CDATA[Delimiter ;]]></programlisting>
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term><anchor id="xm_csv_config_char_control"/>Control characters</term>
+	    <listitem>
+	      <para>
 		The following non-printable characters can be specified with escape sequences:
 		<variablelist>
 		  <varlistentry>

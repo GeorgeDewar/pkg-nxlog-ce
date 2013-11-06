@@ -51,6 +51,9 @@ typedef struct nx_im_msvistalog_conf_t
     EVT_HANDLE		renderer_system;
     PEVT_VARIANT	renderbuf;
     DWORD		renderbufsize;
+    EVT_HANDLE		renderer_user;
+    PEVT_VARIANT	renderbuf_user;
+    DWORD		renderbufsize_user;
     EVT_HANDLE		session;
     float		poll_interval;
     apr_pool_t		*publisherpool;

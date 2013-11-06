@@ -55,35 +55,34 @@ static void write_cb(conn_thd *thd_data, apr_socket_t *sock)
 	nbytes = testinput[thd_data->outpos].len - thd_data->offs;
 	//printf("%d %d\n", strlen(testinput[thd_data->outpos].str), testinput[thd_data->outpos].len);
 	//ASSERT(strlen(testinput[thd_data->outpos].str) == testinput[thd_data->outpos].len);
-	switch ( rv = apr_socket_send(sock, testinput[thd_data->outpos].str, &nbytes) )
+	rv = apr_socket_send(sock, testinput[thd_data->outpos].str, &nbytes);
+	if ( APR_STATUS_IS_EAGAIN(rv) )
 	{
-	    case APR_EAGAIN:
-		if ( nbytes == 0 )
-		{
-		    log_error("socket buffer full?");
-		    apr_sleep(100);
-		    //log_info("wrote %ld bytes %s", nbytes, rv == APR_SUCCESS ? "SUCCESS" : "EAGAIN");
-		}
-		// intentionally no break here
-	    case APR_SUCCESS:
-		thd_data->offs += nbytes;
-		if ( thd_data->offs >= testinput[thd_data->outpos].len )
-		{
-		    (thd_data->evcnt)++;
-		    thd_data->offs = 0;
-		    (thd_data->outpos)++;
-		    if ( thd_data->outpos >= testinputsize )
-		    {
-			thd_data->outpos = 0;
-		    };
-		}
-		break;
-	    default:
-		throw(rv, "socket send failed");
+	    if ( nbytes == 0 )
+	    {
+		log_error("socket buffer full?");
+		apr_sleep(100);
+		//log_info("wrote %ld bytes %s", nbytes, rv == APR_SUCCESS ? "SUCCESS" : "EAGAIN");
+	    }
 	}
-	if ( rv == APR_EAGAIN )
+	else if ( rv == APR_SUCCESS )
 	{
+	    thd_data->offs += nbytes;
+	    if ( thd_data->offs >= testinput[thd_data->outpos].len )
+	    {
+		(thd_data->evcnt)++;
+		thd_data->offs = 0;
+		(thd_data->outpos)++;
+		if ( thd_data->outpos >= testinputsize )
+		{
+		    thd_data->outpos = 0;
+		};
+	    }
 	    break;
+	}
+	else
+	{
+	    throw(rv, "socket send failed");
 	}
     }
 }
@@ -117,14 +116,14 @@ static void* APR_THREAD_FUNC conn_thread(apr_thread_t *thd UNUSED, void *data)
 	    CHECKERR(apr_socket_opt_set(thd_data->sockets[i], APR_SO_NONBLOCK, 1));
 	    CHECKERR(apr_socket_timeout_set(thd_data->sockets[i], APR_USEC_PER_SEC * 30));
 	    log_info("connecting to %s:%d", thd_data->host, thd_data->port);
-	    switch ( rv = apr_socket_connect(thd_data->sockets[i], sa) )
+	    rv = apr_socket_connect(thd_data->sockets[i], sa);
+	    if ( rv == APR_SUCCESS )
 	    {
-		//case APR_EINPROGRESS:
-		case APR_SUCCESS:
-		    (thd_data->conncnt)++;
-		    break;
-		default:
-		    throw(rv, "connection failed");
+		(thd_data->conncnt)++;
+	    }
+	    else
+	    {
+		throw(rv, "connection failed");
 	    }
 	    CHECKERR(apr_socket_opt_set(thd_data->sockets[i], APR_SO_NONBLOCK, 0));
 	    CHECKERR(apr_socket_timeout_set(thd_data->sockets[i], APR_USEC_PER_SEC * 60));
@@ -168,11 +167,11 @@ static void* APR_THREAD_FUNC conn_thread(apr_thread_t *thd UNUSED, void *data)
 			break;
 		    }
 		}
-		else if ( rv == APR_TIMEUP )
+		else if ( APR_STATUS_IS_TIMEUP(rv) )
 		{
 		    log_info("no poll events, pollset_poll timed out");
 		}
-		else if ( rv == APR_EINTR )
+		else if ( APR_STATUS_IS_EINTR(rv) )
 		{
 		    log_info("apr_pollset_poll was interrupted");
 		}
@@ -298,4 +297,3 @@ int main(int argc, const char * const *argv, const char * const *env)
 
     return ( 0 );
 }
-

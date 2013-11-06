@@ -29,6 +29,7 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/csv.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/json.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/xml.xml" /> 
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/kvp.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/gelf.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/charconv.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/fileop.xml" /> 

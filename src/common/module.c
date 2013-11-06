@@ -1091,6 +1091,7 @@ void nx_module_start_self(nx_module_t *module)
 	nx_module_resume(module);
 	return;
     }
+
     ASSERT(nx_module_get_status(module) == NX_MODULE_STATUS_STOPPED);
 
     if ( module->decl->start != NULL )
@@ -2198,15 +2199,15 @@ void nx_module_pollset_add_file(nx_module_t *module,
     {
 	char errmsg[200];
 	
-	switch ( rv )
+	if ( APR_STATUS_IS_EEXIST(rv) )
 	{
-	    case APR_EEXIST:
-//			nx_panic("socket is already added");
-//			log_aprerror(rv, "socket is already added");
-		break;
-	    default:
-		apr_strerror(rv, errmsg, sizeof(errmsg));
-		nx_panic("failed to add descriptor to pollset: %s", errmsg);
+//		nx_panic("socket is already added");
+//		log_aprerror(rv, "file is already added");
+	}
+	else
+	{
+	    apr_strerror(rv, errmsg, sizeof(errmsg));
+	    nx_panic("failed to add descriptor to pollset: %s", errmsg);
 	}
     }
 
@@ -2250,14 +2251,14 @@ void nx_module_pollset_remove_file(nx_module_t *module,
     {
 	char errmsg[200];
 
-	switch ( rv )
+	if ( APR_STATUS_IS_NOTFOUND(rv) )
 	{
-	    case APR_NOTFOUND:
-//			log_aprerror(rv, "Could not remove descriptor from pollset");
-		break;
-	    default:
-		apr_strerror(rv, errmsg, sizeof(errmsg));
-		nx_panic("failed to remove descriptor from pollset: %s", errmsg);
+//		log_aprerror(rv, "Could not remove descriptor from pollset");
+	}
+	else
+	{
+	    apr_strerror(rv, errmsg, sizeof(errmsg));
+	    nx_panic("failed to remove descriptor to pollset: %s", errmsg);
 	}
     }
    *reqevents = 0;
@@ -2297,15 +2298,15 @@ void nx_module_pollset_add_socket(nx_module_t *module,
     {
 	char errmsg[200];
 	
-	switch ( rv )
+	if ( APR_STATUS_IS_EEXIST(rv) )
 	{
-	    case APR_EEXIST:
-//			nx_panic("socket is already added");
-//			log_aprerror(rv, "socket is already added");
-		break;
-	    default:
-		apr_strerror(rv, errmsg, sizeof(errmsg));
-		nx_panic("failed to add descriptor to pollset: %s", errmsg);
+//		nx_panic("socket is already added");
+//		log_aprerror(rv, "socket is already added");
+	}
+	else
+	{
+	    apr_strerror(rv, errmsg, sizeof(errmsg));
+	    nx_panic("failed to add descriptor to pollset: %s", errmsg);
 	}
     }
 
@@ -2350,14 +2351,14 @@ void nx_module_pollset_remove_socket(nx_module_t *module,
     {
 	char errmsg[200];
 
-	switch ( rv )
+	if ( APR_STATUS_IS_NOTFOUND(rv) )
 	{
-	    case APR_NOTFOUND:
-//			log_aprerror(rv, "Could not remove descriptor from pollset");
-		break;
-	    default:
-		apr_strerror(rv, errmsg, sizeof(errmsg));
-		nx_panic("failed to remove descriptor from pollset: %s", errmsg);
+//		log_aprerror(rv, "Could not remove descriptor from pollset");
+	}
+	else
+	{
+	    apr_strerror(rv, errmsg, sizeof(errmsg));
+	    nx_panic("failed to remove descriptor to pollset: %s", errmsg);
 	}
     }
     *reqevents = 0;
@@ -2507,7 +2508,7 @@ void nx_module_pollset_poll(nx_module_t *module, boolean readd)
 	    }
 	}
     }
-    else if ( rv == APR_TIMEUP )
+    else if ( APR_STATUS_IS_TIMEUP(rv) )
     {
 	log_debug("[%s] no poll events, pollset_poll timed out", module->name);
     }

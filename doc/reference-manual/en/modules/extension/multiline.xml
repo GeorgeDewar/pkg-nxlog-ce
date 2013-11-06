@@ -8,10 +8,29 @@
     confuse simple linebased parsers which treat every line as a separate event.
   </para>
   <para>
-    Usually each multi-line message has a header (e.g. timestamp + severity) or they can
-    be fixed in line count. This information allows the message to be reconstructed, i.e. lines 
-    concatenated which belong to a single event. The xm_multiline module works exactly
-    this way.
+    Multi-line events have one or more of the following properties:
+    <itemizedlist>
+      <listitem>
+	<para>
+	  The first line has a header (e.g. timestamp + severity).
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  The first line has a header and there is closing character sequence marking the end.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  The line cont in the message can be variable (one or more) or the message can
+	  have a fixed line count.
+	</para>
+      </listitem>
+    </itemizedlist>
+    
+    This information allows the message to be reconstructed, i.e. lines to be concatenated which
+    belong to a single event. This is how the xm_multiline module can join together multiple
+    lines into a single message.
   </para>
 
   <para>
@@ -86,9 +105,23 @@
 		these solutions are not perfect either (though these may be implemented in a later 
 		version).
 		If this behaviour is unacceptable, consider using some kind of an encapsulation
-		method (JSON, XML, RFC5425, etc) if possible.
+		method (JSON, XML, RFC5425, etc) or use and end marker with 
+		<link linkend="xm_multiline_config_headerline">EndLine</link> if possible.
 	      </para>
 	    </note>
+	  </listitem>
+	</varlistentry>
+	<varlistentry>
+	  <term><anchor id="xm_multiline_config_endline"/>EndLine</term>
+	  <listitem>
+	    <para>
+	      This is similar to the <link linkend="xm_multiline_config_headerline">HeaderLine</link>
+	      directive.  This optional directive also takes a 
+	      <link linkend="lang_literal_string">string</link>
+	      or a <link linkend="lang_literal_regexp">regular expression</link> literal to be
+	      matched against each line. When the match is successful the message
+	      is considered complete and is emitted.
+	    </para>
 	  </listitem>
 	</varlistentry>
 	<varlistentry>
