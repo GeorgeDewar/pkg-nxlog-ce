@@ -318,6 +318,57 @@ static nx_logdata_t *xm_multiline_input_func(nx_module_input_t *input,
 }
 
 
+// return the buffered data regardless even if it is incomplete
+static nx_logdata_t *xm_multiline_flush_func(nx_module_input_t *input,
+					     void *data)
+{
+    nx_logdata_t *retval = NULL;
+    nx_xm_multiline_ctx_t *ctx;
+    nx_module_t *module;
+
+    if ( input->ctx == NULL )
+    {
+	return ( NULL );
+    }
+    ctx = input->ctx;
+    module = (nx_module_t *) data;
+
+    if ( ctx->logdata == NULL )
+    {
+	if ( ctx->tmpline != NULL )
+	{
+	    retval = ctx->tmpline;
+	    ctx->tmpline = NULL;
+	}
+    }
+    else
+    { // we have saved logdata
+	if ( ctx->tmpline != NULL )
+	{
+	    nx_string_append(ctx->logdata->raw_event,
+			     ctx->tmpline->raw_event->buf,
+			     (int) ctx->tmpline->raw_event->len);
+	    nx_logdata_free(ctx->tmpline);
+	    ctx->tmpline = NULL;
+	    retval = ctx->logdata;
+	    ctx->logdata = NULL;
+	}
+	else
+	{
+	    retval = ctx->logdata;
+	    ctx->logdata = NULL;
+	}
+    }
+
+    if ( retval != NULL )
+    {
+	nx_string_strip_crlf(retval->raw_event);
+    }
+
+    return ( retval );
+}
+
+
 
 static void xm_multiline_config(nx_module_t *module)
 {
@@ -454,7 +505,9 @@ static void xm_multiline_config(nx_module_t *module)
 
     if ( nx_module_input_func_lookup(module->name) == NULL )
     {
-	nx_module_input_func_register(NULL, module->name, &xm_multiline_input_func, module);
+	//FIXME: flush func
+	nx_module_input_func_register(NULL, module->name, &xm_multiline_input_func,
+				      &xm_multiline_flush_func, module);
 	log_debug("Inputreader '%s' registered", module->name);
     }
 }

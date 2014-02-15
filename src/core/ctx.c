@@ -470,12 +470,12 @@ nx_module_t *nx_ctx_module_for_job(nx_ctx_t *ctx, nx_job_t *job)
 static void nx_ctx_register_builtin_inputfuncs()
 {
     nx_module_input_func_register(NULL, "linebased",
-				  &nx_module_input_func_linereader, NULL);
+				  &nx_module_input_func_linereader, NULL, NULL);
     
     nx_module_input_func_register(NULL, "dgram",
-				  &nx_module_input_func_dgramreader, NULL);
+				  &nx_module_input_func_dgramreader, NULL, NULL);
     nx_module_input_func_register(NULL, "binary",
-				  &nx_module_input_func_binaryreader, NULL);
+				  &nx_module_input_func_binaryreader, NULL, NULL);
 }
 
 

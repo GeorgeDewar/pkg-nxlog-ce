@@ -14,6 +14,7 @@
 <Input in>
     Module	im_file
     File	"/var/log/app/csv.log"
+    Exec        csv->parse_csv();
 </Input>
 
 <Output out>

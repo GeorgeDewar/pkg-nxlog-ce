@@ -362,7 +362,7 @@ If the lifetime expires, the variable is deleted automatically and get_var(name)
  <procedure>
    <name>drop</name>
    <cb>nx_expr_proc__drop</cb>
-   <description><en>Drop the currently processed event's log.</en></description>
+   <description><en>Drop the currently processed event's log and don't execute further statements.</en></description>
  </procedure>
 
  <procedure>
@@ -622,7 +622,7 @@ If the lifetime expires, the variable is deleted automatically and get_var(name)
     <name>arg</name>
     <type>string</type>
    </arg>
-   <description><en>Parse a datetime argument.</en></description>
+   <description><en>Parse a datetime argument. Returns an undefined datetime type if it cannot parse the argument so that the user can fix the error, e.g. $EventTime = parsedate($somestring); if not defined($EventTime) $EventTime = now();</en></description>
  </function>
 
  <function>
@@ -674,7 +674,7 @@ If the lifetime expires, the variable is deleted automatically and get_var(name)
    <type>global</type>
    <cb>nx_expr_func__hostname_fqdn</cb>
    <rettype>string</rettype>
-   <description><en>Return the FQDN hostname. This function will return the sort form if the FQDN hostname cannot be determined.</en></description>
+   <description><en>Return the FQDN hostname. This function will return the short form if the FQDN hostname cannot be determined.</en></description>
  </function>
 
  <function>

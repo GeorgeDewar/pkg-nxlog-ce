@@ -7,7 +7,7 @@ maintainer-clean-local:
 changelog_DATA = ChangeLog.txt
 changelogdir = $(docdir)
 
-EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE $(wildcard parsers/*.conf) \
+EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE LICENSE.pdf $(wildcard parsers/*.conf) \
              $(wildcard packaging/debian/*.pem) \
              packaging/aix/nxlog.spec \
              packaging/aix/init \
@@ -27,6 +27,8 @@ EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_D
 	     packaging/debian/postrm \
 	     packaging/debian/rules \
 	     packaging/debian/source/format \
+             packaging/macosx/buildpkg.sh \
+             packaging/macosx/nxlog.conf \
 	     packaging/windows/license.rtf \
 	     packaging/windows/nxlog.conf \
 	     packaging/windows/nxlog.wxs \

@@ -27,7 +27,7 @@ static void om_file_create_dir(nx_module_t *module, const char *filename)
     ASSERT(filename != NULL);
 
     idx = strrchr(filename, '/');
-#ifndef WIN32
+#ifdef WIN32
     if ( idx == NULL ) 
     {
         idx = strrchr(filename, '\\');

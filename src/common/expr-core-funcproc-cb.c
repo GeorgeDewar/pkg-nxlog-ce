@@ -6,6 +6,7 @@
  */
 
 #include <apr_lib.h>
+#include <time.h>
 
 #include "expr-core-funcproc.h"
 #include "date.h"
@@ -551,9 +552,15 @@ void nx_expr_func__parsedate(nx_expr_eval_ctx_t *eval_ctx UNUSED,
 	return;
     }
 
-    CHECKERR_MSG(nx_date_parse(&(retval->datetime), args[0].string->buf, NULL), 
-		 "couldn't parse date: %s", args[0].string->buf);
-    retval->defined = TRUE;
+    if ( nx_date_parse(&(retval->datetime), args[0].string->buf, NULL) == APR_SUCCESS )
+    {
+	retval->defined = TRUE;
+    }
+    else
+    {
+	log_debug("couldn't parse date: %s", args[0].string->buf);
+	retval->defined = FALSE;
+    }
 }
 
 
@@ -928,6 +935,7 @@ void nx_expr_proc__drop(nx_expr_eval_ctx_t *eval_ctx,
     }
     // must not free it here because it is still linked in the queue
     eval_ctx->logdata = NULL;
+    eval_ctx->dropped = TRUE; // don't continue executing further statements
 }
 
 
@@ -942,7 +950,7 @@ void nx_expr_proc__delete(nx_expr_eval_ctx_t *eval_ctx,
 
     if ( eval_ctx->logdata == NULL )
     {
-	throw_msg("no logdata to delete() from, possbily dropped");
+	throw_msg("no logdata to delete() from, possibly dropped");
     }
 
     arg = NX_DLIST_FIRST(args);
@@ -1543,7 +1551,7 @@ void nx_expr_proc__rename_field(nx_expr_eval_ctx_t *eval_ctx,
     }
     if ( argval2.string->len == 0 )
     {
-	nx_value_kill(&argval2);
+	nx_value_kill(&argval1);
 	nx_value_kill(&argval2);
 	throw_msg("zero sized string is invalid for second arg of rename_field()");
     }
@@ -1554,12 +1562,12 @@ void nx_expr_proc__rename_field(nx_expr_eval_ctx_t *eval_ctx,
     }
     catch(e)
     {
-	nx_value_kill(&argval2);
+	nx_value_kill(&argval1);
 	nx_value_kill(&argval2);
 	rethrow(e);
     }
 
-    nx_value_kill(&argval2);
+    nx_value_kill(&argval1);
     nx_value_kill(&argval2);
 }
 
@@ -1608,9 +1616,14 @@ void nx_expr_proc__reroute(nx_expr_eval_ctx_t *eval_ctx,
 
     if ( route == NULL )
     {
-	throw_msg("invalid route name specified for reroute(): '%s'", routeval.string->buf);
+	char tmpstr[200];
+
+	apr_cpystrn(tmpstr, routeval.string->buf, sizeof(tmpstr));
+	nx_value_kill(&routeval);
+	throw_msg("invalid route name specified for reroute(): '%s'", tmpstr);
     }
 
+    nx_value_kill(&routeval);
     nx_module_add_logdata_to_route(module, route, logdata);
 
     // must not free it here because it is still linked in the queue
@@ -1661,8 +1674,14 @@ void nx_expr_proc__add_to_route(nx_expr_eval_ctx_t *eval_ctx,
 
     if ( route == NULL )
     {
-	throw_msg("invalid route name specified for add_to_route(): '%s'", routeval.string->buf);
+	char tmpstr[200];
+
+	apr_cpystrn(tmpstr, routeval.string->buf, sizeof(tmpstr));
+	nx_value_kill(&routeval);
+
+	throw_msg("invalid route name specified for add_to_route(): '%s'", tmpstr);
     }
+    nx_value_kill(&routeval);
 
     nx_module_lock(module);
     (module->evt_fwd)++;

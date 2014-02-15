@@ -154,6 +154,7 @@ static void nx_win32_svc_install()
     }
 
     // Install the new service
+    // TODO: add load order dependency on the eventlog service
     new_service = CreateService(service_manager, "nxlog", "nxlog",
 				SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
 				SERVICE_AUTO_START, SERVICE_ERROR_IGNORE,
@@ -246,6 +247,9 @@ static void WINAPI nx_win32_svc_change(DWORD cmd)
     // Only STOP command is handled
     switch ( cmd )
     {
+	case SERVICE_CONTROL_SHUTDOWN:
+	    log_warn("received a system shutdown request");
+	    // fallthrough
 	case SERVICE_CONTROL_STOP:
 	    log_warn("stopping nxlog service");
 	    nxlog.terminate_request = TRUE;
@@ -497,7 +501,8 @@ static void WINAPI nx_win32_svc_main(DWORD argc, LPTSTR *argv)
 	    svc_status.dwWaitHint = 0; 
 	    svc_status.dwServiceType = SERVICE_WIN32;
 	    svc_status.dwCurrentState = SERVICE_RUNNING;
-	    svc_status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+	    // Do we need to support SERVICE_ACCEPT_PRESHUTDOWN ?
+	    svc_status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 	    if ( SetServiceStatus(svc_status_handle, &svc_status) == FALSE )
 	    {
 		nx_win32_error("Cannot send start service status update");

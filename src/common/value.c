@@ -75,10 +75,15 @@ void nx_value_kill(nx_value_t *value)
 		    free(value->regexp.str);
 		    value->regexp.str = NULL;
 		}
+		if ( value->regexp.replacement != NULL )
+		{
+		    free(value->regexp.replacement);
+		}
 		break;    
 	    default:
 		nx_panic("invalid value type: %d", value->type);
 	}
+	value->defined = FALSE; // make sure we will not be called twice
     }
 }
 
@@ -580,7 +585,7 @@ int64_t nx_value_parse_int(const char *string)
 		mul = 1024 * 1024 * 1024;
 		break;
 	    default:
-		throw_msg("invalid modifier: '%c'", string[i + len - 1]);
+		throw_msg("cannot parse integer, invalid modifier: '%c'", string[i + len - 1]);
 	}
 	len--;
     }
@@ -723,7 +728,7 @@ nx_value_t *nx_value_from_string(const char *string, nx_value_type_t type)
 	case NX_VALUE_TYPE_DATETIME:
 	    if ( nx_date_parse(&t, string, NULL) != APR_SUCCESS )
 	    {
-		return ( NULL );
+		throw_msg("Couldn't parse datetime value: '%s'", string);
 	    }
 	    retval = nx_value_new(type);
 	    retval->datetime = t;

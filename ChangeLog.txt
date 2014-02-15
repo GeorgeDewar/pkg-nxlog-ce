@@ -1,3 +1,47 @@
+  A regression caused a crash with im_file when the File did not exist.
+  A typo in the code was causing a memory leak with rename_field().
+* 2014-02-03 2.7.1189
+  The LICENSE has changed.
+  Added a new extension module to parse binary wtmp files on Linux.
+  Fixed a regression causing a crash after the 'failed to determine FQDN hostname' error message.
+  The to_syslog_*() procedures can now use $raw_event if $Message is unset to make it easier to convert to syslog.
+  Added a fix to im_msvistalog to handle the "EvtNext failed with error 13: The data is invalid." error better.
+  The im_file module now emits the last event when using with the xm_multiline extension.
+  Fixed the issue with more than 20 fiels and xm_multiline reported in ticket #33.
+  Json parse errors in raw_event could cause a double free resulting in a crash or undefined behavior.
+  It is now possible to use multiple instances of xm_perl.
+  Disallow using a single processor module instance in multiple routes.
+  The file_chown() procedure in xm_fileop works with user/group names in addtion to uid/gid values.
+  CloseWhenIdle directive for im_file.
+  File removal in some circumstances caused im_file to emit "input file does not exist" messages on windows.
+  In same rare cases im_file would give a panic on windows with "im_file got EAGAIN for read".
+  The regexp replacement operator s/// was leaking memory.
+  In some circumstances excess CPU was used when im_file watched several files.
+  Added some more performance optimizations to im_file to handle a large number of wildcarded files
+   so that it should consume less resources than before. It also comes with a new DirCheckInterval and
+   an ActiveFiles directive which can help in some cases when monitoring wildcarded files.
+  Added a RenameCheck directive to im_file which should help detecting renamed/rotated files.
+  The deb installer got stuck after trying to (re)start the daemon.
+* 2013-10-14 2.6.1131
+  Service control manager could not properly shut down the service on windows2003 and possibly other windows 
+   versions. This could have resulted in unsaved positions and duplicated log collection on system restart.
+  Fixed a panic in nx_config_cache_write() during shutdown.
+  Fixed an assertion failure when pm_pattern was trying to set an invalid datetime field.
+  The installer adds 'eventlog' as a dependency for the nxlog service.
+  Some error conditions (e.g. The interface is unknown, Access is denied, Invalid parameter, etc) should be
+   handled better now by im_mseventlog. 
+  The reroute() and add_to_route() procedures were leaking memory.
+  Some xm_fileop procedures did not work properly on windows, e.g. file_remove() with wildcards.
+  im_exec was consuming excess CPU on windows in some cases.
+  Fixed a memory leak in pm_buffer.
+  Added xm_kvp to the windows wix build script so that it is now included in the msi package.
+  Added an UndefValue directive to the xm_csv module to make parsing W3C logs containing the dash "-" more painless.
+  The parsedate() function now returns an undefined datetime type instead of aborting execution with an error.
+  The drop() procedure now aborts further evaluation of statements so that an else branch is no longer
+   required when dropping events conditionally.
+  Suppress repeating "failed to open directory" error messages in im_file.
+  Fixed bad filenames in logged config locations caused by the include directive.
+  Experimental MacOSX port.
 * 2013-07-04 2.5.1089
   An SSL cert verification failure caused successive verifications to fail in im_ssl and related modules.
   Potentially fixed im_file giving "Partial results are valid but processing is incomplete" errors.

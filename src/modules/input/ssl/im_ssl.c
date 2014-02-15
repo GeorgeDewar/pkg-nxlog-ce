@@ -577,6 +577,7 @@ static void im_ssl_write(nx_module_t *module, nx_event_t *event)
 		 "couldn't get input data from socket");
     ASSERT(input != NULL);
     ssl = (SSL *) nx_module_input_data_get(input, "ssl");
+
     ASSERT(ssl != NULL);
 
     if ( !SSL_is_init_finished(ssl) )

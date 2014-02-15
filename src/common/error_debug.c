@@ -183,7 +183,10 @@ static void write_log(const char	*message,
 	{
 	    if ( _foreground == TRUE )
 	    {
-		fprintf(stderr, "couldn't write to log file\n");
+		char errmsg[200];
+
+		apr_strerror(rv, errmsg, sizeof(errmsg));
+		fprintf(stderr, "couldn't write LogFile: %s\n", errmsg);
 	    }
 	}
     }
@@ -359,7 +362,7 @@ void nx_log(apr_status_t	code,
 		    }
 		}
 		else
-		{
+		{ // we have a different log message
 		    ctx->norepeat_offs = msgoffs;
 		    if ( ctx->norepeat_cnt > 1 )
 		    {

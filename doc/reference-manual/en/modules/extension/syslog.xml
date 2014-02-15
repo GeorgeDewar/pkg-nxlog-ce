@@ -146,6 +146,16 @@
 
   <section id="xm_syslog_config_examples">
     <title>Configuration examples</title>
+      <example id="xm_syslog_example_syslog_bsd_file">
+	<title>Sending a file as BSD syslog over UDP</title>
+        <para>
+          To send logs out in BSD syslog format over udp which are collected from files, use the
+          <link linkend="xm_syslog_proc_to_syslog_bsd">to_syslog_bsd()</link> procedure coupled
+          with the <link linkend="im_udp">om_udp</link> module as in the following example.
+          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_syslog_file_bsd_udp.xml" />
+        </para>
+      </example>
+
       <example id="xm_syslog_example_bsd_udp">
 	<title>Collecting BSD style syslog messages over UDP</title>
         <para>

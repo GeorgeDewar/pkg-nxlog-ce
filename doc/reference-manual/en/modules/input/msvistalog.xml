@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section id="im_msvistalog">
-  <title>MS EventLog for Windows 2008/Vista and later (im_msvistatlog)</title>
+  <title>MS EventLog for Windows 2008/Vista and later (im_msvistalog)</title>
   <para>
     This module can be used to collect EventLog messages on Microsoft Windows platforms which support
     the newer EventLog API (also known as the Crimson Eventlog subsystem), namely Windows 2008/Vista

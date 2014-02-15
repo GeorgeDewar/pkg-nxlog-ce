@@ -120,6 +120,8 @@ static void om_http_reset(nx_module_t *module)
 
     modconf = (nx_om_http_conf_t *) module->config;
 
+    modconf->logdata = NULL;
+
     if ( modconf->bio_resp_head != NULL )
     {
 	BIO_free_all(modconf->bio_resp_head);
@@ -483,8 +485,6 @@ static void om_http_data_available(nx_module_t *module)
 	om_http_send_request(module);
     }
 
-    log_debug("request sent");
-
     BIO_free_all(modconf->bio_req);
     modconf->bio_req = NULL;
 }
@@ -742,7 +742,6 @@ static void om_http_read_response(nx_module_t *module)
 
     nx_module_logqueue_pop(module, modconf->logdata);
     nx_logdata_free(modconf->logdata);
-    modconf->logdata = NULL;
     om_http_reset(module);
     nx_module_data_available(module);
     nx_module_add_poll_event(module);

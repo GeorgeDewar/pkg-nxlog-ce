@@ -90,6 +90,7 @@ am__relativize = \
   reldir="$$dir2"
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+APRCONFIG = @APRCONFIG@
 APR_CFLAGS = @APR_CFLAGS@
 APR_LIBS = @APR_LIBS@
 AR = @AR@
@@ -163,6 +164,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PCRECONFIG = @PCRECONFIG@
 PCRE_CFLAGS = @PCRE_CFLAGS@
 PCRE_LIBS = @PCRE_LIBS@
 PERL = @PERL@
@@ -236,7 +238,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = \
-                syslog exec csv charconv json xml gelf fileop multiline perl kvp
+                syslog exec csv charconv json xml gelf fileop multiline perl kvp wtmp
 
 all: all-recursive
 

@@ -16,9 +16,13 @@
 	    <simpara>
 	      This mandatory directive specifies the name of the output file to open.
 	      It must be a <link linkend="lang_type_string">string</link> type
-	      <link linkend="lang_expressions">expression</link>. Note that the filename
-	      must be quoted to be a valid string literal unlike in other directives
-	      which take a filename argument.
+	      <link linkend="lang_expressions">expression</link>. 
+	      If the expression in the File directive is not a constant string (i.e. it contains
+	      functions, field names or operators), it will be evaluated before each event is
+	      written to the file (and after the <link linkend="config_module_exec">Exec</link>
+	      is evaluated).
+	      Note that the filename must be quoted to be a valid string literal unlike in
+	      other directives which take a filename argument.
 	      For relative filenames you should be aware that nxlog changes its working
 	      directory to '/' unless the global
 	      <link linkend="config_global_spooldir">SpoolDir</link> is set to something else.

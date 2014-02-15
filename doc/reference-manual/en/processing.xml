@@ -252,14 +252,14 @@ Nov 03 2005 14:50:30
      </para>
 
      <para>
-       The <link linkend="core_func_datetime">datetime()</link> function can be used to convert
-       an integer expressing the number of microseconds elapsed since the epoch (Unix timestamp format).
+       The <link linkend="core_func_parsedate">parsedate()</link> function returns an undefined datetime type.
+       You should take care of checking the return value for errors as in the example below.
 	 <example>
-	   <title>Parsing a microsecond resolution timestamp expressed with a fractional part</title>
+	   <title>Using the parsedate() function</title>
 	   <para>
-	     The integer format of nxlog does not support fractional parts, so we use a regular
-	     expression to get around this.
-	     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-datetime.xml" />
+	     Since our regular expression is quite vague, it may match strings which are invalid. 
+	     In this case <link linkend="core_func_parsedate">parsedate()</link> will return an undefined datetime value.
+	     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../config-examples/stmnt-example-parsedate.xml" />
 	   </para>
 	 </example>
      </para>

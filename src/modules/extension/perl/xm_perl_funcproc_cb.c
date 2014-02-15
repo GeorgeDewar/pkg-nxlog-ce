@@ -14,35 +14,6 @@
 
 #define NX_LOGMODULE NX_LOGMODULE_CORE
 
-static PerlInterpreter *my_perl = NULL;
-
-
-PerlInterpreter *nx_xm_perl_init()
-{
-    if ( my_perl == NULL )
-    {
-	my_perl = perl_alloc();
-	perl_construct(my_perl);
-	PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
-    }
-
-    return ( my_perl );
-}
-
-
-
-void nx_xm_perl_destroy()
-{
-    // FIXME: this is racy
-    if ( my_perl != NULL )
-    {
-	perl_destruct(my_perl);
-	perl_free(my_perl);
-	my_perl = NULL;
-    }
-}
-
-
 
 static void xm_perl_call(nx_expr_eval_ctx_t *eval_ctx,
 			 nx_module_t *module,
@@ -80,7 +51,7 @@ static void xm_perl_call(nx_expr_eval_ctx_t *eval_ctx,
     log_debug("calling perl subroutine: %s", value.string->buf);
 
     PERL_SET_CONTEXT(modconf->perl_interpreter);
-
+    dTHXa(modconf->perl_interpreter);
     dSP;
     ENTER;
     SAVETMPS;
