@@ -178,7 +178,7 @@ define ROOT C:\Program Files (x86)\nxlog
      <title>Configuring nxlog on GNU/Linux</title>
      <para>
        After the package is installed check and edit the configuration file located at 
-       <filename>/etc/nxlog.conf</filename>. It contains an example configuration which
+       <filename>/etc/nxlog/nxlog.conf</filename>. It contains an example configuration which
        you will likely want to modify to suit your needs.
        Please read the relevant chapters from this manual on how to configure nxlog:
        <simplelist>

@@ -176,12 +176,13 @@ void nxlog_init(nxlog_t *nxlog)
 	{
 	    if ((rv = apr_sockaddr_info_get(&sa, tmpstr, APR_INET, 0, 0, nxlog->pool)) != APR_SUCCESS )
 	    {
-		log_aprwarn(rv, "failed to determine FQDN hostname");
+		log_aprwarn(rv, "failed to determine FQDN, cannot resolve %s", tmpstr);
 		nxlog->hostname_fqdn.buf = apr_pstrdup(nxlog->pool, "localhost.localdomain");
 	    }
 	    else if ((rv = apr_getnameinfo(&(nxlog->hostname_fqdn.buf), sa, 0)) != APR_SUCCESS )
 	    {
 		log_aprwarn(rv, "failed to determine FQDN hostname");
+		nxlog->hostname_fqdn.buf = apr_pstrdup(nxlog->pool, tmpstr);
 	    }
 
 	    nxlog->hostname_fqdn.len = (uint32_t) strlen(nxlog->hostname_fqdn.buf);
@@ -351,7 +352,8 @@ static void* APR_THREAD_FUNC nxlog_event_thread(apr_thread_t *thd, void *data UN
 	    
 	    if ( next_run_relative > 0 )
 	    {
-		log_debug("future event, event thread sleeping in cond_timedwait");
+		log_debug("future event, event thread sleeping %ldms in cond_timedwait",
+			  (long int) next_run_relative);
 		apr_thread_cond_timedwait(nxlog->event_cond, nxlog->mutex,
 					  next_run_relative);
 	    }

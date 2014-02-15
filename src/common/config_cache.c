@@ -205,6 +205,7 @@ void nx_config_cache_write()
     apr_hash_index_t *idx;
     const char *key;
     apr_ssize_t keylen;
+    apr_status_t rv;
 
     ctx = nx_ctx_get();
 
@@ -224,10 +225,14 @@ void nx_config_cache_write()
     
     if ( ctx->ccfile == NULL )
     {
-	CHECKERR_MSG(apr_file_open(&(ctx->ccfile), ctx->ccfilename,
-				   APR_READ | APR_WRITE | APR_CREATE | APR_TRUNCATE,
-				   APR_OS_DEFAULT, ctx->pool),
-		     "couldn't open config cache '%s' for writing", ctx->ccfilename);
+	rv = apr_file_open(&(ctx->ccfile), ctx->ccfilename,
+			   APR_READ | APR_WRITE | APR_CREATE | APR_TRUNCATE,
+			   APR_OS_DEFAULT, ctx->pool);
+	if ( rv != APR_SUCCESS )
+	{
+	    log_aprerror(rv, "couldn't open config cache '%s' for writing", ctx->ccfilename);
+	    return;
+	}
     }
     else
     {

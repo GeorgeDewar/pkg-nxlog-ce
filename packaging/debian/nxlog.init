@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 # /etc/init.d/nxlog: start the nxlog daemon.
 
 ### BEGIN INIT INFO

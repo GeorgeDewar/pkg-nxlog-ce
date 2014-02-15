@@ -262,7 +262,8 @@ static nx_directive_t *nx_cfg_parse_line(const char *l, nx_cfg_parser_ctx_t *ctx
 	}
 	else
 	{
-	    incfile.name = args;
+	    incfile.name = apr_pstrdup(ctx->pool, args);
+
 	    try
 	    {
 	        nx_cfg_open_file(&incfile, ctx->pool);
@@ -273,6 +274,7 @@ static nx_directive_t *nx_cfg_parse_line(const char *l, nx_cfg_parser_ctx_t *ctx
 			    ctx->cfg->name, ctx->cfg->line_num);
 	    }
 	    retval = nx_cfg_parse(&cfg_ctx);
+
 	    ctx->current = cfg_ctx.current;
 	    ctx->next_is_child = cfg_ctx.next_is_child;
 	    ctx->defines = cfg_ctx.defines;
@@ -421,174 +423,92 @@ static apr_status_t cfg_close(void *param)
 
 
 
-/* Read one line from open ap_configfile_t, strip LF, increase line number */
+/* Read one line from open nx_configfile_t, strip LF, increase line number */
 /* If custom handler does not define a getstr() function, read char by char */
 
 int nx_cfg_getline(char *buf, int bufsize, nx_cfgfile_t *cfp)
 {
+    char *src, *dst;
+    char *cp;
+    char *cbuf = buf;
+    int cbufsize = bufsize;
+
     ASSERT(buf != NULL);
+    ASSERT(cfp->getstr != NULL);
 
-    /* If a "get string" function is defined, use it */
-    if ( cfp->getstr != NULL )
+    for ( ; ; )
     {
-        char *src, *dst;
-        char *cp;
-        char *cbuf = buf;
-        int cbufsize = bufsize;
-
-        while ( 1 )
+	(cfp->line_num)++;
+	if ( cfp->getstr(cbuf, cbufsize, cfp->param) == NULL )
 	{
-            ++cfp->line_num;
-            if ( cfp->getstr(cbuf, cbufsize, cfp->param) == NULL )
+	    return 1;
+	}
+	/*
+	 *  check for line continuation,
+	 *  i.e. match [^\\]\\[\r]\n only
+	 */
+	cp = cbuf;
+	while ( (cp < cbuf+cbufsize) && (*cp != '\0') )
+	{
+	    cp++;
+	}
+	if ( (cp > cbuf) && (cp[-1] == APR_ASCII_LF) )
+	{
+	    cp--;
+	    if ( (cp > cbuf) && (cp[-1] == APR_ASCII_CR) )
 	    {
-                return 1;
+		cp--;
 	    }
-            /*
-             *  check for line continuation,
-             *  i.e. match [^\\]\\[\r]\n only
-             */
-            cp = cbuf;
-            while ( (cp < cbuf+cbufsize) && (*cp != '\0') )
+	    if ( (cp > cbuf) && (cp[-1] == '\\') )
 	    {
-                cp++;
-	    }
-            if ( (cp > cbuf) && (cp[-1] == APR_ASCII_LF) )
-	    {
-                cp--;
-                if ( (cp > cbuf) && (cp[-1] == APR_ASCII_CR) )
+		cp--;
+		if (! ((cp > cbuf) && (cp[-1] == '\\')) )
 		{
-                    cp--;
+		    /*
+		     * line continuation requested -
+		     * then remove backslash and continue
+		     */
+		    cbufsize -= (int) (cp - cbuf);
+		    cbuf = cp;
+		    continue;
 		}
-                if ( (cp > cbuf) && (cp[-1] == '\\') )
+		else
 		{
-                    cp--;
-                    if (! ((cp > cbuf) && (cp[-1] == '\\')) )
+		    /*
+		     * no real continuation because escaped -
+		     * then just remove escape character
+		     */
+		    for ( ; (cp < cbuf + cbufsize) && (*cp != '\0'); cp++ )
 		    {
-                        /*
-                         * line continuation requested -
-                         * then remove backslash and continue
-                         */
-                        cbufsize -= (int) (cp - cbuf);
-                        cbuf = cp;
-                        continue;
-                    }
-                    else
-		    {
-                        /*
-                         * no real continuation because escaped -
-                         * then just remove escape character
-                         */
-                        for ( ; (cp < cbuf + cbufsize) && (*cp != '\0'); cp++ )
-			{
-                            cp[0] = cp[1];
-			}
-                    }
-                }
-            }
-            break;
-        }
-
-        /*
-         * Leading and trailing white space is eliminated completely
-         */
-        src = buf;
-        while ( apr_isspace(*src) )
-	{
-            src++;
+			cp[0] = cp[1];
+		    }
+		}
+	    }
 	}
-        /* blast trailing whitespace */
-        dst = &src[strlen(src)];
-        while ( (--dst >= src) && apr_isspace(*dst) )
-	{
-            *dst = '\0';
-	}
-        /* Zap leading whitespace by shifting */
-        if ( src != buf )
-	{
-            for ( dst = buf; (*dst++ = *src++) != '\0'; );
-	}
-        //log_debug("Read config: %s", buf);
-        return 0;
+	break;
     }
-    else
+
+    /*
+     * Leading and trailing white space is eliminated completely
+     */
+    src = buf;
+    while ( apr_isspace(*src) )
     {
-        /* No "get string" function defined; read character by character */
-        int c;
-        int i = 0;
-
-        buf[0] = '\0';
-        /* skip leading whitespace */
-        do
-	{
-            c = cfp->getch(cfp->param);
-        }
-	while ( (c == '\t') || (c == ' ') );
-
-        if ( c == EOF )
-	{
-            return 1;
-	}
-
-        if ( bufsize < 2 )
-	{
-            /* too small, assume caller is crazy */
-            return 1;
-        }
-
-        while ( 1 )
-	{
-            if ( (c == '\t') || (c == ' ') )
-	    {
-                buf[i++] = ' ';
-                while ( (c == '\t') || (c == ' ') )
-		{
-                    c = cfp->getch(cfp->param);
-		}
-            }
-            if ( c == APR_ASCII_CR )
-	    {
-                /* silently ignore CR (_assume_ that a LF follows) */
-                c = cfp->getch(cfp->param);
-            }
-            if ( c == APR_ASCII_LF )
-	    {
-                /* increase line number and return on LF */
-                ++cfp->line_num;
-            }
-            if ( (c == EOF) || (c == 0x4) || (c == APR_ASCII_LF) || (i >= (bufsize - 2)) )
-	    {
-                /*
-                 *  check for line continuation
-                 */
-                if ( (i > 0) && (buf[i-1] == '\\') )
-		{
-                    i--;
-                    if ( !((i > 0) && (buf[i-1] == '\\')) )
-		    {
-                        /* line is continued */
-                        c = cfp->getch(cfp->param);
-                        continue;
-                    }
-                    /* else nothing needs be done because
-                     * then the backslash is escaped and
-                     * we just strip to a single one
-                     */
-                }
-                /* blast trailing whitespace */
-                while ( (i > 0) && apr_isspace(buf[i - 1]) )
-		{ 
-                    i--;
-		}
-                buf[i] = '\0';
-
-                //log_debug("Read config: %s", buf);
-                return 0;
-            }
-            buf[i] = (char) c;
-            ++i;
-            c = cfp->getch(cfp->param);
-        }
+	src++;
     }
+    /* blast trailing whitespace */
+    dst = &src[strlen(src)];
+    while ( (--dst >= src) && apr_isspace(*dst) )
+    {
+	*dst = '\0';
+    }
+    /* Zap leading whitespace by shifting */
+    if ( src != buf )
+    {
+	for ( dst = buf; (*dst++ = *src++) != '\0'; );
+    }
+    //log_debug("Read config: %s", buf);
+    return 0;
 }
 
 
@@ -712,7 +632,7 @@ void nx_cfg_dump(const nx_directive_t *conftree, int level)
 	apr_snprintf(buf + i, sizeof(buf) - (unsigned int)i, "%s %s", curr->directive,
 		     curr->args == NULL ? "" : curr->args);
 	printf("%s\n", buf);
-	
+
 	if ( curr->first_child != NULL )
 	{
 	    nx_cfg_dump(curr->first_child, level + 1);

@@ -4,17 +4,14 @@ set -e
 
 case "$1" in
 	purge)
-
-		. /usr/share/debconf/confmodule
-
 		[ -d /var/lib/nxlog ] && rm -rf /var/lib/nxlog
 		[ -d /var/log/nxlog ] && rm -rf /var/log/nxlog
 		[ -d /var/spool/nxlog ] && rm -rf /var/spool/nxlog
 		[ -d /var/run/nxlog ] && rm -rf /var/run/nxlog
-		[ -f /etc/nxlog.conf ] && rm -rf /etc/nxlog.conf
+		[ -f /etc/nxlog/nxlog.conf ] && rm -rf /etc/nxlog/nxlog.conf
 
 #		if NUSER_ENTRY=`getent passwd nxlog`; then
-#			deluser --quiet $ATA_USER
+#			deluser --quiet $NXLOGUSER
 #		fi
 
 		;;

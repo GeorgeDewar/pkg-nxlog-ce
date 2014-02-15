@@ -15,5 +15,9 @@ RUNPROCESSOR: modules/extension/multiline/xm_multiline4.conf
 COMPAREFILE: tmp/output modules/extension/multiline/xm_multiline4.out
 
 REMOVE: tmp/output
+RUNPROCESSOR: modules/extension/multiline/xm_multiline5.conf
+COMPAREFILE: tmp/output modules/extension/multiline/xm_multiline5.out
+
+REMOVE: tmp/output
 
 

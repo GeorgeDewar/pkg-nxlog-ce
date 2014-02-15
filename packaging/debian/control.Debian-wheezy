@@ -7,7 +7,7 @@ Standards-Version: 3.9.4
 
 Package: nxlog-ce
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, openssl
+Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, openssl, lsb-base
 Suggests: libdbd-mysql, libdbd-pgsql, libdbd-sqlite3, libdbd-freetds
 Description: Modular, multi-threaded, high-performance log management solution
  In concept nxlog is similar to syslog-ng or rsyslog but it is not limited to

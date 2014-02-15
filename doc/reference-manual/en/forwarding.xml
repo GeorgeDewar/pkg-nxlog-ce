@@ -114,16 +114,6 @@
 	</varlistentry>
 
 	<varlistentry>
-	  <term><anchor id="forwarding_format_bson"/>BSON</term>
-	  <listitem>
-	    <para>
-	      The BSON output format is currently unsupported. Support is planned and should
-	      be available in an upcoming nxlog release.
-	    </para>
-	  </listitem>
-	</varlistentry>
-
-	<varlistentry>
 	  <term><anchor id="forwarding_format_xml"/>XML</term>
 	  <listitem>
 	    <para>
@@ -215,9 +205,7 @@
    <section id="forwarding_database">
      <title>Storing logs in a database</title>
      <para>
-       The <link linkend="om_dbi">om_dbi</link> module can be used to store logs in databases
-       which are supported by the libdbi database abstraction library.
-       This is only supported on POSIX platforms and is not available on Windows.
+       The <link linkend="om_dbi">om_dbi</link> and om_odbc modules can be used to store logs in databases.
      </para>
    </section>
 

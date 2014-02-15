@@ -39,7 +39,9 @@
 	     <ServiceInstall Id='nxlogServiceInstall' DisplayName='nxlog' Name='nxlog'
 			     Arguments='-c "[INSTALLDIR]conf\nxlog.conf"'
 			     Description="This service is responsible for running the nxlog agent. See www.nxsec.com"
-			     ErrorControl='normal' Start='auto' Type='ownProcess' Vital='yes' />
+			     ErrorControl='normal' Start='auto' Type='ownProcess' Vital='yes'>
+	       <ServiceDependency Id="eventlog" />
+	     </ServiceInstall>
 
 	     <ServiceControl Id='nxlogServiceControl' Name='nxlog' Stop='both' Remove='uninstall' Wait='yes'/>
 	   </Component>
@@ -75,6 +77,7 @@
 		 <File Id='xmGelf' Name='xm_gelf.dll' DiskId='1' Source='modules\extension\xm_gelf.dll'/>
 		 <File Id='xmFileop' Name='xm_fileop.dll' DiskId='1' Source='modules\extension\xm_fileop.dll'/>
 		 <File Id='xmMultiline' Name='xm_multiline.dll' DiskId='1' Source='modules\extension\xm_multiline.dll'/>
+		 <File Id='xmKvp' Name='xm_kvp.dll' DiskId='1' Source='modules\extension\xm_kvp.dll'/>
 	       </Component>
 	     </Directory>
 

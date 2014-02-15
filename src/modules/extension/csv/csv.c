@@ -56,6 +56,7 @@ void nx_csv_ctx_init(nx_csv_ctx_t *ctx)
     ctx->escapechar = '\\';
     ctx->escape_control = TRUE;
     ctx->quote_method = NX_CSV_QUOTE_METHOD_STRING;
+    ctx->undefvalue = NULL;
 }
 
 
@@ -123,7 +124,8 @@ char nx_csv_get_config_char(const char *str)
 
 
 
-static void add_logdata_field(nx_logdata_t *logdata, 
+static void add_logdata_field(nx_csv_ctx_t *ctx,
+			      nx_logdata_t *logdata, 
 			      const char *key,
 			      const char *strval,
 			      nx_value_type_t type)
@@ -139,10 +141,17 @@ static void add_logdata_field(nx_logdata_t *logdata,
 	type = NX_VALUE_TYPE_STRING;
     }
 
-    value = nx_value_from_string(strval, type);
+    if ( (ctx->undefvalue != NULL) && (strcmp(ctx->undefvalue, strval) == 0) )
+    {
+	value = nx_value_new(type);
+	value->defined = FALSE;
+    }
+    else
+    {
+	value = nx_value_from_string(strval, type);
+    }
     if ( value != NULL )
     {
-	ASSERT(value->defined == TRUE);
 	nx_logdata_set_field_value(logdata, key, value);
     }
 }
@@ -248,7 +257,7 @@ static void parse_fields(nx_logdata_t *logdata,
 				  ctx->num_field, currfield + 1, src);
 		    }
 		    *ptr = '\0';
-		    add_logdata_field(logdata, ctx->fields[currfield],
+		    add_logdata_field(ctx, logdata, ctx->fields[currfield],
 				      dst, ctx->types[currfield]);
 		    currfield++;
 		    ptr = dst;
@@ -308,7 +317,7 @@ static void parse_fields(nx_logdata_t *logdata,
 			}
 
 			*ptr = '\0';
-			add_logdata_field(logdata, ctx->fields[currfield],
+			add_logdata_field(ctx, logdata, ctx->fields[currfield],
 					  dst, ctx->types[currfield]);
 			currfield++;
 			ptr = dst;
@@ -336,7 +345,7 @@ static void parse_fields(nx_logdata_t *logdata,
 	    else
 	    {
 		*ptr = '\0';
-		add_logdata_field(logdata, ctx->fields[currfield],
+		add_logdata_field(ctx, logdata, ctx->fields[currfield],
 				  dst, ctx->types[currfield]);
 		currfield++;
 	    }
@@ -352,7 +361,7 @@ static void parse_fields(nx_logdata_t *logdata,
 		else
 		{
 		    *ptr = '\0';
-		    add_logdata_field(logdata, ctx->fields[currfield],
+		    add_logdata_field(ctx, logdata, ctx->fields[currfield],
 				      dst, ctx->types[currfield]);
 		    currfield++;
 		}

@@ -11,7 +11,12 @@ AC_LANG(C)
 AC_PROG_CC
 
 # APR
-AC_PATH_PROG(apr_config, [apr-1-config])
+AC_ARG_VAR([APRCONFIG], [apr-1-config tool with path])
+if test -z "$APRCONFIG"; then
+	AC_PATH_PROG(apr_config, [apr-1-config])
+else
+	apr_config=$APRCONFIG
+fi
 if test "x$apr_config" = "x"; then
     AC_MSG_ERROR([apr library not found])
 fi
@@ -45,7 +50,13 @@ if test "x$OPENSSL" = "xNOTFOUND"; then
 fi
 
 # PCRE
-AC_PATH_PROG(pcre_config, [pcre-config])
+AC_ARG_VAR([PCRECONFIG], [pcre-config tool with path])
+if test -z "$PCRECONFIG"; then
+	AC_PATH_PROG(pcre_config, [pcre-config])
+else
+	pcre_config=$PCRECONFIG
+fi
+
 if test "x$pcre_config" = "x"; then
     AC_MSG_ERROR([pcre library not found])
 fi
@@ -245,6 +256,19 @@ AC_ARG_WITH(pidfile,
   [ NX_PIDFILE="${localstatedir}/run/nxlog/nxlog.pid"]
   )
 
+# xm_wtmp
+case $host in
+       *linux*)
+	   BUILD_XM_WTMP=1
+	;;
+       *)
+	   BUILD_XM_WTMP=0
+	;;
+esac;
+if test "x$BUILD_XM_WTMP" = "x1"; then
+   AC_CHECK_HEADERS(utmp.h, [], [BUILD_XM_WTMP=0; AC_MSG_WARN([utmp.h not found, not building xm_wtmp])])
+fi
+AM_CONDITIONAL([BUILD_XM_WTMP], [test x$BUILD_XM_WTMP = x1])
 
 #################################
 # C extensions.
@@ -402,6 +426,7 @@ AC_OUTPUT(Makefile
 	        src/modules/extension/fileop/Makefile
 	        src/modules/extension/multiline/Makefile
 	        src/modules/extension/perl/Makefile
+			src/modules/extension/wtmp/Makefile
 	   src/utils/Makefile
 	   packaging/redhat/nxlog.spec
 	   packaging/redhat/nxlog.spec.RHEL5

@@ -99,11 +99,10 @@
 	    <note>
 	      <para>
 		Until there is a new header read, the previous message is stored in the buffers
-		because the module does not know where the message ends.
-		If there is no new message, the last may sit in the buffers indefinitly. 
-		It may be possible to flush the buffers using a timer or on EOF, unfortunately
-		these solutions are not perfect either (though these may be implemented in a later 
-		version).
+		because the module does not know where the message ends. The 
+		<link linkend="im_file">im_file</link> module will forcibly flush this buffer 
+		after the configured <link linkend="im_file_config_pollinterval">PollInterval</link> 
+		timeout.
 		If this behaviour is unacceptable, consider using some kind of an encapsulation
 		method (JSON, XML, RFC5425, etc) or use and end marker with 
 		<link linkend="xm_multiline_config_headerline">EndLine</link> if possible.
@@ -168,6 +167,22 @@
 
   <section id="xm_multiline_config_examples">
     <title>Configuration examples</title>
+
+      <example id="xm_multiline_example_5">
+	<title>Parsing multi-line XML logs and converting to JSON</title>
+        <para>
+	  XML is commonly formatted as indented multi-line to make it more readable. 
+	  In the following configuration file we use the 
+	  <link linkend="xm_multiline_config_headerline">HeaderLine</link> together with the 
+	  <link linkend="xm_multiline_config_headerline">HeaderLine</link> directive to parse the events which are
+	  converted to JSON after some slight normalization.
+          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_multiline5.conf.xml" />
+	  An input sample:
+          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_multiline5.in.xml" />
+	  The following output is produced:
+          <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_multiline5.out.xml" />
+        </para>
+      </example>
 
       <example id="xm_multiline_example_4">
 	<title>Parsing DICOM logs</title>

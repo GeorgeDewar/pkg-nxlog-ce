@@ -111,7 +111,6 @@ void nx_expr_proc__xm_fileop_file_cycle(nx_expr_eval_ctx_t *eval_ctx,
 	throw_msg("string type required for 'file'");
     }
 
-
     val = NX_DLIST_NEXT(arg, link);
     if ( val != NULL )
     {
@@ -409,8 +408,10 @@ void nx_expr_proc__xm_fileop_file_remove(nx_expr_eval_ctx_t *eval_ctx,
 	    pool = nx_pool_create_core();
 
 	    filename = file.string->buf;
+	    log_debug("file_remove() called with wildcarded path: %s", filename);
+
 	    idx = strrchr(filename, '/');
-#ifndef WIN32
+#ifdef WIN32
 	    flags = APR_FNM_CASE_BLIND;
 	    if ( idx == NULL ) 
 	    {
@@ -426,6 +427,7 @@ void nx_expr_proc__xm_fileop_file_remove(nx_expr_eval_ctx_t *eval_ctx,
 		dirname = nx_string_create(filename, (int) (idx + 1 - filename));
 		filename = idx + 1;
 	    }
+	    log_debug("file_remove(): checking for matching files under %s", dirname->buf);
 
 	    CHECKERR_MSG(apr_dir_open(&dir, dirname->buf, pool),
 			 "failed to open directory: %s", dirname->buf);
@@ -808,7 +810,7 @@ void nx_expr_proc__xm_fileop_file_chown(nx_expr_eval_ctx_t *eval_ctx,
     ASSERT(uid != NULL);
     ASSERT(uid->expr != NULL);
 
-    gid = NX_DLIST_NEXT(arg, link);
+    gid = NX_DLIST_NEXT(uid, link);
     ASSERT(gid != NULL);
     ASSERT(gid->expr != NULL);
 
@@ -868,12 +870,127 @@ void nx_expr_proc__xm_fileop_file_chown(nx_expr_eval_ctx_t *eval_ctx,
 #ifdef HAVE_CHOWN
     if ( (rv = chown(file.string->buf, (uid_t) uidval.integer, (gid_t) gidval.integer)) != 0 )
     {
-	log_aprerror(rv, "failed to change file ownership on '%s'", file.string->buf);
+	log_errno("failed to change file ownership on '%s'", file.string->buf);
     }
 #else
     log_error("This platform does not support the file_chown() function");
 #endif    
     nx_value_kill(&file);
+    nx_value_kill(&uidval);
+    nx_value_kill(&gidval);
+}
+
+
+
+void nx_expr_proc__xm_fileop_file_chown_usr_grp(nx_expr_eval_ctx_t *eval_ctx,
+					nx_module_t *module,
+					nx_expr_arg_list_t *args)
+{
+    nx_expr_arg_t *arg;
+    nx_value_t file;
+    nx_expr_arg_t *user, *group;
+    nx_value_t usrval, grpval;
+    nx_exception_t e;
+    int rv;
+    apr_status_t rv2;
+    apr_uid_t uid;
+    apr_gid_t tmp;
+    apr_gid_t gid;
+
+    ASSERT(module != NULL);
+
+    ASSERT(args != NULL);
+    arg = NX_DLIST_FIRST(args);
+    ASSERT(arg != NULL);
+    ASSERT(arg->expr != NULL);
+
+    user = NX_DLIST_NEXT(arg, link);
+    ASSERT(user != NULL);
+    ASSERT(user->expr != NULL);
+
+    group = NX_DLIST_NEXT(user, link);
+    ASSERT(group != NULL);
+    ASSERT(group->expr != NULL);
+
+    nx_expr_evaluate(eval_ctx, &file, arg->expr);
+
+    if ( file.defined != TRUE )
+    {
+	throw_msg("'file' is undef");
+    }
+    if ( file.type != NX_VALUE_TYPE_STRING )
+    {
+	nx_value_kill(&file);
+	throw_msg("string type required for 'file'");
+    }
+
+    try
+    {
+	nx_expr_evaluate(eval_ctx, &usrval, user->expr);
+    }
+    catch(e)
+    {
+	nx_value_kill(&file);
+	rethrow(e);
+    }
+    if ( usrval.defined != TRUE )
+    {
+	nx_value_kill(&file);
+	throw_msg("'user' is undef");
+    }
+    if ( usrval.type != NX_VALUE_TYPE_STRING )
+    {
+	nx_value_kill(&file);
+	throw_msg("string type required for 'user'");
+    }
+
+    try
+    {
+	nx_expr_evaluate(eval_ctx, &grpval, group->expr);
+    }
+    catch(e)
+    {
+	nx_value_kill(&file);
+	rethrow(e);
+    }
+    if ( grpval.defined != TRUE )
+    {
+	nx_value_kill(&file);
+	throw_msg("'group' is undef");
+    }
+    if ( grpval.type != NX_VALUE_TYPE_STRING )
+    {
+	nx_value_kill(&file);
+	throw_msg("string type required for 'group'");
+    }
+    
+    if ( (rv2 = apr_gid_get(&gid, grpval.string->buf, module->pool)) != APR_SUCCESS )
+    {
+	log_aprerror(rv2, "failed to change file ownership on '%s', couldn't resolve group name '%s'",
+		     file.string->buf, grpval.string->buf);
+    }
+    else
+    { // APR_SUCCESS
+	if ( (rv2 = apr_uid_get(&uid, &tmp, usrval.string->buf, module->pool)) != APR_SUCCESS )
+	{
+	    log_aprerror(rv2, "failed to change file ownership on '%s', couldn't resolve user name '%s'",
+			 file.string->buf, usrval.string->buf);
+	}
+	else
+	{ // APR_SUCCESS
+#ifdef HAVE_CHOWN
+	    if ( (rv = chown(file.string->buf, (uid_t)uid, (gid_t)gid)) != 0 )
+	    {
+		log_errno("failed to change file ownership on '%s'", file.string->buf);
+	    }
+#else
+	    log_error("This platform does not support the file_chown() function");
+#endif    
+	}
+    }
+    nx_value_kill(&file);
+    nx_value_kill(&usrval);
+    nx_value_kill(&grpval);
 }
 
 
@@ -1277,7 +1394,7 @@ void nx_expr_func__xm_fileop_file_dirname(nx_expr_eval_ctx_t *eval_ctx UNUSED,
 
     filename = args[0].string->buf;
     idx = strrchr(filename, '/');
-#ifndef WIN32
+#ifdef WIN32
     if ( idx == NULL ) 
     {
         idx = strrchr(filename, '\\');

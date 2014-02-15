@@ -26,6 +26,7 @@ fi
 ./tester.pl modules/extension/multiline/xm_multiline.txt || FAILED="$FAILED xm_multiline"
 ./tester.pl modules/extension/perl/xm_perl.txt || FAILED="$FAILED xm_perl"
 ./tester.pl modules/extension/kvp/xm_kvp.txt || FAILED="$FAILED xm_kvp"
+./tester.pl modules/extension/wtmp/xm_wtmp.txt || FAILED="$FAILED xm_wtmp"
 if test "x$FAILED" != "x"; then
     echo "Failed tests: $FAILED";
     exit 1;

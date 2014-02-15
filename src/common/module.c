@@ -1414,9 +1414,10 @@ nx_expr_statement_list_t *nx_module_parse_exec_block(nx_module_t *module,
 
 static void nx_module_parse_schedule_blocks(nx_module_t *module)
 {
-    const nx_directive_t *curr, *curr2;
+    const nx_directive_t * volatile curr, * volatile curr2;
     nx_schedule_entry_t *sched;
     apr_time_t first;
+    nx_exception_t e;
 
     ASSERT(module->directives != NULL);
     curr = module->directives;
@@ -1451,7 +1452,14 @@ static void nx_module_parse_schedule_blocks(nx_module_t *module)
 			nx_conf_error(curr2, "'Every' is already defined within the Schedule block");
 		    }
 		    sched->type = NX_SCHEDULE_ENTRY_TYPE_CRONTAB;
-		    nx_schedule_entry_parse_crontab(sched, curr2->args);
+		    try
+		    {
+			nx_schedule_entry_parse_crontab(sched, curr2->args);
+		    }
+		    catch(e)
+		    {
+			nx_conf_error(curr2, "couldn't parse value for directive 'When': %s", nx_exception_get_message(&e, 0));
+		    }
 		}
 		else if ( strcasecmp(curr2->directive, "Every") == 0 )
 		{
@@ -1463,7 +1471,14 @@ static void nx_module_parse_schedule_blocks(nx_module_t *module)
 		    {
 			nx_conf_error(curr2, "'Every' is already defined within the Schedule block");
 		    }
-		    nx_schedule_entry_parse_every(sched, curr2->args);
+		    try
+		    {
+			nx_schedule_entry_parse_every(sched, curr2->args);
+		    }
+		    catch(e)
+		    {
+			nx_conf_error(curr2, "couldn't parse value for directive 'Every': %s", nx_exception_get_message(&e, 0));
+		    }
 		    sched->type = NX_SCHEDULE_ENTRY_TYPE_EVERY;
 		}
 		else if ( strcasecmp(curr2->directive, "First") == 0 )
@@ -1920,6 +1935,7 @@ nx_module_output_func_decl_t *nx_module_output_func_lookup(const char *fname)
 void nx_module_input_func_register(const nx_module_t *module,
 				   const char *fname,
 				   nx_module_input_func_t *func,
+				   nx_module_input_func_t *flush,
 				   const void *data)
 {
     nx_ctx_t *ctx;
@@ -1936,6 +1952,7 @@ void nx_module_input_func_register(const nx_module_t *module,
     ASSERT(inputfunc != NULL);
 
     inputfunc->func = func;
+    inputfunc->flush = flush;
     inputfunc->module = module;
     inputfunc->name = apr_pstrdup(ctx->pool, fname);
     inputfunc->data = data;

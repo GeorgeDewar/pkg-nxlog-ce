@@ -1,2 +1,2 @@
 c:\\Program\ Files\ \(x86\)\\Windows\ Installer\ XML\ v3.5\\bin\\candle.exe nxlog.wxs || exit 1
-c:\\Program\ Files\ \(x86\)\\Windows\ Installer\ XML\ v3.5\\bin\\light.exe -ext WixUIExtension nxlog.wixobj -o nxlog-ce-2.5.1089.msi
+c:\\Program\ Files\ \(x86\)\\Windows\ Installer\ XML\ v3.5\\bin\\light.exe -ext WixUIExtension nxlog.wixobj -o nxlog-ce-2.7.1191.msi

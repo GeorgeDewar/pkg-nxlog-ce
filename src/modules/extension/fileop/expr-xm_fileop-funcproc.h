@@ -23,7 +23,7 @@ void nx_expr_func__xm_fileop_dir_exists(nx_expr_eval_ctx_t *eval_ctx, nx_module_
 
 /* PROCEDURES */
 
-#define nx_api_declarations_xm_fileop_proc_num 16
+#define nx_api_declarations_xm_fileop_proc_num 17
 void nx_expr_proc__xm_fileop_file_cycle(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_rename(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_copy(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
@@ -33,6 +33,7 @@ void nx_expr_proc__xm_fileop_file_append(nx_expr_eval_ctx_t *eval_ctx, nx_module
 void nx_expr_proc__xm_fileop_file_write(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_truncate(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_chown(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
+void nx_expr_proc__xm_fileop_file_chown_usr_grp(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_chmod(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_file_touch(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);
 void nx_expr_proc__xm_fileop_dir_make(nx_expr_eval_ctx_t *eval_ctx, nx_module_t *module, nx_expr_arg_list_t *args);

@@ -32,9 +32,9 @@
 //#include <sys/localedef.h>
 //#include <locale.h>
 //#include <string.h>
-//#include <time.h>
 //#include <tzfile.h>
 
+#include <time.h>
 #include <ctype.h>
 #include "types.h"
 
