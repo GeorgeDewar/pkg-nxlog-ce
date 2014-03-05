@@ -683,27 +683,14 @@ void nx_logdata_to_syslog_rfc3164(nx_logdata_t *logdata)
     nx_value_t timestamp;
     nx_value_t application;
     nx_value_t pid;
-    nx_value_t msg;
-    nx_string_t *tmpmsg = NULL;
+    nx_value_t message;
     size_t len;
     char tmpstr[20];
     int i;
 
     ASSERT(logdata != NULL);
     ASSERT(logdata->raw_event != NULL);
-
-    if ( (nx_logdata_get_field_value(logdata, "Message", &msg) == TRUE) &&
-	 (msg.type == NX_VALUE_TYPE_STRING) && (msg.defined == TRUE) )
-    {
-	// we have a Message field
-    }
-    else
-    { // otherwise use raw_event
-	tmpmsg = nx_string_clone(logdata->raw_event);
-	msg.string = tmpmsg;
-	msg.type = NX_VALUE_TYPE_STRING;
-    }
-
+    
     pri = nx_syslog_get_priority(logdata);
 
     if ( (nx_logdata_get_field_value(logdata, "EventTime", &timestamp) == TRUE) &&
@@ -764,21 +751,19 @@ void nx_logdata_to_syslog_rfc3164(nx_logdata_t *logdata)
 	nx_string_append(logdata->raw_event, ":", 1);
     }
 
-    // Append message
-    i = (int) logdata->raw_event->len;
-    nx_string_append(logdata->raw_event, " ", 1);
-    nx_string_append(logdata->raw_event, msg.string->buf, (int) msg.string->len);
-    for ( ; i < (int) logdata->raw_event->len; i++ )
-    { // replace linebreaks with space
-	if ( (logdata->raw_event->buf[i] == '\n') || (logdata->raw_event->buf[i] == '\r') )
-	{
-	    logdata->raw_event->buf[i] = ' ';
+    if ( (nx_logdata_get_field_value(logdata, "Message", &message) == TRUE) &&
+	 (message.type == NX_VALUE_TYPE_STRING) && (message.defined == TRUE) )
+    {
+	i = (int) logdata->raw_event->len;
+	nx_string_append(logdata->raw_event, " ", 1);
+	nx_string_append(logdata->raw_event, message.string->buf, (int) message.string->len);
+	for ( ; i < (int) logdata->raw_event->len; i++ )
+	{ // replace linebreaks with space
+	    if ( (logdata->raw_event->buf[i] == '\n') || (logdata->raw_event->buf[i] == '\r') )
+	    {
+		logdata->raw_event->buf[i] = ' ';
+	    }
 	}
-    }
-
-    if (tmpmsg != NULL)
-    { // clean up temp copy
-	nx_string_free(tmpmsg);
     }
 }
 
@@ -1205,8 +1190,7 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata, boolean gmt)
     nx_value_t application;
     nx_value_t messageid;
     nx_value_t pid;
-    nx_value_t msg;
-    nx_string_t *tmpmsg = NULL;
+    nx_value_t message;
     size_t len;
     char tmpstr[33];
     int i;
@@ -1214,18 +1198,6 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata, boolean gmt)
     ASSERT(logdata != NULL);
     ASSERT(logdata->raw_event != NULL);
     
-    if ( (nx_logdata_get_field_value(logdata, "Message", &msg) == TRUE) &&
-	 (msg.type == NX_VALUE_TYPE_STRING) && (msg.defined == TRUE) )
-    {
-	// we have a Message field
-    }
-    else
-    { // otherwise use raw_event
-	tmpmsg = nx_string_clone(logdata->raw_event);
-	msg.string = tmpmsg;
-	msg.type = NX_VALUE_TYPE_STRING;
-    }
-
     pri = nx_syslog_get_priority(logdata);
 
     if ( (nx_logdata_get_field_value(logdata, "EventTime", &timestamp) == TRUE) &&
@@ -1309,21 +1281,19 @@ void nx_logdata_to_syslog_rfc5424(nx_logdata_t *logdata, boolean gmt)
 
     nx_syslog_add_structured_data(logdata);
 
-    // Append message
-    i = (int) logdata->raw_event->len;
-    nx_string_append(logdata->raw_event, " ", 1);
-    nx_string_append(logdata->raw_event, msg.string->buf, (int) msg.string->len);
-    for ( ; i < (int) logdata->raw_event->len; i++ )
-    { // replace linebreaks with space
-	if ( (logdata->raw_event->buf[i] == '\n') || (logdata->raw_event->buf[i] == '\r') )
-	{
-	    logdata->raw_event->buf[i] = ' ';
+    if ( (nx_logdata_get_field_value(logdata, "Message", &message) == TRUE) &&
+	 (message.type == NX_VALUE_TYPE_STRING) && (message.defined == TRUE) )
+    {
+	i = (int) logdata->raw_event->len;
+	nx_string_append(logdata->raw_event, " ", 1);
+	nx_string_append(logdata->raw_event, message.string->buf, (int) message.string->len);
+	for ( ; i < (int) logdata->raw_event->len; i++ )
+	{ // replace linebreaks with space
+	    if ( (logdata->raw_event->buf[i] == '\n') || (logdata->raw_event->buf[i] == '\r') )
+	    {
+		logdata->raw_event->buf[i] = ' ';
+	    }
 	}
-    }
-
-    if (tmpmsg != NULL)
-    { // clean up temp copy
-	nx_string_free(tmpmsg);
     }
 }
 

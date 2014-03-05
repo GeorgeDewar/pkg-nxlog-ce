@@ -42,24 +42,15 @@ typedef struct nx_im_file_conf_t
     boolean 		savepos;
     boolean		readfromlast;
     boolean		recursive;
-    boolean		closewhenidle;
-    boolean		renamecheck;
     float		poll_interval;
-    float		dircheck_interval;
-    nx_event_t 		*poll_event;
-    nx_event_t 		*dircheck_event;
+    nx_event_t 		*event;
     nx_module_input_func_decl_t *inputfunc;
-    int			non_active_modified;	///< file modified in the non-active file set
 
-    int			active_files;	///< Max number of files to keep in open_files
     apr_hash_t		*files; 	///< Contains nx_file_input_t structures
     int			num_open_files; ///< The number of open files in the list
     nx_im_file_input_list_t *open_files;///< The list of open files
     nx_im_file_input_t	*currsrc; 	///< last successfull read from this input file
     boolean		warned_no_input_files;
-    boolean		warned_no_directory;
-    apr_time_t		lastcheck;	///< time of last check for new data in closed files
-    
 } nx_im_file_conf_t;
 
 

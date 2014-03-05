@@ -37,7 +37,6 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/syslog.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/exec.xml" /> 
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/perl.xml" /> 
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="modules/extension/wtmp.xml" /> 
   </section>
 
   <section id="modules_input">

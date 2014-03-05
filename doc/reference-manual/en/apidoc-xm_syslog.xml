@@ -322,7 +322,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Create a BSD Syslog formatted log message in $raw_event from the fields of the event. The fields that are used to construct the $raw_event field are $EventTime, $Hostname, $SourceName, $ProcessID, $Message or $raw_event, $SyslogSeverity or $SyslogSeverityValue or $Severity or $SeverityValue, $SyslogFacility or $SyslogFacilityValue. If the fields are not present, a sensible default is used.</simpara>
+          <simpara>Create a BSD Syslog formatted log message in 'raw_event' from the fields of the event</simpara>
          </listitem>
         </varlistentry>
       </variablelist>
@@ -339,7 +339,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Create an IETF Syslog (RFC5424) formatted log message in $raw_event from the fields of the event. The fields that are used to construct the $raw_event field are $EventTime, $Hostname, $SourceName, $ProcessID, $Message or $raw_event, $SyslogSeverity or $SyslogSeverityValue or $Severity or $SeverityValue, $SyslogFacility or $SyslogFacilityValue. If the fields are not present, a sensible default is used.</simpara>
+          <simpara>Create an IETF Syslog (RFC5424) formatted log message in 'raw_event' from the fields of the event</simpara>
          </listitem>
         </varlistentry>
       </variablelist>
@@ -356,7 +356,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Create a SNARE Syslog formatted log message in $raw_event. Uses the following fields to construct $raw_event: $EventTime, $Hostname, $SeverityValue, $FileName, $EventID, $SourceName, $AccountName, $AccountType, $EventType, $Category, $Message.</simpara>
+          <simpara>Create a SNARE Syslog formatted log message in 'raw_event'. Uses the following fields: EventTime, Hostname, SeverityValue, FileName, EventID, SourceName, AccountName, AccountType, EventType, Category, Message</simpara>
          </listitem>
         </varlistentry>
       </variablelist>

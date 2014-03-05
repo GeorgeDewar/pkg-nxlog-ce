@@ -16,7 +16,7 @@
     <para>
       <example>
 	<title>Testing buffering with the om_blocker module</title>
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-om_blocker.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-pm_blocker.xml" />
       </example>
     </para>
   </section>

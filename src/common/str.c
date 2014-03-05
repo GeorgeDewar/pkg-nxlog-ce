@@ -6,7 +6,6 @@
  */
 
 #include <apr_lib.h>
-#include <stdlib.h>
 
 #include "error_debug.h"
 #include "exception.h"

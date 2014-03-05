@@ -21,13 +21,13 @@
 typedef struct nx_eventlog_src_t
 {
     NX_DLIST_ENTRY(nx_eventlog_src_t) link;
-    HANDLE 		handle;  ///< NULL if couldn't open or need to reopen
-    const char 		*name;
-    DWORD 		rec_num; ///< for savepos
-    boolean 		seek;
-    apr_time_t		blacklist_until; ///< ignore this file until this time
-    int			blacklist_interval; ///< seconds to blacklist the file, increased on failure  
-    boolean 		ignorefirstread;
+    HANDLE handle;
+    const char *name;
+    DWORD rec_num; ///< for savepos
+    boolean seek;
+    apr_time_t reopen_at;
+    int reopen; // if this is 0, no need to reopen. Otherwise reopen at will be set to now() + reopen sec
+    boolean ignorefirstread;
 } nx_eventlog_src_t;
 
 typedef struct nx_eventlog_sources_t nx_eventlog_sources_t;

@@ -13,9 +13,10 @@
 #include "../../../common/error_debug.h"
 #include "xm_perl.h"
 
+
 #define NX_LOGMODULE NX_LOGMODULE_MODULE
 
-EXTERN_C void xs_init(pTHX);
+EXTERN_C void xs_init (pTHX);
 
 static void xm_perl_config(nx_module_t *module)
 {
@@ -68,27 +69,10 @@ static void xm_perl_init(nx_module_t *module)
     args[1] = modconf->perlcode;
     args[2] = NULL;
 
-    if ( modconf->perl_interpreter == NULL )
-    {
-	dTHX;
-	modconf->perl_interpreter = perl_alloc();
-	PL_perl_destruct_level = 1;
-	perl_construct(modconf->perl_interpreter);
-	PERL_SET_CONTEXT(modconf->perl_interpreter);
-	PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
-    }
-
+    modconf->perl_interpreter = nx_xm_perl_init();
     if ( perl_parse(modconf->perl_interpreter, xs_init, 2, args, NULL) )
     {
-	if ( modconf->perl_interpreter != NULL )
-	{
-	    dTHX;
-	    PERL_SET_CONTEXT(modconf->perl_interpreter);
-	    perl_destruct(modconf->perl_interpreter);
-	    perl_free(modconf->perl_interpreter);
-	    modconf->perl_interpreter = NULL;
-	}
-
+	nx_xm_perl_destroy();
 	throw_msg("the perl interpreter failed to parse %s", modconf->perlcode);
     }
 }
@@ -104,15 +88,7 @@ static void xm_perl_shutdown(nx_module_t *module)
     modconf = (nx_xm_perl_conf_t *) module->config;
     ASSERT(modconf != NULL);
 
-    if ( modconf->perl_interpreter != NULL )
-    {
-	dTHX;
-	PERL_SET_CONTEXT(modconf->perl_interpreter);
-	PL_perl_destruct_level = 1;
-	perl_destruct(modconf->perl_interpreter);
-	perl_free(modconf->perl_interpreter);
-	modconf->perl_interpreter = NULL;
-    }
+    nx_xm_perl_destroy();
 }
 
 

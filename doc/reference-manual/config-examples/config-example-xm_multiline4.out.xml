@@ -18,7 +18,5 @@ Accepted Extended Negotiation: none
   02  00  00  00  00  d8  00  01  00  00  50  41  43  53  20  20
   20  20  20  20  20  20  20  20  20  20  52  5a  44  43  58  20
   20  20  20  20  20  20  20  20  20  20  00  00  00  00  00  00
---------------------------------------
-2011-12-1512:22:51.031000  4296   DEBUG  DIMSE sendDcmDataset: sending 146 bytes
 
 ]]></programlisting>

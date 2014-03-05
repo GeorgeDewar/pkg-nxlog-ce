@@ -327,7 +327,6 @@ static void pm_buffer_data_available(nx_module_t *module)
 	    
 	    written = pm_buffer_push_disk(module, logdata);
 	    nx_module_logqueue_pop(module, logdata);
-	    nx_logdata_free(logdata);
 	    modconf->buffer_size += written;
 	}
 
@@ -480,7 +479,7 @@ static void pm_buffer_start(nx_module_t *module)
 
     if ( modconf->type == NX_PM_BUFFER_TYPE_DISK )
     {
-	pool = nx_pool_create_core();
+	pool = nx_pool_create_child(module->pool);
 
 	try
 	{
@@ -491,7 +490,7 @@ static void pm_buffer_start(nx_module_t *module)
 	    apr_off_t offs = 0;
 
 	    CHECKERR_MSG(apr_dir_open(&dir, modconf->basedir, pool),
-			 "failed to read disk buffer files from '%s'", modconf->basedir);
+			 "failed to read disk buffer files");
 	
 	    namelen = (size_t) apr_snprintf(fname, sizeof(fname), "%s.", module->name);
 
@@ -577,7 +576,7 @@ static void pm_buffer_start(nx_module_t *module)
 	    {
 		throw_msg("disk buffer filename length limit exceeeded");
 	    }
-	    pool = nx_pool_create_core();
+	    pool = nx_pool_create_child(module->pool);
 	    
 	    CHECKERR_MSG(apr_file_open(&(modconf->push_file), filename, APR_WRITE | APR_CREATE | APR_TRUNCATE,
 				       APR_OS_DEFAULT, pool),

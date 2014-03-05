@@ -115,14 +115,6 @@ static void xm_csv_config(nx_module_t *module)
 	{
 	    modconf->ctx.num_type = nx_module_parse_types(modconf->ctx.types, curr->args);
 	}
-	else if ( strcasecmp(curr->directive, "UndefValue") == 0 )
-	{
-	    if ( (curr->args == NULL) || (curr->args[0] == '\0') )
-	    {
-		nx_conf_error(curr, "UndefValue needs a parameter");
-	    }
-	    modconf->ctx.undefvalue = apr_pstrdup(module->pool, curr->args);
-	}
 
 	curr = curr->next;
     }

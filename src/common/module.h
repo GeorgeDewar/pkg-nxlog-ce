@@ -143,8 +143,7 @@ struct nx_module_input_func_decl_t
     NX_DLIST_ENTRY(nx_module_input_func_decl_t) link;
     const nx_module_t *module;
     const char *name;
-    nx_module_input_func_t *func;  ///< return logdata to caller
-    nx_module_input_func_t *flush; ///< return logdata to caller forcibly
+    nx_module_input_func_t *func;
     void *data;
 };
 struct nx_module_input_t
@@ -287,7 +286,6 @@ nx_module_input_func_decl_t *nx_module_input_func_lookup(const char *fname);
 void nx_module_input_func_register(const nx_module_t *module,
 				   const char *fname,
 				   nx_module_input_func_t *func,
-				   nx_module_input_func_t *flush,
 				   const void *data);
 nx_logdata_t *nx_module_input_func_dgramreader(nx_module_input_t *input,
 					       void *data);

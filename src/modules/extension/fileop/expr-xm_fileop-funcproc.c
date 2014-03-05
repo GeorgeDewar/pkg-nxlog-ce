@@ -287,13 +287,6 @@ const char *nx_expr_proc__xm_fileop_file_chown_string_integer_integer_argnames[]
 nx_value_type_t nx_expr_proc__xm_fileop_file_chown_string_integer_integer_argtypes[] = {
     NX_VALUE_TYPE_STRING, NX_VALUE_TYPE_INTEGER, NX_VALUE_TYPE_INTEGER, 
 };
-// file_chown
-const char *nx_expr_proc__xm_fileop_file_chown_usr_grp_string_string_string_argnames[] = {
-    "file", "user", "group", 
-};
-nx_value_type_t nx_expr_proc__xm_fileop_file_chown_usr_grp_string_string_string_argtypes[] = {
-    NX_VALUE_TYPE_STRING, NX_VALUE_TYPE_STRING, NX_VALUE_TYPE_STRING, 
-};
 // file_chmod
 const char *nx_expr_proc__xm_fileop_file_chmod_string_integer_argnames[] = {
     "file", "mode", 
@@ -447,16 +440,6 @@ nx_expr_proc_t nx_api_declarations_xm_fileop_procs[] = {
  {
    { .next = NULL, .prev = NULL },
    NULL,
-   "file_chown",
-   NX_EXPR_FUNCPROC_TYPE_GLOBAL,
-   nx_expr_proc__xm_fileop_file_chown_usr_grp,
-   3,
-   nx_expr_proc__xm_fileop_file_chown_usr_grp_string_string_string_argnames,
-   nx_expr_proc__xm_fileop_file_chown_usr_grp_string_string_string_argtypes,
- },
- {
-   { .next = NULL, .prev = NULL },
-   NULL,
    "file_chmod",
    NX_EXPR_FUNCPROC_TYPE_GLOBAL,
    nx_expr_proc__xm_fileop_file_chmod,
@@ -499,6 +482,6 @@ nx_expr_proc_t nx_api_declarations_xm_fileop_procs[] = {
 nx_module_exports_t nx_module_exports_xm_fileop = {
 	11,
 	nx_api_declarations_xm_fileop_funcs,
-	17,
+	16,
 	nx_api_declarations_xm_fileop_procs,
 };

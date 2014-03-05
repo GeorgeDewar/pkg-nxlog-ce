@@ -33,9 +33,6 @@ for i in ../../../test/modules/processor/pattern/patterndb.xml          \
          ../../../test/modules/extension/multiline/xm_multiline4.conf   \
          ../../../test/modules/extension/multiline/xm_multiline4.in     \
          ../../../test/modules/extension/multiline/xm_multiline4.out    \
-         ../../../test/modules/extension/multiline/xm_multiline5.conf   \
-         ../../../test/modules/extension/multiline/xm_multiline5.in     \
-         ../../../test/modules/extension/multiline/xm_multiline5.out    \
          ../../../test/modules/extension/perl/xm_perl.conf              \
          ../../../test/modules/extension/perl/processlogs.pl            \
          ../../../test/modules/extension/kvp/xm_kvp5.conf               \
@@ -54,7 +51,7 @@ for i in ../../../test/modules/processor/pattern/patterndb.xml          \
     FILENAME=config-example-`basename $i`.xml
     echo '<?xml version="1.0" encoding="UTF-8"?>' > $FILENAME
     echo '<programlisting><![CDATA[' >> $FILENAME
-    cat $i | grep -v 'include tmp/common.conf' >> $FILENAME
+    cat $i |grep -v 'include tmp/common.conf' >> $FILENAME
     echo '' >> $FILENAME
     echo ']]></programlisting>' >> $FILENAME
 done

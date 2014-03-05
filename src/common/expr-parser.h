@@ -15,11 +15,6 @@
 #define YYSTYPE nx_expr_parser_yystype
 #define YY_EXTRA_TYPE nx_expr_parser_t *
 
-/* This is a hack to get it built on darwin */
-# ifdef __APPLE__
-# undef bool
-#endif
-
 typedef union nx_expr_parser_yystype
 {
     nx_expr_t	*expr;

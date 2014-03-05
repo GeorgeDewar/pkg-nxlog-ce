@@ -202,14 +202,11 @@ void nx_pattern_field_list_insert_field(apr_pool_t *pool,
     ASSERT(value != NULL);
     
     val = nx_value_from_string(value, type); //FIXME: use pool alloc here
-    if ( val != NULL )
-    {
-	field = apr_pcalloc(pool, sizeof(nx_logdata_field_t));
-	field->value = val;
-	field->key = apr_pstrdup(pool, key);
+    field = apr_pcalloc(pool, sizeof(nx_logdata_field_t));
+    field->value = val;
+    field->key = apr_pstrdup(pool, key);
 
-	NX_DLIST_INSERT_TAIL(fields, field, link);
-    }
+    NX_DLIST_INSERT_TAIL(fields, field, link);
 }
 
 

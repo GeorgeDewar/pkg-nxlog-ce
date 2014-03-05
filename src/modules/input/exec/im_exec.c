@@ -17,7 +17,6 @@
 
 #define IM_EXEC_DEFAULT_POLL_INTERVAL 1 /* The number of seconds to check the files for new data */
 #define IM_EXEC_DEFAULT_RESTART_INTERVAL 1 /* The number of seconds to wait between restarts */
-#define IM_EXEC_DEFAULT_EAGAIN_WAIT 1000
 
 static void im_exec_stop(nx_module_t *module);
 
@@ -29,8 +28,6 @@ static void im_exec_add_read_event(nx_module_t *module, int delay)
 
     imconf = (nx_im_exec_conf_t *) module->config;
     ASSERT(imconf->event == NULL);
-
-    log_debug("im_exec_add_read_event with delay %d", delay);
 
     event = nx_event_new();
     event->module = module;
@@ -67,19 +64,16 @@ static void im_exec_add_restart_event(nx_module_t *module)
 
 
 
-static void im_exec_fill_buffer(nx_module_t *module, nx_module_input_t *input)
+static void im_exec_fill_buffer(nx_module_input_t *input)
 {
     apr_status_t rv;
     apr_size_t len;
-    nx_im_exec_conf_t *imconf;
 
     ASSERT(input != NULL);
     ASSERT(input->buf != NULL);
     ASSERT(input->module != NULL);
     ASSERT(input->desc_type == APR_POLL_FILE);
     ASSERT(input->desc.f != NULL);
-
-    imconf = (nx_im_exec_conf_t *) module->config;
 
     if ( input->bufstart == input->bufsize )
     {
@@ -106,20 +100,8 @@ static void im_exec_fill_buffer(nx_module_t *module, nx_module_input_t *input)
 	{ 
 #ifdef WIN32
 	    // on windows EAGAIN is normal because we are using NON-BLOCKING reads
-	    // unfortunately it gives EAGAIN also when there is no data 
-	    if ( len > 0 )
-	    {
-		imconf->delay = IM_EXEC_DEFAULT_EAGAIN_WAIT;
-	    }
-	    else
-	    {
-		imconf->delay *= 2;
-		if ( imconf->delay > (int) (APR_USEC_PER_SEC * IM_EXEC_DEFAULT_POLL_INTERVAL) )
-		{
-		    imconf->delay = (int) (APR_USEC_PER_SEC * IM_EXEC_DEFAULT_POLL_INTERVAL);
-		}
-	    }
-	    im_exec_add_read_event(input->module, imconf->delay);
+	    // so we try again after 500 ms
+	    im_exec_add_read_event(input->module, 500);
 	    log_debug("got EAGAIN");
 #else
 	    log_error("got EAGAIN for blocking read in module %s", input->module->name);
@@ -135,7 +117,6 @@ static void im_exec_fill_buffer(nx_module_t *module, nx_module_input_t *input)
     else
     {
 	log_debug("im_exec read %d bytes", (int) len);
-	imconf->delay = IM_EXEC_DEFAULT_EAGAIN_WAIT;
     }
     input->buflen += (int) len;
     ASSERT(input->buflen <= input->bufsize);
@@ -159,7 +140,7 @@ static void im_exec_read(nx_module_t *module)
 	return;
     }
     
-    im_exec_fill_buffer(module, &(module->input));
+    im_exec_fill_buffer(&(module->input));
     while ( (logdata = module->input.inputfunc->func(&(module->input), module->input.inputfunc->data)) != NULL )
     {
 	nx_module_add_logdata_input(module, &(module->input), logdata);
@@ -264,7 +245,6 @@ static void im_exec_config(nx_module_t *module)
 	nx_conf_error(module->directives, "'Command' missing for module im_exec");
     }
 
-    imconf->delay = IM_EXEC_DEFAULT_EAGAIN_WAIT;
     module->input.pool = nx_pool_create_child(module->pool);
 }
 

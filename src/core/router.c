@@ -27,7 +27,7 @@ static void nx_route_add_module(const char *start,
 {
     char modname[128];
     int len;
-    nx_module_t *module;
+    nx_module_t *module, *newmodule;
     nx_exception_t e;
 
     for ( ; apr_isspace(*start) && (end > start); start++ ); // trim leading space
@@ -95,35 +95,27 @@ static void nx_route_add_module(const char *start,
 	}
     }
 
-    if ( (module->type == NX_MODULE_TYPE_PROCESSOR) && (module->routes->nelts >= 1) )
-    {
-	nx_route_t *r2;
-	
-	r2 = ((nx_route_t **)module->routes->elts)[0];
-	if ( ctx->ignoreerrors != TRUE )
-	{
-	    nx_conf_error(routeconf, "cannot add processor module '%s' to route '%s' "
-			  "because it is already added to route '%s', you should define another instance",
-			  modname, route->name, r2->name);
-	}
-	else
-	{
-	    try
-	    {
-		nx_conf_error(routeconf, "cannot add processor module '%s' to route '%s' "
-			      "because it is already added to route '%s', you should define another instance",
-			      modname, route->name, r2->name);
-	    }
-	    catch(e)
-	    {
-		log_exception(e);
-	    }
-	    return;
-	}
-  
-    }
-
     log_debug("adding module %s to route %s", module->name, route->name);
+
+    // TODO: get rid of this and forbid using a processor instance in multiple routes
+    if ( (module->type == NX_MODULE_TYPE_PROCESSOR) && (module->routes->nelts >= 1) )
+    { // clone module
+	char tmpname[512];
+
+	log_debug("cloning module '%s' as '%s:%s'", module->name, module->name, route->name);
+	if ( apr_snprintf(tmpname, sizeof(tmpname), "%s:%s",
+			  module->name, route->name) == sizeof(tmpname) )
+	{
+	    throw_msg("module name too long: %s",  module->name);
+	}
+	newmodule = nx_module_new(NX_MODULE_TYPE_PROCESSOR, tmpname);
+	newmodule->directives = module->directives;
+	newmodule->dso = module->dso;
+	newmodule->dsoname = apr_pstrdup(newmodule->pool, module->dsoname);
+	newmodule->decl = module->decl;
+	NX_DLIST_INSERT_TAIL(ctx->modules, newmodule, link);
+	module = newmodule;
+    }
 
     *((nx_route_t **) apr_array_push(module->routes)) = route;
     *((nx_module_t **) apr_array_push(route->modules)) = module;
