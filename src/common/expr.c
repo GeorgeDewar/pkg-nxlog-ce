@@ -31,11 +31,10 @@ static void nx_expr_decl_init(nx_expr_decl_t *decl,
     {
 	decl->file = "INPUT";
     }
-
     decl->line = parser->linenum;
     decl->pos = parser->linepos;
     decl->name = exprname;
-    log_debug("%s declared at line %d, character %d in %s", decl->name, decl->line, decl->pos, decl->file);
+    //log_debug("%s declared at line %d, character %d", decl->name, decl->line, decl->pos);
 }
 
 
@@ -137,10 +136,6 @@ void nx_expr_statement_execute(nx_expr_eval_ctx_t *eval_ctx,
     ASSERT(eval_ctx != NULL);
     ASSERT(stmnt != NULL);
 
-    if ( eval_ctx->dropped == TRUE )
-    {
-	return;
-    }
 
     switch ( stmnt->type )
     {
@@ -266,7 +261,6 @@ void nx_expr_eval_ctx_init(nx_expr_eval_ctx_t *eval_ctx,
     eval_ctx->input = input;
     eval_ctx->num_captured = 0;
     eval_ctx->captured = NULL;
-    eval_ctx->dropped = FALSE;
 }
 
 

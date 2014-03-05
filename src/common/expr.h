@@ -55,7 +55,6 @@ typedef struct nx_expr_eval_ctx_t
     nx_module_input_t	*input;		///< source
     int			num_captured;	///< number of captured strings from the last regexp operation
     nx_string_t		**captured;
-    boolean		dropped;	///< don't continue further
 } nx_expr_eval_ctx_t;
 
 

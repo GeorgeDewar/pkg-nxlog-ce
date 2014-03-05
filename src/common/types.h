@@ -25,7 +25,7 @@
 #include <apr_strings.h>
 #include <apr_time.h>
 
-//#include <openssl/ssl.h>
+#include <openssl/ssl.h>
 
 #include "config.h"
 
@@ -40,14 +40,12 @@ typedef enum boolean
     true = 1,
 #  endif
 
-# ifndef __APPLE__
 #  ifndef FALSE
     FALSE = 0,
 #  endif
 #  ifndef TRUE
     TRUE = 1,
 #  endif
-# endif
 
 #  ifndef no
     no = 0,

@@ -700,7 +700,6 @@ static void im_msvistalog_read(nx_module_t *module)
 
     log_debug("im_msvistalog checking for new events...");
 
-    memset(imconf->eventarray, 0, sizeof(imconf->eventarray));
     if ( EvtNext(imconf->subscription, IM_MSVISTALOG_BATCH_SIZE,
 		 imconf->eventarray, 500, 0, &evcnt ) != TRUE )
     {
@@ -719,9 +718,6 @@ static void im_msvistalog_read(nx_module_t *module)
 		nx_module_start(module);
 		SetLastError(status);
 		msvistalog_throw("Couldn't read next event, invalid handle");
-	    case ERROR_INVALID_DATA:
-		SetLastError(status);
-		msvistalog_throw("Couldn't read next event, corrupted eventlog?");
 	    default:
 		msvistalog_error("EvtNext failed with error %d", (int) status);
 		nx_module_stop_self(module);
@@ -741,13 +737,10 @@ static void im_msvistalog_read(nx_module_t *module)
 	imconf->last_event = imconf->eventarray[evcnt - 1];
 	for ( i = 0; i < (int) evcnt; i++ )
 	{
-	    if ( imconf->eventarray[i] != NULL )
+	    im_msvistalog_event_to_logdata(module, imconf->eventarray[i]);
+	    if ( i < (int) evcnt - 1 )
 	    {
-		im_msvistalog_event_to_logdata(module, imconf->eventarray[i]);
-		if ( i < (int) evcnt - 1 )
-		{
-		    EvtClose(imconf->eventarray[i]);
-		}
+		EvtClose(imconf->eventarray[i]);
 	    }
 	}
     }

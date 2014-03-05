@@ -3,7 +3,7 @@
 
 
   <Product Name='NXLOG-CE' Id='*' UpgradeCode='9E888A9C-5962-11E0-B4E3-20CF305ACE5E'
-    Language='1033' Codepage='1252' Version='2.7.1191' Manufacturer='nxsec.com'>
+    Language='1033' Codepage='1252' Version='2.5.1089' Manufacturer='nxsec.com'>
 
     <Package Id='*' Keywords='Installer' Description="NXLOG Installer" Manufacturer='nxsec.com'
 	     InstallerVersion='100' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
@@ -12,8 +12,8 @@
     <Property Id='DiskPrompt' Value="NXLOG Installation [1]" />
 
     <Upgrade Id="9E888A9C-5962-11E0-B4E3-20CF305ACE5E">
-      <UpgradeVersion OnlyDetect="yes" Minimum="2.7.1191" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
-      <UpgradeVersion OnlyDetect="no" Maximum="2.7.1191" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
+      <UpgradeVersion OnlyDetect="yes" Minimum="2.5.1089" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
+      <UpgradeVersion OnlyDetect="no" Maximum="2.5.1089" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
     </Upgrade>
 
     <InstallExecuteSequence>
@@ -39,9 +39,7 @@
 	     <ServiceInstall Id='nxlogServiceInstall' DisplayName='nxlog' Name='nxlog'
 			     Arguments='-c "[INSTALLDIR]conf\nxlog.conf"'
 			     Description="This service is responsible for running the nxlog agent. See www.nxsec.com"
-			     ErrorControl='normal' Start='auto' Type='ownProcess' Vital='yes'>
-	       <ServiceDependency Id="eventlog" />
-	     </ServiceInstall>
+			     ErrorControl='normal' Start='auto' Type='ownProcess' Vital='yes' />
 
 	     <ServiceControl Id='nxlogServiceControl' Name='nxlog' Stop='both' Remove='uninstall' Wait='yes'/>
 	   </Component>
@@ -77,7 +75,6 @@
 		 <File Id='xmGelf' Name='xm_gelf.dll' DiskId='1' Source='modules\extension\xm_gelf.dll'/>
 		 <File Id='xmFileop' Name='xm_fileop.dll' DiskId='1' Source='modules\extension\xm_fileop.dll'/>
 		 <File Id='xmMultiline' Name='xm_multiline.dll' DiskId='1' Source='modules\extension\xm_multiline.dll'/>
-		 <File Id='xmKvp' Name='xm_kvp.dll' DiskId='1' Source='modules\extension\xm_kvp.dll'/>
 	       </Component>
 	     </Directory>
 

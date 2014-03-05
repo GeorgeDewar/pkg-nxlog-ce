@@ -324,7 +324,7 @@ static void xm_syslog_config(nx_module_t *module UNUSED)
 
     if ( nx_module_input_func_lookup(fname) == NULL )
     {
-	nx_module_input_func_register(NULL, fname, &xm_syslog_input_func_rfc5425, NULL, NULL);
+	nx_module_input_func_register(NULL, fname, &xm_syslog_input_func_rfc5425, NULL);
 	log_debug("Inputreader '%s' registered", fname);
     }
 

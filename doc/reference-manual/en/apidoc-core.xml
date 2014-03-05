@@ -683,7 +683,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Parse a datetime argument. Returns an undefined datetime type if it cannot parse the argument so that the user can fix the error, e.g. $EventTime = parsedate($somestring); if not defined($EventTime) $EventTime = now();</simpara>
+          <simpara>Parse a datetime argument.</simpara>
          </listitem>
         </varlistentry>
         <varlistentry>
@@ -844,7 +844,7 @@
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Return the FQDN hostname. This function will return the short form if the FQDN hostname cannot be determined.</simpara>
+          <simpara>Return the FQDN hostname. This function will return the sort form if the FQDN hostname cannot be determined.</simpara>
          </listitem>
         </varlistentry>
         <varlistentry>
@@ -2192,7 +2192,7 @@ If the lifetime expires, the variable is deleted automatically and get_var(name)
         <varlistentry>
          <term>description</term>
          <listitem>
-          <simpara>Drop the currently processed event's log and don't execute further statements.</simpara>
+          <simpara>Drop the currently processed event's log.</simpara>
          </listitem>
         </varlistentry>
       </variablelist>

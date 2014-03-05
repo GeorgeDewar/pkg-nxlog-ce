@@ -29,7 +29,6 @@ static void nx_module_output_fill_buffer(nx_module_output_t *output,
 		  (int) output->bufsize);
 	len = output->bufsize - sizeof(NX_LINEFEED);
     }
-    ASSERT(output->logdata->raw_event->buf != NULL);
     memcpy(output->buf, output->logdata->raw_event->buf, len);
     if ( addlf == TRUE )
     {

@@ -134,7 +134,6 @@ distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
-APRCONFIG = @APRCONFIG@
 APR_CFLAGS = @APR_CFLAGS@
 APR_LIBS = @APR_LIBS@
 AR = @AR@
@@ -208,7 +207,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PCRECONFIG = @PCRECONFIG@
 PCRE_CFLAGS = @PCRE_CFLAGS@
 PCRE_LIBS = @PCRE_LIBS@
 PERL = @PERL@
@@ -284,7 +282,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = src test doc
 changelog_DATA = ChangeLog.txt
 changelogdir = $(docdir)
-EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE LICENSE.pdf $(wildcard parsers/*.conf) \
+EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_DATA) LICENSE $(wildcard parsers/*.conf) \
              $(wildcard packaging/debian/*.pem) \
              packaging/aix/nxlog.spec \
              packaging/aix/init \
@@ -304,8 +302,6 @@ EXTRA_DIST = autogen.sh libtool svn_version.txt version.sh VERSION $(changelog_D
 	     packaging/debian/postrm \
 	     packaging/debian/rules \
 	     packaging/debian/source/format \
-             packaging/macosx/buildpkg.sh \
-             packaging/macosx/nxlog.conf \
 	     packaging/windows/license.rtf \
 	     packaging/windows/nxlog.conf \
 	     packaging/windows/nxlog.wxs \

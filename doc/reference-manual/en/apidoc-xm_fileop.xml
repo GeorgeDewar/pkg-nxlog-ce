@@ -981,57 +981,6 @@
 
    <varlistentry>
      <term>
-       <function>file_chown(string file, string user, string group);</function>
-     </term>
-     <listitem>
-      <variablelist>
-        <varlistentry>
-         <term>description</term>
-         <listitem>
-          <simpara>
-       Change file ownership. This function is only implemented on POSIX systems where chown() is 
-       available in the underlying OS.
-       An error is logged if the operation fails.
-     </simpara>
-         </listitem>
-        </varlistentry>
-        <varlistentry>
-          <term>arguments</term>
-          <listitem>
-           <variablelist>
-            <varlistentry>
-             <term>file</term>
-             <listitem>
-               <simpara>
-                type: <link linkend="lang_type_string">string</link>
-               </simpara>
-             </listitem>
-            </varlistentry>
-            <varlistentry>
-             <term>user</term>
-             <listitem>
-               <simpara>
-                type: <link linkend="lang_type_string">string</link>
-               </simpara>
-             </listitem>
-            </varlistentry>
-            <varlistentry>
-             <term>group</term>
-             <listitem>
-               <simpara>
-                type: <link linkend="lang_type_string">string</link>
-               </simpara>
-             </listitem>
-            </varlistentry>
-           </variablelist>
-          </listitem>
-        </varlistentry>
-      </variablelist>
-     </listitem>
-   </varlistentry>
-
-   <varlistentry>
-     <term>
        <anchor id="xm_fileop_proc_file_chmod"/>
        <function>file_chmod(string file, integer mode);</function>
      </term>

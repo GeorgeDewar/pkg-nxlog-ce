@@ -1,9 +1,12 @@
-#!/bin/sh
+#! /bin/sh
 
 set -e
 
 case "$1" in
     configure)
+
+	. /usr/share/debconf/confmodule
+
 	addgroup --system --quiet nxlog || true
 	if [ -z "`getent passwd nxlog`" ]; then
 	    adduser --quiet --system --no-create-home \

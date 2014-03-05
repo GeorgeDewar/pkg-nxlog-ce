@@ -23,7 +23,8 @@
 
 #define IM_FILE_DEFAULT_POLL_INTERVAL 1 /* The number of seconds to check the files for new data */
 #define IM_FILE_MAX_READ 50 /* The max number of logs to read in a single iteration */
-#define IM_FILE_DEFAULT_ACTIVE_FILES 10 /* The number of files which will be open at a time */
+#define IM_FILE_CLOSE_THRESHOLD 10 /* The number of EOFs to close the file */
+#define IM_FILE_MAX_OPEN_FILES 20 /* The max number of files which will be open at a time */
 
 
 static void im_file_input_close(nx_module_t *module, nx_im_file_input_t *file) 
@@ -34,23 +35,6 @@ static void im_file_input_close(nx_module_t *module, nx_im_file_input_t *file)
 
     imconf = (nx_im_file_conf_t *) module->config;
 
-    if ( imconf->currsrc == file )
-    {
-	imconf->currsrc = NX_DLIST_NEXT(file, link);
-    }
-
-    // we need to flush xm_multiline and other extension's buffers to avoid loosing data
-    if ( (file->input != NULL) && (file->input->inputfunc != NULL) &&
-	 (file->input->inputfunc->flush != NULL) )
-    {
-	nx_logdata_t *logdata;
-	if ( (logdata = file->input->inputfunc->flush(file->input,
-						      file->input->inputfunc->data)) != NULL )
-	{
-	    nx_module_add_logdata_input(module, file->input, logdata);
-	}
-    }
-
     if ( file->input != NULL )
     {
 	if ( file->input->desc.f != NULL )
@@ -58,7 +42,6 @@ static void im_file_input_close(nx_module_t *module, nx_im_file_input_t *file)
 	    apr_file_close(file->input->desc.f);
 	    file->input->desc.f = NULL;
 	}
-	//TODO: warn if input buffer contains unprocessed data?
 	apr_pool_destroy(file->input->pool);
 	file->input = NULL;
 
@@ -133,10 +116,7 @@ static void im_file_fill_buffer(nx_module_t *module, nx_im_file_input_t *file, b
 	}
 	else if ( APR_STATUS_IS_EAGAIN(rv) )
 	{
-	    // Normally this shouldn't happen because file i/o is blocking,
-	    // but for some weird reason we get this on windows in some rare cases.
-	    // So just wait a little instead of panic()-ing.
-	    apr_sleep(APR_USEC_PER_SEC / 10);
+	    nx_panic("im_file got EAGAIN for read in module %s", input->module->name);
 	}
 	else if ( APR_STATUS_IS_EBADF(rv) )
 	{
@@ -349,9 +329,9 @@ static boolean im_file_input_open(nx_module_t *module,
 
 	if ( opened == TRUE )
 	{
-	    if ( imconf->num_open_files > imconf->active_files )
+	    if ( imconf->num_open_files > IM_FILE_MAX_OPEN_FILES )
 	    {
-		log_debug("maximum number (>%d) of files open, closing current", imconf->active_files);
+		log_debug("maximum number (%d) of files open, closing current", imconf->num_open_files);
 		im_file_input_close(module, *file);
 	    }
 	    else
@@ -371,15 +351,15 @@ static boolean im_file_input_open(nx_module_t *module,
     {
 	if ( APR_STATUS_IS_ENOENT(e.code) )
 	{
-	    if ( (existed == TRUE) || (imconf->filename_const == FALSE) || (apr_fnmatch_test(imconf->filename) == 0) )
+	    if ( (existed == TRUE) || (imconf->filename_const == FALSE) )
 	    {
-		if ( existed != TRUE )
+		if ( existed == TRUE )
 		{
-		    log_warn("input file does not exist: %s", (*file)->name);
+		    log_warn("input file was deleted: %s", (*file)->name);
 		}
 		else
 		{
-		    log_info("input file was deleted: %s", (*file)->name);
+		    log_warn("input file does not exist: %s", (*file)->name);
 		}
 		apr_hash_set(imconf->files, (*file)->name, APR_HASH_KEY_STRING, NULL);
 		im_file_input_close(module, *file);
@@ -404,7 +384,6 @@ static boolean im_file_input_open(nx_module_t *module,
 
 
 
-/* close the first file in the open set which is returning EOF */
 static boolean im_file_input_check_close(nx_module_t *module) 
 {
     nx_im_file_conf_t *imconf;
@@ -412,9 +391,9 @@ static boolean im_file_input_check_close(nx_module_t *module)
 
     imconf = (nx_im_file_conf_t *) module->config;
 
-    if ( imconf->num_open_files < imconf->active_files )
+    if ( imconf->num_open_files < IM_FILE_MAX_OPEN_FILES )
     {
-	return ( TRUE );
+	return ( FALSE );
     }
     for ( file = NX_DLIST_FIRST(imconf->open_files);
 	  file != NULL;
@@ -432,193 +411,21 @@ static boolean im_file_input_check_close(nx_module_t *module)
 
 
 
-/* Warning: 'file' can become invalid after the function returns!! */
-static boolean im_file_check_file(nx_module_t *module, 
-				  nx_im_file_input_t **file,
-				  const char *fname,
-				  apr_pool_t *pool)
-{
-    nx_exception_t e;
-    boolean volatile retval = FALSE;
-    nx_im_file_conf_t *imconf;
-
-    ASSERT(file != NULL);
-    ASSERT(*file != NULL);
-
-    imconf = (nx_im_file_conf_t *) module->config;
-
-    if ( ((*file)->blacklist_until != 0) && ((*file)->blacklist_until > apr_time_now()) )
-    {
-	log_debug("not checking file %s until blacklisting expires", (*file)->name);
-	return ( FALSE );
-    }
-
-    if ( (*file)->new_size > (*file)->filepos )
-    {
-	log_debug("file '%s' has unread data (%u > %u)", (*file)->name,
-		  (unsigned int) (*file)->new_size, (unsigned int) (*file)->filepos);
-	if ( im_file_input_check_close(module) == TRUE )
-	{
-	    im_file_input_open(module, file, NULL, FALSE, TRUE);
-	    if ( file == NULL )
-	    {
-		return ( FALSE );
-	    }
-	}
-	return ( TRUE );
-    }
-
-    try
-    {
-	apr_finfo_t finfo;
-	boolean needopen = FALSE;
-	apr_status_t rv;
-
-	log_debug("check file: %s", fname);
-
-	rv = apr_stat(&finfo, fname,
-		      APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE, pool);
-	if ( rv == APR_SUCCESS )
-	{
-	}
-	else if ( rv == APR_INCOMPLETE )
-	{ // partial results returned. we check the valid bitmask
-	}
-	else
-	{
-	    throw(rv, "apr_stat failed on file %s", fname);
-	}
-
-	if ( (*file)->inode == 0 )
-	{ // no stat info stored yet (initial open failed)
-	    needopen = TRUE;
-	}
-	else
-	{
-	    if ( (finfo.valid & APR_FINFO_INODE) && ((*file)->inode != finfo.inode) )
-	    {
-		log_warn("inode changed for '%s': reopening possibly rotated file", fname);
-		im_file_input_close(module, *file);
-		(*file)->filepos = 0;
-		retval = TRUE;
-		needopen = TRUE;
-	    }
-		
-	    ASSERT((*file)->mtime != 0);
-	    if ( (finfo.valid & APR_FINFO_MTIME) && ((*file)->mtime != finfo.mtime) )
-	    {
-		log_debug("mtime of file '%s' changed", fname);
-		(*file)->new_mtime = finfo.mtime;
-		retval = TRUE;
-		needopen = TRUE;
-	    }
-		
-	    if ( finfo.valid & APR_FINFO_SIZE )
-	    {
-		if ( (*file)->size < finfo.size )
-		{
-		    log_debug("file size of '%s' increased since last read", fname);
-		    (*file)->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
-		}
-	    
-		if ( ((*file)->filepos > 0) && (finfo.size < (*file)->filepos) )
-		{
-		    log_debug("file '%s' was truncated", fname);
-		    (*file)->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
-		}
-
-		if ( finfo.size > (*file)->filepos )
-		{
-		    log_debug("file '%s' has unread data (%u > %u)", fname,
-			      (unsigned int) finfo.size, (unsigned int) (*file)->filepos);
-		    (*file)->new_size = finfo.size;
-		    retval = TRUE;
-		    needopen = TRUE;
-		}
-	    }
-	}
-	    
-	if ( needopen == TRUE )
-	{
-	    im_file_input_check_close(module);
-	    im_file_input_open(module, file, &finfo, FALSE, TRUE);
-	}
-    }
-    catch(e)
-    {
-	if ( APR_STATUS_IS_ENOENT(e.code) )
-	{
-	    if ( ((*file)->blacklist_until != 0) && (apr_fnmatch_test(imconf->filename) == 0) )
-	    {
-		log_warn("input file does not exist: %s", fname);
-		im_file_input_blacklist(module, *file);
-	    }
-	    else
-	    {
-		log_warn("input file was deleted: %s", fname);
-
-		apr_hash_set(imconf->files, fname, APR_HASH_KEY_STRING, NULL);
-		im_file_input_close(module, *file);
-		apr_pool_destroy((*file)->pool);
-		*file = NULL;
-	    }
-	}
-	else
-	{
-	    log_exception(e);
-	    im_file_input_blacklist(module, *file);
-	}
-	retval = FALSE;
-    }
-
-    return ( retval );
-}
-
-
-
-/*
- * Check for modifications to files that are already known.
- */
-static boolean im_file_check_files(nx_module_t *module, boolean non_active_only)
+static boolean im_file_has_unread_data(nx_module_t *module)
 {
     nx_im_file_conf_t *imconf;
-    apr_pool_t *pool;
-    const char *fname;
     boolean retval = FALSE;
     apr_hash_index_t *idx;
+    const char *fname;
     apr_ssize_t keylen;
-    nx_im_file_input_t *file, *tmpfile;
-    int num_new = 0;
+    nx_im_file_input_t *file = NULL;
+    apr_pool_t *pool;
 
     imconf = (nx_im_file_conf_t *) module->config;
 
     pool = nx_pool_create_child(module->pool);
 
-    //log_debug("im_file_check_files");
-
-    if ( non_active_only == FALSE )
-    {
-	// First check the open file list
-	for ( file = NX_DLIST_FIRST(imconf->open_files); file != NULL; )
-	{
-	    tmpfile = NX_DLIST_NEXT(file, link);
-	    if ( im_file_check_file(module, &file, file->name, pool) == TRUE )
-	    {
-		retval = TRUE;
-		num_new++;
-		log_debug("check_files found an active file");
-		break;
-	    }
-	    file = tmpfile;
-	}
-    }
-
-    imconf->non_active_modified = FALSE;
-
+    // TODO: keep the iterator so we don't restart from the beginning every time
     for ( idx = apr_hash_first(pool, imconf->files);
 	  idx != NULL;
 	  idx = apr_hash_next(idx) )
@@ -627,71 +434,157 @@ static boolean im_file_check_files(nx_module_t *module, boolean non_active_only)
 	ASSERT(file != NULL);
 	ASSERT(fname != NULL);
 
-	if ( file->input == NULL )
-	{ // open files have been already checked in the previous loop
-	    if ( im_file_check_file(module, &file, fname, pool) == TRUE )
+	if ( file->new_size > file->filepos )
+	{
+	    log_debug("file '%s' has unread data (%u > %u)", fname,
+		      (unsigned int) file->new_size, (unsigned int) file->filepos);
+	    im_file_input_check_close(module);
+	    if ( im_file_input_open(module, &file, NULL, FALSE, TRUE) == TRUE )
 	    {
 		retval = TRUE;
-		imconf->non_active_modified = TRUE;
-		log_debug("non-active modification on %s", fname);
-		num_new++;
-		if ( num_new >= imconf->active_files )
-		{
-		    break;
-		}
-	    }
-	}
-    }
-
-    apr_pool_destroy(pool);
-
-    if ( retval == FALSE )
-    {
-	imconf->non_active_modified = FALSE;
-    }
-/*
-    else
-    {
-	log_debug("non-active modified: %d, total files: %u", imconf->non_active_modified,
-		 apr_hash_count(imconf->files));
-    }
-*/
-    return ( retval );
-}
-
-
-
-/* return a file pointer if the inode is already used by another file */
-static nx_im_file_input_t *im_file_check_rename(nx_module_t *module,
-						const char *filename)
-{
-    apr_pool_t *pool;
-    nx_im_file_input_t * volatile retval = NULL;
-    nx_im_file_input_t *file;
-    nx_im_file_conf_t *imconf;
-    apr_status_t rv;
-    apr_finfo_t finfo;
-    apr_hash_index_t *idx;
-
-    imconf = (nx_im_file_conf_t *) module->config;
-    pool = nx_pool_create_child(module->pool);
-
-    rv = apr_stat(&finfo, filename, APR_FINFO_INODE | APR_FINFO_SIZE, pool);
-    if ( rv == APR_SUCCESS )
-    {
-	for ( idx = apr_hash_first(pool, imconf->files);
-	      idx != NULL;
-	      idx = apr_hash_next(idx) )
-	{
-	    apr_hash_this(idx, NULL, NULL, (void **) &file);
-	    ASSERT(file != NULL);
-	    if ( (finfo.inode == file->inode) && (finfo.size == file->size) )
-	    {
-		retval = file;
 		break;
 	    }
 	}
     }
+    apr_pool_destroy(pool);
+
+    return ( retval );
+}
+
+
+
+static boolean im_file_check_files(nx_module_t *module)
+{
+    nx_im_file_conf_t *imconf;
+    apr_pool_t *pool;
+    const char *fname;
+    boolean volatile retval = FALSE;
+    nx_exception_t e;
+    apr_hash_index_t * volatile idx;
+    apr_ssize_t keylen;
+    nx_im_file_input_t *file;
+
+    imconf = (nx_im_file_conf_t *) module->config;
+
+    pool = nx_pool_create_child(module->pool);
+
+    // check if it is already added to the list
+    for ( idx = apr_hash_first(pool, imconf->files);
+	  idx != NULL;
+	  idx = apr_hash_next(idx) )
+    {
+	apr_hash_this(idx, (const void **) &fname, &keylen, (void **) &file);
+	ASSERT(file != NULL);
+	ASSERT(fname != NULL);
+
+	if ( (file->blacklist_until != 0) && (file->blacklist_until > apr_time_now()) )
+	{
+	    log_debug("not checking file %s until blacklisting expires", file->name);
+	    continue;
+	}
+
+	try
+	{
+	    apr_finfo_t finfo;
+	    boolean needopen = FALSE;
+	    apr_status_t rv;
+
+	    rv = apr_stat(&finfo, fname,
+			  APR_FINFO_INODE | APR_FINFO_MTIME | APR_FINFO_SIZE, pool);
+	    if ( rv == APR_SUCCESS )
+	    {
+	    }
+	    else if ( rv == APR_INCOMPLETE )
+	    { // partial results returned. we check the valid bitmask
+	    }
+	    else
+	    {
+		throw(rv, "apr_stat failed on file %s", fname);
+	    }
+
+	    if ( file->inode == 0 )
+	    { // no stat info stored yet (initial open failed)
+		needopen = TRUE;
+	    }
+	    else
+	    {
+		if ( (finfo.valid & APR_FINFO_INODE) && (file->inode != finfo.inode) )
+		{
+		    log_warn("inode changed for '%s': reopening possibly rotated file", fname);
+		    im_file_input_close(module, file);
+		    file->filepos = 0;
+		    retval = TRUE;
+		    needopen = TRUE;
+		}
+		
+		ASSERT(file->mtime != 0);
+		if ( (finfo.valid & APR_FINFO_MTIME) && (file->mtime != finfo.mtime) )
+		{
+		    log_debug("mtime of file '%s' changed", fname);
+		    file->new_mtime = finfo.mtime;
+		    retval = TRUE;
+		    needopen = TRUE;
+		}
+		
+		if ( finfo.valid & APR_FINFO_SIZE )
+		{
+		    if ( file->size < finfo.size )
+		    {
+			log_debug("file size of '%s' increased since last read", fname);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
+	    
+		    if ( (file->filepos > 0) && (finfo.size < file->filepos) )
+		    {
+			log_debug("file '%s' was truncated", fname);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
+
+		    if ( finfo.size > file->filepos )
+		    {
+			log_debug("file '%s' has unread data (%u > %u)", fname,
+				  (unsigned int) finfo.size, (unsigned int) file->filepos);
+			file->new_size = finfo.size;
+			retval = TRUE;
+			needopen = TRUE;
+		    }
+		}
+	    }
+	    
+	    if ( needopen == TRUE )
+	    {
+		im_file_input_check_close(module);
+		im_file_input_open(module, &file, &finfo, FALSE, TRUE);
+	    }
+	}
+	catch(e)
+	{
+	    if ( APR_STATUS_IS_ENOENT(e.code) )
+	    {
+		if ( file->blacklist_until != 0 )
+		{
+		    log_warn("input file does not exist: %s", fname);
+		    im_file_input_blacklist(module, file);
+		}
+		else
+		{
+		    log_warn("input file was deleted: %s", fname);
+		    apr_hash_set(imconf->files, fname, keylen, NULL);
+		    im_file_input_close(module, file);
+		    apr_pool_destroy(file->pool);
+		}
+	    }
+	    else
+	    {
+		log_exception(e);
+		im_file_input_blacklist(module, file);
+	    }
+	}
+    }
 
     apr_pool_destroy(pool);
 
@@ -700,21 +593,15 @@ static nx_im_file_input_t *im_file_check_rename(nx_module_t *module,
 
 
 
-static boolean im_file_add_file(nx_module_t *module,
-				const char *fname,
-				boolean readfromlast,
-				boolean single) //< single file only, not wildcarded
+static boolean im_file_add_file(nx_module_t *module, const char *fname, boolean readfromlast)
 {
     nx_im_file_conf_t *imconf;
     nx_im_file_input_t *file;
     apr_off_t filepos = 0;
     int64_t savedpos = 0;
-    boolean retval = FALSE;
+    boolean volatile retval = FALSE;
     apr_pool_t *pool;
     boolean existed = FALSE;
-    const char *fname2;
-    apr_ssize_t keylen;
-    apr_hash_index_t *idx;
 
     imconf = (nx_im_file_conf_t *) module->config;
 
@@ -745,22 +632,6 @@ static boolean im_file_add_file(nx_module_t *module,
 	file->filepos = filepos;
 	file->name = apr_pstrdup(pool, fname);
 
-	if ( imconf->renamecheck == TRUE )
-	{
-	    nx_im_file_input_t *dupe;
-
-	    dupe = im_file_check_rename(module, fname);
-	    if ( dupe != NULL )
-	    {
-		log_info("input file '%s' was possibly renamed/rotated from '%s'," 
-			 " will only read new data from this file.", fname, dupe->name);
-		file->filepos = dupe->filepos; // do not read the contents again
-		apr_hash_set(imconf->files, dupe->name, APR_HASH_KEY_STRING, NULL);
-		im_file_input_close(module, dupe);
-		apr_pool_destroy(dupe->pool);
-	    }
-	}
-
 	im_file_input_check_close(module);
 	retval = im_file_input_open(module, &file, NULL, readfromlast, existed);
 	if ( file != NULL )
@@ -770,31 +641,7 @@ static boolean im_file_add_file(nx_module_t *module,
     }
     else
     {
-	//log_debug("file %s already added", file->name);
-    }
-
-    if ( single == TRUE )
-    { // remove everything else
-	pool = nx_pool_create_child(module->pool);
-	for ( idx = apr_hash_first(pool, imconf->files);
-	      idx != NULL;
-	      idx = apr_hash_next(idx) )
-	{
-	    apr_hash_this(idx, (const void **) &fname2, &keylen, (void **) &file);
-
-	    if ( strcmp(fname, fname2) != 0 )
-	    {
-		log_debug("not watching file %s anymore", file->name);
-
-		apr_hash_set(imconf->files, fname2, keylen, NULL);
-		if ( file != NULL )
-		{
-		    im_file_input_close(module, file);
-		    apr_pool_destroy(file->pool);
-		}
-	    }
-	}
-	apr_pool_destroy(pool);
+	log_debug("file %s already added", file->name);
     }
 
     return ( retval );
@@ -817,29 +664,21 @@ static boolean im_file_glob_dir(nx_module_t *module,
     char tmp[APR_PATH_MAX];
     boolean volatile retval = FALSE;
     apr_status_t rv;
-    nx_im_file_conf_t *imconf;
-    
-    imconf = (nx_im_file_conf_t *) module->config;
 
     log_debug("reading directory entries under '%s' to check for matching files", dirname);
     rv = apr_dir_open(&dir, dirname, pool);
     if ( rv != APR_SUCCESS )
     {
-	if ( imconf->warned_no_directory == FALSE )
-	{
-	    log_aprerror(rv, "failed to open directory: %s", dirname);
-	}
-	imconf->warned_no_directory = TRUE;
+	log_aprerror(rv, "failed to open directory: %s", dirname);
 	return ( FALSE );
-    }
-    else
-    {
-	imconf->warned_no_directory = FALSE;
     }
 
     try
     {
 	apr_finfo_t finfo;
+	nx_im_file_conf_t *imconf;
+
+	imconf = (nx_im_file_conf_t *) module->config;
 
 	for ( ; ; )
 	{
@@ -864,7 +703,7 @@ static boolean im_file_glob_dir(nx_module_t *module,
 		{
 		    log_debug("'%s' matches wildcard '%s'", finfo.name, fname);
 		    apr_snprintf(tmp, sizeof(tmp), "%s"NX_DIR_SEPARATOR"%s", dirname, finfo.name);
-		    if ( im_file_add_file(module, tmp, readfromlast, FALSE) == TRUE )
+		    if ( im_file_add_file(module, tmp, readfromlast) == TRUE )
 		    {
 			retval = TRUE;
 		    }
@@ -964,8 +803,8 @@ static boolean im_file_check_new(nx_module_t *module, boolean readfromlast)
 	    }
 	}
 	else
-	{ // not a wildcarded name
-	    im_file_add_file(module, imconf->filename, imconf->readfromlast, TRUE);
+	{
+	    im_file_add_file(module, imconf->filename, imconf->readfromlast);
 	}
     }
     catch(e)
@@ -986,15 +825,14 @@ static boolean im_file_check_new(nx_module_t *module, boolean readfromlast)
 
 
 
-static void im_file_add_poll_event(nx_module_t *module, boolean delayed)
+
+static void im_file_add_event(nx_module_t *module, boolean delayed)
 {
     nx_event_t *event;
     nx_im_file_conf_t *imconf;
 
     imconf = (nx_im_file_conf_t *) module->config;
-    ASSERT(imconf->poll_event == NULL);
-
-    //log_debug("add_poll_event: %d", delayed);
+    ASSERT(imconf->event == NULL);
 
     event = nx_event_new();
     event->module = module;
@@ -1010,75 +848,8 @@ static void im_file_add_poll_event(nx_module_t *module, boolean delayed)
     event->type = NX_EVENT_READ;
     event->priority = module->priority;
     nx_event_add(event);
-    imconf->poll_event = event;
-}
+    imconf->event = event;
 
-
-
-static void im_file_add_dircheck_event(nx_module_t *module, boolean delayed)
-{
-    nx_event_t *event;
-    nx_im_file_conf_t *imconf;
-
-    imconf = (nx_im_file_conf_t *) module->config;
-    ASSERT(imconf->dircheck_event == NULL);
-
-    event = nx_event_new();
-    event->module = module;
-    if ( delayed == TRUE )
-    {
-	event->delayed = TRUE;
-	event->time = apr_time_now() + (int) (APR_USEC_PER_SEC * imconf->dircheck_interval);
-    }
-    else
-    {
-	event->delayed = FALSE;
-    }
-    event->type = NX_EVENT_MODULE_SPECIFIC;
-    event->priority = module->priority;
-    nx_event_add(event);
-    imconf->dircheck_event = event;
-}
-
-
-
-static void im_file_dircheck_event_cb(nx_module_t *module)
-{
-    nx_im_file_conf_t *imconf;
-    boolean got_data = FALSE;
-
-    imconf = (nx_im_file_conf_t *) module->config;
-
-    imconf->dircheck_event = NULL;
-
-    //log_info("dircheck_event_cb");
-
-    if ( apr_hash_count(imconf->files) > (unsigned int) imconf->num_open_files )
-    { // assume we have non-active modifications
-	imconf->non_active_modified = TRUE; 
-    }
-    if ( im_file_check_new(module, FALSE) == TRUE )
-    {
-	//log_info("dircheck_event_cb detected new files in check_new()");
-	got_data = TRUE;
-    }
-    if ( im_file_check_files(module, FALSE) == TRUE )
-    {
-	//log_info("dircheck_event_cb detected new files in check_files()");
-	got_data = TRUE;
-    }
-
-    if ( got_data == TRUE )
-    { // force undelayed event
-	if ( imconf->poll_event != NULL )
-	{
-	    nx_event_remove(imconf->poll_event);
-	    nx_event_free(imconf->poll_event);
-	    imconf->poll_event = NULL;
-	}
-	im_file_add_poll_event(module, FALSE);
-    }
-    im_file_add_dircheck_event(module, TRUE);
 }
 
 
@@ -1090,11 +861,10 @@ static void im_file_read(nx_module_t *module)
     boolean got_eof;
     boolean got_data;
     int evcnt = 0;
-    nx_im_file_input_t *file;
 
     ASSERT(module != NULL);
     imconf = (nx_im_file_conf_t *) module->config;
-    imconf->poll_event = NULL;
+    imconf->event = NULL;
 
     if ( nx_module_get_status(module) != NX_MODULE_STATUS_RUNNING )
     {
@@ -1163,39 +933,18 @@ static void im_file_read(nx_module_t *module)
 
 	    if ( got_data == FALSE )
 	    {
-		file = imconf->currsrc;
-		if ( file->new_size > 0 )
+		if ( imconf->currsrc->new_size > 0 )
 		{
-		    file->size = file->new_size;
-		    file->filepos = file->new_size;
+		    imconf->currsrc->size = imconf->currsrc->new_size;
+		    imconf->currsrc->filepos = imconf->currsrc->new_size;
 		}
-		if ( file->new_mtime > 0 )
+		if ( imconf->currsrc->new_mtime > 0 )
 		{
-		    file->mtime = file->new_mtime;
+		    imconf->currsrc->mtime = imconf->currsrc->new_mtime;
 		}
 
-		(file->num_eof)++;
-		if (file->num_eof >= 2)
-		{   // if the file returns another EOF, i.e. did not recieve any data since PollInterval*2, 
-		    // then we flush xm_multiline and extension's buffers.
-		    // This also avoids the last event sitting in xm_multiline's buffers forever 
-		    if ( (file->input != NULL) && (file->input->inputfunc->flush != NULL) )
-		    {
-			if ( (logdata = file->input->inputfunc->flush(file->input,
-								      file->input->inputfunc->data)) != NULL )
-			{
-			    nx_module_add_logdata_input(module, file->input, logdata);
-			    evcnt++;
-			}
-		    }
-		}
-		imconf->currsrc = NX_DLIST_NEXT(file, link);
-
-		if ( imconf->closewhenidle == TRUE )
-		{
-		    log_debug("closing idle file %s (CloseWhenIdle is enabled)", file->name);
-		    im_file_input_close(module, file);
-		}
+		(imconf->currsrc->num_eof)++;
+		imconf->currsrc = NX_DLIST_NEXT(imconf->currsrc, link);
 		continue;
 	    }
 	}
@@ -1205,25 +954,29 @@ static void im_file_read(nx_module_t *module)
 	}
     }
 
+    if ( (evcnt < IM_FILE_MAX_READ) && (evcnt < IM_FILE_MAX_OPEN_FILES) )
+    {
+	if ( (im_file_has_unread_data(module) == TRUE) ||
+	     (im_file_check_files(module) == TRUE) )
+	{ // force undelayed event
+	    evcnt++;
+	}
+	if ( (evcnt == 0) && (im_file_check_new(module, FALSE) == TRUE) )
+	{ // force undelayed event
+	    evcnt++;
+	}
+    }
+
     if ( nx_module_get_status(module) == NX_MODULE_STATUS_RUNNING )
     {
-	boolean delayed = FALSE;
-
-	//log_debug("evcnt: %d", evcnt);
-
-	if ( evcnt < IM_FILE_MAX_READ )
+	if ( evcnt == 0 )
 	{
-	    if ( evcnt == 0 )
-	    {
-		delayed = TRUE;
-	    }
-	    if ( imconf->non_active_modified == TRUE )
-	    {
-		//log_debug("may have non-active modifications, checking files");
-		delayed = im_file_check_files(module, TRUE) == FALSE;
-	    }
+	    im_file_add_event(module, TRUE);
 	}
-	im_file_add_poll_event(module, delayed);
+	else
+	{
+	    im_file_add_event(module, FALSE);
+	}
     }
 }
 
@@ -1288,12 +1041,6 @@ static void im_file_config(nx_module_t *module)
 	else if ( strcasecmp(curr->directive, "recursive") == 0 )
 	{
 	}
-	else if ( strcasecmp(curr->directive, "RenameCheck") == 0 )
-	{
-	}
-	else if ( strcasecmp(curr->directive, "CloseWhenIdle") == 0 )
-	{
-	}
 	else if ( strcasecmp(curr->directive, "ReadFromLast") == 0 )
 	{
 	}
@@ -1320,20 +1067,6 @@ static void im_file_config(nx_module_t *module)
 		nx_conf_error(curr, "invalid PollInterval: %s", curr->args);
             }
 	}
-	else if ( strcasecmp(curr->directive, "DirCheckInterval") == 0 )
-	{
-	    if ( sscanf(curr->args, "%f", &(imconf->dircheck_interval)) != 1 )
-	    {
-		nx_conf_error(curr, "invalid DirCheckInterval: %s", curr->args);
-            }
-	}
-	else if ( strcasecmp(curr->directive, "ActiveFiles") == 0 )
-	{
-	    if ( sscanf(curr->args, "%d", &(imconf->active_files)) != 1 )
-	    {
-		nx_conf_error(curr, "invalid ActiveFiles directive: %s", curr->args);
-            }
-	}
 	else
 	{
 	    nx_conf_error(curr, "invalid keyword: %s", curr->directive);
@@ -1353,14 +1086,8 @@ static void im_file_config(nx_module_t *module)
     imconf->readfromlast = TRUE;
     nx_cfg_get_boolean(module->directives, "ReadFromLast", &(imconf->readfromlast));
 
-    imconf->closewhenidle = FALSE;
-    nx_cfg_get_boolean(module->directives, "CloseWhenIdle", &(imconf->closewhenidle));
-
     imconf->recursive = TRUE;
     nx_cfg_get_boolean(module->directives, "recursive", &(imconf->recursive));
-
-    imconf->renamecheck = FALSE;
-    nx_cfg_get_boolean(module->directives, "RenameCheck", &(imconf->renamecheck));
 
     if ( imconf->filename_expr == NULL )
     {
@@ -1370,16 +1097,6 @@ static void im_file_config(nx_module_t *module)
     if ( imconf->poll_interval == 0 )
     {
 	imconf->poll_interval = IM_FILE_DEFAULT_POLL_INTERVAL;
-    }
-
-    if ( imconf->dircheck_interval == 0 )
-    {
-	imconf->dircheck_interval = imconf->poll_interval * 2;
-    }
-
-    if ( imconf->active_files == 0 )
-    {
-	imconf->active_files = IM_FILE_DEFAULT_ACTIVE_FILES;
     }
 
     imconf->open_files = apr_pcalloc(module->pool, sizeof(nx_im_file_input_list_t));
@@ -1397,8 +1114,7 @@ static void im_file_start(nx_module_t *module)
     imconf = (nx_im_file_conf_t *) module->config;
   
     im_file_check_new(module, imconf->readfromlast);
-    im_file_add_poll_event(module, FALSE);
-    im_file_add_dircheck_event(module, FALSE);
+    im_file_add_event(module, FALSE);
 }
 
 
@@ -1438,14 +1154,11 @@ static void im_file_stop(nx_module_t *module)
 		      module->name, (long int) file->filepos, file->name);
 	}
 	apr_hash_set(imconf->files, fname, keylen, NULL);
-	ASSERT(file->pool != NULL);
 	apr_pool_destroy(file->pool);
     }
     apr_pool_destroy(pool);
 
-    // events are removed by the core, so just NULL out our pointers here
-    imconf->poll_event = NULL;
-    imconf->dircheck_event = NULL;
+    imconf->event = NULL;
 }
 
 
@@ -1459,13 +1172,12 @@ static void im_file_pause(nx_module_t *module)
 
     imconf = (nx_im_file_conf_t *) module->config;
 
-    if ( imconf->poll_event != NULL )
+    if ( imconf->event != NULL )
     {
-	nx_event_remove(imconf->poll_event);
-	nx_event_free(imconf->poll_event);
-	imconf->poll_event = NULL;
+	nx_event_remove(imconf->event);
+	nx_event_free(imconf->event);
+	imconf->event = NULL;
     }
-    // leave the dircheck event running
 }
 
 
@@ -1479,13 +1191,13 @@ static void im_file_resume(nx_module_t *module)
 
     imconf = (nx_im_file_conf_t *) module->config;
 
-    if ( imconf->poll_event != NULL )
+    if ( imconf->event != NULL )
     {
-	nx_event_remove(imconf->poll_event);
-	nx_event_free(imconf->poll_event);
-	imconf->poll_event = NULL;
+	nx_event_remove(imconf->event);
+	nx_event_free(imconf->event);
+	imconf->event = NULL;
     }
-    im_file_add_poll_event(module, FALSE);
+    im_file_add_event(module, FALSE);
 }
 
 
@@ -1498,9 +1210,6 @@ static void im_file_event(nx_module_t *module, nx_event_t *event)
     {
 	case NX_EVENT_READ:
 	    im_file_read(module);
-	    break;
-	case NX_EVENT_MODULE_SPECIFIC:
-	    im_file_dircheck_event_cb(module);
 	    break;
 	default:
 	    nx_panic("invalid event type: %d", event->type);

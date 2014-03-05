@@ -46,16 +46,15 @@ void nx_expr_parser_append_string(char **dst,
 
     ASSERT(src != NULL);
 
+    log_debug("appending [%s] to [%s]", src, *dst);
     if ( *dst == NULL )
     {
-	log_debug("adding string [%s]", src, *dst);
 	len1 = strlen(src);
 	*dst = malloc(len1 + 1);
 	apr_cpystrn(*dst, src, len1 + 1);
     }
     else
     {
-	log_debug("appending [%s] to [%s]", src, *dst);
 	len1 = strlen(*dst);
 	len2 = strlen(src);
 	*dst = realloc(*dst, len1 + len2 + 1);

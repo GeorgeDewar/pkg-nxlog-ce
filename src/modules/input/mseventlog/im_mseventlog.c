@@ -648,40 +648,11 @@ static nx_logdata_t *im_mseventlog_get_logdata(nx_module_t *module,
 }
 
 
-// got an error, close eventlog
-static void im_mseventlog_error_close_src(nx_eventlog_src_t *event_src) 
-{
-    ASSERT(event_src != NULL);
-
-    if ( event_src->handle != NULL )
-    {
-	CloseEventLog(event_src->handle);
-	event_src->handle = NULL;
-    }
-
-    if ( event_src->blacklist_interval == 0 )
-    {
-	event_src->blacklist_interval = 1;
-    }
-    else
-    {
-	event_src->blacklist_interval *= 2;
-	if ( event_src->blacklist_interval > 60*10 ) 
-	{ // limit at 10 minutes
-	    event_src->blacklist_interval = 60*10;
-	}
-    }
-    event_src->blacklist_until = apr_time_now() + event_src->blacklist_interval * APR_USEC_PER_SEC;
-}
-
-
 
 static void im_mseventlog_set_readfromcurrent(nx_eventlog_src_t *event_src)
 {
     DWORD oldest;
     DWORD record_cnt;
-
-    ASSERT(event_src->handle != NULL);
 
     if ( (GetOldestEventLogRecord(event_src->handle, &oldest) == TRUE) &&
 	 (GetNumberOfEventLogRecords(event_src->handle, &record_cnt) == TRUE) )
@@ -700,9 +671,7 @@ static void im_mseventlog_set_readfromcurrent(nx_eventlog_src_t *event_src)
     }
     else
     {
-	log_aprerror((apr_status_t) APR_FROM_OS_ERROR(GetLastError()),
-		     "im_mseventlog_set_readfromcurrent() failed");
-	im_mseventlog_error_close_src(event_src);
+	event_src->reopen = 1;
     }
 }
 
@@ -712,8 +681,6 @@ static void im_mseventlog_set_readfromlast(nx_eventlog_src_t *event_src)
 {
     DWORD oldest;
     DWORD record_cnt;
-
-    ASSERT(event_src->handle != NULL);
 
     if ( (GetOldestEventLogRecord(event_src->handle, &oldest) == TRUE) &&
 	 (GetNumberOfEventLogRecords(event_src->handle, &record_cnt) == TRUE) )
@@ -729,9 +696,7 @@ static void im_mseventlog_set_readfromlast(nx_eventlog_src_t *event_src)
     }
     else
     {
-	log_aprerror((apr_status_t) APR_FROM_OS_ERROR(GetLastError()),
-		     "im_mseventlog_set_readfromlast() failed");
-	im_mseventlog_error_close_src(event_src);
+	event_src->reopen = 1;
     }
 }
 
@@ -745,66 +710,71 @@ static void im_mseventlog_open_src(nx_module_t *module, nx_eventlog_src_t *event
 
     imconf = (nx_im_mseventlog_conf_t *) module->config;
 
-    ASSERT(event_src->name != NULL);
-    log_debug("opening %s eventlog", event_src->name);
-
     if ( event_src->handle != NULL )
     {
 	CloseEventLog(event_src->handle);
-	event_src->handle = NULL;
+	event_src->reopen = 1;
     }
 
     if ( (event_src->handle = OpenEventLog(NULL, event_src->name)) == NULL )
     {
 	DWORD errorcode = GetLastError();
-	
-	im_mseventlog_error_close_src(event_src); // set/increase blacklist timeout
+
+	if ( event_src->reopen <= 1 )
+	{
+	    event_src->reopen = 1;
+	}
+	else
+	{
+	    event_src->reopen *= 3;
+	}
+	event_src->reopen_at = apr_time_now() + event_src->reopen * APR_USEC_PER_SEC;
 	log_aprerror((apr_status_t) APR_FROM_OS_ERROR(errorcode),
-		     "Failed to open %s EventLog, will retry after %d seconds",
-		     event_src->name, event_src->blacklist_interval);
+		     "Failed to open %s EventLog, retrying %d seconds later",
+		     event_src->name, event_src->reopen);
     }
     else
     { // Opened OK
-	if ( event_src->blacklist_interval != 0 )
+	if ( event_src->reopen != 0 )
 	{
 	    log_info("Successfully reopened %s EventLog", event_src->name);
+	    event_src->reopen = 0;
+	    event_src->reopen_at = 0;
 	}
     }
-	
-    if ( event_src->handle != NULL )
+
+    if ( (imconf->savepos == TRUE) && (event_src->rec_num == 0) )
     {
-	if ( (imconf->savepos == TRUE) && (event_src->rec_num == 0) )
-	{
-	    char key[256];
-	    uint64_t tmp = 0;
+	char key[256];
+	uint64_t tmp = 0;
 	
-	    if ( apr_snprintf(key, sizeof(key), "%s_rec_num", event_src->name) < ((int) sizeof(key)) - 1 )
+	if ( apr_snprintf(key, sizeof(key), "%s_rec_num", event_src->name) < ((int) sizeof(key)) - 1 )
+	{
+	    if ( nx_config_cache_get_int(module->name, key, (int64_t *) &tmp) == TRUE )
 	    {
-		if ( nx_config_cache_get_int(module->name, key, (int64_t *) &tmp) == TRUE )
+		event_src->rec_num = (DWORD) tmp;
+		log_debug("got rec_num for %s: %d", key, (int) event_src->rec_num);
+		if ( event_src->rec_num > 0 )
 		{
-		    event_src->rec_num = (DWORD) tmp;
-		    log_debug("got rec_num for %s: %d", key, (int) event_src->rec_num);
-		    if ( event_src->rec_num > 0 )
-		    {
-			im_mseventlog_set_readfromcurrent(event_src);
-		    }
-		}
-		else
-		{
-		    log_debug("no value found in cache for %s", key);
+		    im_mseventlog_set_readfromcurrent(event_src);
 		}
 	    }
 	    else
 	    {
-		log_error("event source name too long: [%s]", event_src->name);
+		log_debug("no value found in cache for %s", key);
 	    }
 	}
-
-	if ( (event_src->rec_num == 0) && (imconf->readfromlast == TRUE) )
+	else
 	{
-	    im_mseventlog_set_readfromlast(event_src);
+	    log_error("event source name too long: [%s]", event_src->name);
 	}
     }
+
+    if ( (event_src->rec_num == 0) && (imconf->readfromlast == TRUE) )
+    {
+	im_mseventlog_set_readfromlast(event_src);
+    }
+    log_debug("added eventlog source '%s'", event_src->name);
 }
 
 
@@ -847,9 +817,9 @@ static void im_mseventlog_read(nx_module_t *module)
 	    break;
 	}
 	//log_debug("reading from %s", event_src->name);
-	
-	if ( (imconf->currsrc->handle == NULL) &&
-	     (apr_time_now() > imconf->currsrc->blacklist_until) )
+
+	if ( (imconf->currsrc->reopen != 0) && 
+	     (apr_time_now() > imconf->currsrc->reopen_at) )
 	{ // reopen eventlog
 	    im_mseventlog_open_src(module, imconf->currsrc);
 	}
@@ -896,62 +866,33 @@ static void im_mseventlog_read(nx_module_t *module)
 		    continue;
 		}
 		else if ( errorcode == ERROR_INVALID_PARAMETER )
-		{ 
-		    const char *warnmsg = "ReadFromLast is FALSE and will try to restart from the beginning. This might result in duplicated logs.";
- 
-		    if ( imconf->readfromlast == TRUE )
-		    {
-			warnmsg = "ReadFromLast is TRUE and will try to restart from the last position. This might result in uncollected logs.";
-		    }
-		    imconf->offs = 0;
-		    imconf->bytes = 0;
-		    imconf->currsrc->rec_num = 0;
-		    im_mseventlog_error_close_src(imconf->currsrc);
+		{ /* See http://support.microsoft.com/kb/177199/
+		    */
+		    // seek = FALSE was set earlier, it should resolve this error
 		    log_warn("got ERROR_INVALID_PARAMETER (errorcode: %d) for the %s log, "
-			     "will try to reopen in %d sec. %s", (int) errorcode, imconf->currsrc->name,
-			     imconf->currsrc->blacklist_interval, warnmsg);
-		}
-		else if ( (errorcode == ERROR_ACCESS_DENIED) || (errorcode == RPC_S_UNKNOWN_IF) )
-		{ // The eventlog subsystem may not be available and there can be other transient errors
-		    const char *errcodestr = "ACCESS_DENIED";
-		    
-		    if ( errorcode == RPC_S_UNKNOWN_IF )
-		    {
-			errcodestr = "UNKNOWN_IF";
-		    }
+			     "this might result in duplicated events because im_mseventlog cannot seek. "
+			     "see http://support.microsoft.com/kb/177199/",
+			     (int) errorcode, imconf->currsrc->name);
 		    imconf->offs = 0;
 		    imconf->bytes = 0;
-		    im_mseventlog_error_close_src(imconf->currsrc);
-		    log_warn("the eventlog service is possibly unavailable, " 
-			     "got %s (errorcode: %d) for the %s log, will try to reopen in %d sec.",
-			     errcodestr, (int) errorcode, imconf->currsrc->name,
-			     imconf->currsrc->blacklist_interval);
+		    continue;
 		}
 		else 
 		{
 		    // Try to reopen on other errors such as ERROR_INVALID_HANDLE
+		    // The eventlog subsystem may not be available and there can be other transient errors
+		    // see http://support.microsoft.com/kb/833305
 		    char errmsg[200];
-		    const char *warnmsg = "ReadFromLast is FALSE and will try to restart from the beginning. This might result in duplicated logs.";
- 
-		    if ( imconf->readfromlast == TRUE )
-		    {
-			warnmsg = "ReadFromLast is TRUE and will try to restart from the last position. This might result in uncollected logs.";
-		    }
 
 		    apr_strerror((apr_status_t) APR_FROM_OS_ERROR(errorcode), errmsg, sizeof(errmsg));
+		    log_warn("Trying to reopen %s EventLog because ReadEventLog() failed for offset %d, (errorcode: %d, reason: %s)",
+			     imconf->currsrc->name, (int) imconf->currsrc->rec_num,
+			     (int) errorcode, errmsg);
+
 		    imconf->offs = 0;
 		    imconf->bytes = 0;
-		    imconf->currsrc->rec_num = 0;
-		    im_mseventlog_error_close_src(imconf->currsrc);
-		    log_warn("ReadEventLog() failed for offset %d for the %s log, (errorcode: %d, reason: %s). %s",
-			     (int) imconf->currsrc->rec_num, imconf->currsrc->name, 
-			     (int) errorcode, errmsg, warnmsg);
+		    im_mseventlog_open_src(module, imconf->currsrc);
 		}
-	    }
-	    else
-	    { // ReadEventLog succeeded, clear any blacklisting
-		imconf->currsrc->blacklist_until = 0;
-		imconf->currsrc->blacklist_interval = 0;
 	    }
 	}
 
@@ -1131,7 +1072,6 @@ static void im_mseventlog_start(nx_module_t *module)
 		event_src->name = apr_pstrdup(module->pool, regvalbuf);
 		NX_DLIST_INSERT_TAIL(imconf->event_sources, event_src, link);
 		im_mseventlog_open_src(module, event_src);
-		log_debug("added eventlog source '%s'", event_src->name);
 	    }
 	    RegCloseKey(reg);
 	}
@@ -1190,7 +1130,7 @@ static void im_mseventlog_stop(nx_module_t *module)
 	    if ( event_src->handle != NULL )
 	    {
 		CloseEventLog(event_src->handle);
-		event_src->handle = NULL;
+		event_src->reopen = 0;
 	    }
 	}
     }

@@ -21,7 +21,6 @@ typedef struct nx_im_exec_conf_t
     boolean running;
     nx_event_t *event;
     boolean restart;
-    int delay;
 } nx_im_exec_conf_t;
 
 

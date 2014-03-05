@@ -183,11 +183,6 @@ nx_logdata_t *nx_logdata_from_membuf(const char *buf,
 	*bytes = offs;
     }
 
-    if ( retval->raw_event == NULL )
-    {
-	retval->raw_event = nx_string_new();
-    }
-    ASSERT(retval->raw_event->buf != NULL);
     return ( retval );
 }
 

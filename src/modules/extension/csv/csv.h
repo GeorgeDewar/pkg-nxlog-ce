@@ -32,7 +32,6 @@ typedef struct nx_csv_ctx_t
     int num_type;
     const char *fields[NX_MODULE_MAX_FIELDS];
     nx_value_type_t types[NX_MODULE_MAX_FIELDS];
-    const char *undefvalue;
 } nx_csv_ctx_t;
 
 void nx_csv_ctx_set_quotechar(nx_csv_ctx_t *ctx, const char quotechar);

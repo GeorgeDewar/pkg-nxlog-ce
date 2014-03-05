@@ -182,6 +182,8 @@ void nx_logdata_set_field_value(nx_logdata_t *logdata,
     {
 	if ( strcasecmp(field->key, key) == 0 )
 	{
+	    nx_value_free(field->value);
+	    field->value = value;
 	    if ( strcmp(key, "raw_event") == 0 )
 	    {
 		if ( (value->defined == TRUE) && (value->type == NX_VALUE_TYPE_STRING) )
@@ -200,9 +202,6 @@ void nx_logdata_set_field_value(nx_logdata_t *logdata,
 		    throw_msg("'raw_event' cannot be set to an undefined value.");
 		}
 	    }
-	    nx_value_free(field->value);
-	    field->value = value;
-
 	    return;
 	}
     }

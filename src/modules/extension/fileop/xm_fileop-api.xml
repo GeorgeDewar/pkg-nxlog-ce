@@ -279,34 +279,6 @@ TODO:
      </en>
    </description>
  </procedure>
- 
- <procedure>
-   <name>file_chown</name>
-   <type>global</type>
-   <cb>nx_expr_proc__xm_fileop_file_chown_usr_grp</cb>
-   <arg>
-    <name>file</name>
-    <type>string</type>
-    <access>r</access>
-   </arg>
-   <arg>
-    <name>user</name>
-    <type>string</type>
-    <access>r</access>
-   </arg>
-   <arg>
-    <name>group</name>
-    <type>string</type>
-    <access>r</access>
-   </arg>
-   <description>
-     <en>
-       Change file ownership. This function is only implemented on POSIX systems where chown() is 
-       available in the underlying OS.
-       An error is logged if the operation fails.
-     </en>
-   </description>
- </procedure>
 
  <procedure>
    <name>file_chmod</name>

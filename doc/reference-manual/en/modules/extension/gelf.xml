@@ -73,16 +73,8 @@
 </Extension>
 
 <Input in>
-    # Use 'im_mseventlog' for Windows XP, 2000 and 2003
+    # Use 'im_mseventlog' for Windows XP and 2003
     Module      im_msvistalog
-# Uncomment the following to collect specific event logs only
-#    Query       <QueryList>\
-#                    <Query Id="0">\
-#                        <Select Path="Application">*</Select>\
-#                        <Select Path="System">*</Select>\
-#                        <Select Path="Security">*</Select>\
-#                    </Query>\
-#                </QueryList>
 </Input>
 
 <Output out>
@@ -98,22 +90,13 @@
 ]]>
 </programlisting>
       </example> 
-      <example id="xm_gelf_example_file">
-	<title>Forwarding custom log files to Graylog2 in GELF</title>
-	<para>
-	  You may want to collect custom application logs and send it out in the GELF format. See the following example about
-	  setting the common and custom fields to make the data more useful for the other end.
-	</para>
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_gelf_file.xml" />
-      </example>
-
-      <example id="xm_gelf_example_csv">
+      <example id="xm_gelf_example2">
 	<title>Parsing a CSV file and sending it to Graylog2 in GELF</title>
 	<para>
 	  Using the following config file nxlog will read a CSV file containing 3 fields and
 	  forwards it in GELF so that the fields will be available on the server.
 	</para>
-	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-xm_gelf_csv.xml" />
+	<xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="../../../config-examples/config-example-gelf.xml" />
       </example>
 
     </para>

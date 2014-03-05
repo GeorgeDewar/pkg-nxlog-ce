@@ -178,18 +178,6 @@
   	    </para>
 	  </listitem>
 	</varlistentry>
-
-	<varlistentry>
-	  <term><anchor id="xm_csv_config_undefvalue"/>UndefValue</term>
-	  <listitem>
-	    <para>
-	      This optional directive specifies a string which will be treated as an undefined value.
-	      This is particularly useful when <link linkend="processing_parsers_w3c">parsing the W3C format</link> where
-	      the dash "-" marks an omitted field.
-  	    </para>
-	  </listitem>
-	</varlistentry>
-
       </variablelist>
     </para>
     

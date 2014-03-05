@@ -5,9 +5,6 @@
     Fields	$date, $time, $HTTPMethod, $HTTPURL
     FieldTypes  string, string, string, string
     Delimiter	' '
-    QuoteChar   '"'
-    EscapeControl FALSE
-    UndefValue  -
 </Extension>
 
 <Extension json>
