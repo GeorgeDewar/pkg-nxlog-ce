@@ -1,9 +1,9 @@
-nxlog-ce (1:2.5.1089-1) UNRELEASED; urgency=low
+nxlog-ce (1:2.5.1089-1) unstable; urgency=low
 
   * Re-upload 2.5.1089-1 after 2.7.1191-1 was discovered to be not
     DFSG-compatible. See #739334 and #739338 for more info.
 
- -- Chris Lamb <lamby@debian.org>  Wed, 05 Mar 2014 23:19:09 +0000
+ -- Chris Lamb <lamby@debian.org>  Wed, 05 Mar 2014 23:32:48 +0000
 
 nxlog-ce (2.7.1191-1) unstable; urgency=medium
 
