@@ -1,4 +1,4 @@
-nxlog-ce (1:2.5.1089-1) unstable; urgency=low
+nxlog-ce (1:2.5.1089-2) UNRELEASED; urgency=medium
 
   * Re-upload 2.5.1089-1 after 2.7.1191-1 was discovered to be not
     DFSG-compatible. See #739334 and #739338 for more info.
